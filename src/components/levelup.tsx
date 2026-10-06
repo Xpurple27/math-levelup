@@ -109,7 +109,9 @@ export default function Levelup() {
   const [section, setSection] = useState("All");
   const [search, setSearch] = useState("");
   const [backend, setBackend] = useState<"local" | "supabase">("local");
-  const [auth, setAuth] = useState<"login" | "register" | null>(null),
+  const [auth, setAuth] = useState<
+      "login" | "register" | "confirmation" | null
+    >(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [topic, setTopic] = useState("rasio"),
@@ -125,6 +127,7 @@ export default function Levelup() {
     const r = await fetch("/api/action");
     const d = await r.json();
     setUser(d.user);
+    if (d.user) sessionStorage.removeItem("levelup-email-confirmation");
     setBackend(d.backend || "local");
     if (d.notice) setError(d.notice);
     setMastery(d.mastery || []);
@@ -251,8 +254,13 @@ export default function Levelup() {
   };
   const start = async (kind: string, t = topic) => {
     if (!user) {
-      setAuth("register");
-      setNotice("Buat akun untuk menyimpan jawaban dan progres Anda.");
+      const pending = sessionStorage.getItem("levelup-email-confirmation");
+      setAuth(pending ? "login" : "register");
+      setNotice(
+        pending
+          ? "Konfirmasikan email Anda, lalu masuk untuk mulai latihan."
+          : "Buat akun untuk menyimpan jawaban dan progres Anda.",
+      );
       return;
     }
     const d = await call({
@@ -1439,113 +1447,148 @@ export default function Levelup() {
             <h2 id="auth-title">
               {auth === "register"
                 ? "Mulai perjalananmu."
-                : "Selamat datang kembali."}
+                : auth === "confirmation"
+                  ? "Konfirmasi email terlebih dahulu"
+                  : "Selamat datang kembali."}
             </h2>
             <p className="muted">
               {notice ||
                 "Simpan progres dan temukan langkah belajar yang tepat."}
             </p>
-            <form
-              onSubmit={async (e) => {
-                e.preventDefault();
-                const data = Object.fromEntries(new FormData(e.currentTarget));
-                const d = await call({ action: auth, ...data });
-                if (d) {
-                  setAuth(null);
-                  setNotice(
-                    d.confirmationRequired
-                      ? "Pendaftaran diterima. Periksa email untuk mengonfirmasi akun, lalu masuk kembali."
-                      : "",
-                  );
-                  await refresh();
-                }
-              }}
-            >
-              {auth === "register" && (
-                <label className="field">
-                  Nama lengkap
-                  <input
-                    name="name"
-                    required
-                    minLength={2}
-                    maxLength={80}
-                    autoComplete="name"
-                    placeholder="Nama kamu"
-                  />
-                </label>
-              )}
-              <label className="field">
-                Email
-                <input
-                  name="email"
-                  required
-                  type="email"
-                  autoComplete="email"
-                  placeholder="kamu@email.com"
-                />
-              </label>
-              <label className="field">
-                Kata sandi
-                <input
-                  name="password"
-                  required
-                  type="password"
-                  minLength={auth === "register" ? 8 : 1}
-                  maxLength={200}
-                  autoComplete={
-                    auth === "register" ? "new-password" : "current-password"
-                  }
-                  placeholder="Minimal 8 karakter"
-                />
-              </label>
-              {auth === "register" && (
-                <div className="form-row">
+            {auth === "confirmation" ? (
+              <div>
+                <ol>
+                  <li>Buka email dari Supabase, termasuk folder spam.</li>
+                  <li>Klik tautan konfirmasi email.</li>
+                  <li>Kembali ke aplikasi dan masuk dengan akun Anda.</li>
+                </ol>
+                <button
+                  className="button primary full"
+                  onClick={() => {
+                    setAuth("login");
+                    setError("");
+                  }}
+                >
+                  Sudah konfirmasi? Masuk
+                </button>
+              </div>
+            ) : (
+              <>
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    const data = Object.fromEntries(
+                      new FormData(e.currentTarget),
+                    );
+                    const d = await call({ action: auth, ...data });
+                    if (d) {
+                      if (d.confirmationRequired) {
+                        sessionStorage.setItem(
+                          "levelup-email-confirmation",
+                          "pending",
+                        );
+                        setAuth("confirmation");
+                        setNotice(
+                          "Pendaftaran diterima. Anda belum masuk; konfirmasi email diperlukan sebelum latihan.",
+                        );
+                      } else {
+                        sessionStorage.removeItem("levelup-email-confirmation");
+                        setAuth(null);
+                        setNotice("");
+                      }
+                      await refresh();
+                    }
+                  }}
+                >
+                  {auth === "register" && (
+                    <label className="field">
+                      Nama lengkap
+                      <input
+                        name="name"
+                        required
+                        minLength={2}
+                        maxLength={80}
+                        autoComplete="name"
+                        placeholder="Nama kamu"
+                      />
+                    </label>
+                  )}
                   <label className="field">
-                    Jenjang
-                    <select name="grade">
-                      <option>Kelas 12</option>
-                      <option>Kelas 11</option>
-                      <option>Gap year</option>
-                    </select>
-                  </label>
-                  <label className="field">
-                    Target UTBK
+                    Email
                     <input
-                      name="goal"
-                      type="number"
-                      min="100"
-                      max="1000"
-                      defaultValue="700"
+                      name="email"
                       required
+                      type="email"
+                      autoComplete="email"
+                      placeholder="kamu@email.com"
                     />
                   </label>
-                </div>
-              )}
-              {error && (
-                <p className="form-error" role="alert">
-                  {error}
-                </p>
-              )}
-              <button className="button primary full" disabled={busy}>
-                {busy
-                  ? "Memproses…"
-                  : auth === "register"
-                    ? "Buat akun"
-                    : "Masuk"}
-                <ArrowRight size={17} />
-              </button>
-            </form>
-            <button
-              className="text-button auth-toggle"
-              onClick={() => {
-                setAuth(auth === "register" ? "login" : "register");
-                setError("");
-              }}
-            >
-              {auth === "register"
-                ? "Sudah punya akun? Masuk"
-                : "Belum punya akun? Daftar gratis"}
-            </button>
+                  <label className="field">
+                    Kata sandi
+                    <input
+                      name="password"
+                      required
+                      type="password"
+                      minLength={auth === "register" ? 8 : 1}
+                      maxLength={200}
+                      autoComplete={
+                        auth === "register"
+                          ? "new-password"
+                          : "current-password"
+                      }
+                      placeholder="Minimal 8 karakter"
+                    />
+                  </label>
+                  {auth === "register" && (
+                    <div className="form-row">
+                      <label className="field">
+                        Jenjang
+                        <select name="grade">
+                          <option>Kelas 12</option>
+                          <option>Kelas 11</option>
+                          <option>Gap year</option>
+                        </select>
+                      </label>
+                      <label className="field">
+                        Target UTBK
+                        <input
+                          name="goal"
+                          type="number"
+                          min="100"
+                          max="1000"
+                          defaultValue="700"
+                          required
+                        />
+                      </label>
+                    </div>
+                  )}
+                  {error && (
+                    <p className="form-error" role="alert">
+                      {error}
+                    </p>
+                  )}
+                  <button className="button primary full" disabled={busy}>
+                    {busy
+                      ? "Memproses…"
+                      : auth === "register"
+                        ? "Buat akun"
+                        : "Masuk"}
+                    <ArrowRight size={17} />
+                  </button>
+                </form>
+                <button
+                  className="text-button auth-toggle"
+                  onClick={() => {
+                    setAuth(auth === "register" ? "login" : "register");
+                    setError("");
+                  }}
+                >
+                  {auth === "register"
+                    ? "Sudah punya akun? Masuk"
+                    : "Belum punya akun? Daftar gratis"}
+                </button>
+              </>
+            )}
             <div className="demo-label">
               {backend === "supabase"
                 ? "Akun online dikelola melalui Supabase."

@@ -93,6 +93,15 @@ describe("Supabase identity adapter", () => {
     await logout();
     expect(auth.signOut).toHaveBeenCalledOnce();
   });
+  it("explains when login requires email confirmation", async () => {
+    auth.signInWithPassword.mockResolvedValue({
+      data: { user: null },
+      error: { code: "email_not_confirmed" },
+    });
+    await expect(
+      authenticate("student@example.com", "password-123"),
+    ).rejects.toThrow("Email belum dikonfirmasi");
+  });
   it("never chooses local SQLite on Vercel", () => {
     vi.stubEnv("VERCEL", "1");
     vi.stubEnv("LEVELUP_BACKEND", "local");

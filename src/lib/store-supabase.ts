@@ -98,6 +98,12 @@ export async function authenticate(email: string, password: string) {
     email,
     password,
   });
+  if (error?.code === "email_not_confirmed") {
+    throw new StorageError(
+      "Email belum dikonfirmasi. Buka tautan konfirmasi di email Anda, lalu masuk kembali.",
+      401,
+    );
+  }
   if (error) return null;
   return data.user ? profile(data.user) : null;
 }

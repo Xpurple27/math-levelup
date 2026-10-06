@@ -38,6 +38,8 @@ After Vercel provides the deployment hostname:
 - Add the exact callback for a Preview deployment if testing that hostname. Avoid broad wildcards for unrelated preview domains.
 - Keep email confirmation enabled if you want verified email ownership. The signup UI asks the student to confirm and then sign in. Opening a confirmation link in the same browser supports the PKCE callback.
 
+If signup returns to the dashboard but practice asks for registration again, check **Authentication → Users** for that email and its confirmation status. A pending signup does not create a logged-in session. Confirm the email, then sign in. The UI now keeps the confirmation instructions visible and directs pending signups to login when starting a lesson. For this deployment use Site URL `https://math-levelup.vercel.app` and allow redirect `https://math-levelup.vercel.app/auth/callback`.
+
 Email confirmation is not password recovery. Reset-password UX and persistent auth throttling remain future work. Set up production SMTP and check Supabase email limits before inviting students.
 
 ## 4. Verify the deployed flow

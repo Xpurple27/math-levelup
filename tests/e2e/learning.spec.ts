@@ -477,3 +477,54 @@ test("new topic search, practice filters, fresh-first selection, and frozen resu
     ).status(),
   ).toBe(400);
 });
+
+test("pending Supabase signup explains confirmation and returns to login", async ({
+  page,
+}) => {
+  await page.route("**/api/action", async (route) => {
+    const request = route.request();
+    if (request.method() === "GET") {
+      await route.fulfill({ json: { user: null, backend: "supabase" } });
+    } else if (request.postDataJSON().action === "register") {
+      await route.fulfill({
+        json: { confirmationRequired: true, backend: "supabase" },
+      });
+    } else {
+      await route.fulfill({
+        status: 401,
+        json: {
+          error:
+            "Email belum dikonfirmasi. Buka tautan konfirmasi di email Anda, lalu masuk kembali.",
+        },
+      });
+    }
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await page.getByLabel("Nama lengkap").fill("Siswa Konfirmasi");
+  await page
+    .getByLabel("Email", { exact: true })
+    .fill("confirmation@example.com");
+  await page.getByLabel("Kata sandi").fill("fixture-password-123");
+  await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(
+    dialog.getByRole("heading", { name: "Konfirmasi email terlebih dahulu" }),
+  ).toBeVisible();
+  await expect(dialog.getByLabel("Kata sandi")).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Sudah konfirmasi? Masuk" }).click();
+  await dialog
+    .getByLabel("Email", { exact: true })
+    .fill("confirmation@example.com");
+  await dialog.getByLabel("Kata sandi").fill("fixture-password-123");
+  await dialog.getByRole("button", { name: "Masuk", exact: true }).click();
+  await expect(dialog.getByRole("alert")).toContainText(
+    "Email belum dikonfirmasi",
+  );
+  await page.reload();
+  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await expect(
+    dialog.getByRole("heading", { name: "Selamat datang kembali." }),
+  ).toBeVisible();
+  await expect(dialog.getByLabel("Nama lengkap")).toHaveCount(0);
+});
