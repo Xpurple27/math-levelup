@@ -1,0 +1,8 @@
+node_modules
+.next
+.data
+package-lock.json
+next-env.d.ts
+playwright-report
+test-results
+docs/handoff
