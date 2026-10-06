@@ -160,7 +160,9 @@ test("register → diagnostic with resume → result → learn → guided → mi
   await expect(
     page.getByText("Latihan mandiri", { exact: true }),
   ).toBeVisible();
-  await expect(page.getByText(/bukti soal · confidence/).first()).toBeVisible();
+  await expect(
+    page.getByText(/soal unik terjawab · confidence/).first(),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Keluar", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Halo, Sobat LevelUP" }),
@@ -654,3 +656,71 @@ for (const packageNumber of ["01", "02"])
       ).status(),
     ).toBe(400);
   });
+
+test("repeated fixed tryout does not inflate confidence or expose internal evidence", async ({
+  request: rawRequest,
+}) => {
+  const request = localApi(rawRequest);
+  const post = (data: unknown) =>
+    request.post("/api/action", {
+      data,
+      headers: { origin: "http://127.0.0.1:3000" },
+    });
+  await post({
+    action: "register",
+    name: "Confidence Fixture",
+    email: `confidence-${Date.now()}@example.com`,
+    password: "fixture-only-password",
+  });
+  let before: unknown;
+  for (let i = 0; i < 2; i++) {
+    const r = await post({
+      action: "start",
+      kind: "tryout",
+      packageSlug: "pk-02-v1",
+    });
+    expect(r.status()).toBe(200);
+    const { attempt } = await r.json();
+    for (const q of attempt.questions)
+      expect(
+        (
+          await post({
+            action: "answer",
+            id: attempt.id,
+            questionId: q.id,
+            selected: 0,
+            score: 100,
+            confidence: 1,
+            uniqueEvidence: { forged: "Hard" },
+          })
+        ).status(),
+      ).toBe(200);
+    expect((await post({ action: "submit", id: attempt.id })).status()).toBe(
+      200,
+    );
+    const progress = await (await request.get("/api/action")).json();
+    const diversity = progress.mastery.map(
+      (m: {
+        topic: string;
+        count: number;
+        advanced: number;
+        confidence: number;
+        uniqueEvidence?: unknown;
+      }) => {
+        expect(m.uniqueEvidence).toBeUndefined();
+        return {
+          topic: m.topic,
+          count: m.count,
+          advanced: m.advanced,
+          confidence: m.confidence,
+        };
+      },
+    );
+    expect(
+      diversity.reduce((sum: number, m: { count: number }) => sum + m.count, 0),
+    ).toBe(20);
+    if (i === 0) before = diversity;
+    else expect(diversity).toEqual(before);
+    expect(progress.history).toHaveLength(i + 1);
+  }
+});

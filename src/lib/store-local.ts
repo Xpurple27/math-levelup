@@ -1,5 +1,12 @@
 import "server-only";
-import { findTryoutPackage } from "./tryout-packages";
+import {
+  attemptDurationMs,
+  activityQualifies,
+  learningDay,
+  streakForDays,
+} from "./learning-rules";
+import { StorageError } from "./store-errors";
+import { rebuildUniqueEvidence } from "./scoring";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -17,37 +24,25 @@ const dir = resolve(
 );
 mkdirSync(dir, { recursive: true });
 const db = new DatabaseSync(resolve(dir, "levelup.sqlite"));
-db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON;
+db.exec(`PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;
 CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY,email TEXT UNIQUE NOT NULL,name TEXT NOT NULL,password TEXT NOT NULL,goal INTEGER NOT NULL DEFAULT 700,grade TEXT NOT NULL DEFAULT 'Kelas 12');
 CREATE TABLE IF NOT EXISTS sessions(token TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS attempts(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),kind TEXT NOT NULL,topic TEXT,started INTEGER NOT NULL,deadline INTEGER,snapshot TEXT NOT NULL,answers TEXT NOT NULL DEFAULT '{}',feedback TEXT NOT NULL DEFAULT '{}',credits TEXT NOT NULL DEFAULT '{}',status TEXT NOT NULL DEFAULT 'active',result TEXT);
 CREATE TABLE IF NOT EXISTS mastery(user_id TEXT NOT NULL REFERENCES users(id),topic TEXT NOT NULL,data TEXT NOT NULL,PRIMARY KEY(user_id,topic));
 CREATE TABLE IF NOT EXISTS activities(user_id TEXT NOT NULL REFERENCES users(id),day TEXT NOT NULL,kind TEXT NOT NULL,PRIMARY KEY(user_id,day,kind));`);
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  goal: number;
-  grade: string;
-};
-export type Attempt = {
-  revision?: number;
-  id: string;
-  user_id: string;
-  kind: string;
-  topic: string | null;
-  started: number;
-  deadline: number | null;
-  snapshot: Question[];
-  answers: Record<string, number>;
-  feedback: Record<
-    string,
-    { tries: number; done: boolean; correct: boolean; selected: number }
-  >;
-  credits: Record<string, number>;
-  status: string;
-  result: ReturnType<typeof import("./scoring").grade> | null;
-};
+// Local schema upgrades are additive and preserve historical snapshots.
+if (
+  !db
+    .prepare("PRAGMA table_info(attempts)")
+    .all()
+    .some((r) => r.name === "revision")
+) {
+  db.exec(
+    "ALTER TABLE attempts ADD COLUMN revision INTEGER NOT NULL DEFAULT 0",
+  );
+}
+export type { User, Attempt } from "./store-types";
+import type { User, Attempt } from "./store-types";
 export function passwordHash(password: string) {
   const salt = randomBytes(16).toString("hex");
   return `${salt}:${scryptSync(password, salt, 64).toString("hex")}`;
@@ -141,70 +136,115 @@ export function createAttempt(
   topic: string | null,
   questions: Question[],
 ) {
-  const id = randomUUID(),
-    now = Date.now(),
-    deadline =
-      kind === "tryout"
-        ? now + (findTryoutPackage(topic)?.minutes ?? 20) * 60000
-        : kind === "diagnostic"
-          ? now + 30 * 60000
-          : kind === "mini"
-            ? now + 10 * 60000
-            : null;
-  db.prepare(
-    "INSERT INTO attempts(id,user_id,kind,topic,started,deadline,snapshot) VALUES(?,?,?,?,?,?,?)",
-  ).run(id, userId, kind, topic, now, deadline, JSON.stringify(questions));
-  return getAttempt(id, userId)!;
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const existing = activeAttempt(userId, kind, topic);
+    if (existing) {
+      db.exec("COMMIT");
+      return existing;
+    }
+    const id = randomUUID(),
+      now = Date.now(),
+      duration = attemptDurationMs(kind, topic);
+    db.prepare(
+      "INSERT INTO attempts(id,user_id,kind,topic,started,deadline,snapshot) VALUES(?,?,?,?,?,?,?)",
+    ).run(
+      id,
+      userId,
+      kind,
+      topic,
+      now,
+      duration === null ? null : now + duration,
+      JSON.stringify(questions),
+    );
+    const attempt = getAttempt(id, userId)!;
+    db.exec("COMMIT");
+    return attempt;
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }
 export function saveAttempt(a: Attempt) {
-  db.prepare(
-    "UPDATE attempts SET answers=?,feedback=?,credits=? WHERE id=? AND user_id=? AND status='active'",
-  ).run(
-    JSON.stringify(a.answers),
-    JSON.stringify(a.feedback),
-    JSON.stringify(a.credits),
-    a.id,
-    a.user_id,
-  );
+  const change = db
+    .prepare(
+      "UPDATE attempts SET answers=?,feedback=?,credits=?,revision=revision+1 WHERE id=? AND user_id=? AND status='active' AND revision=? AND (deadline IS NULL OR deadline>?)",
+    )
+    .run(
+      JSON.stringify(a.answers),
+      JSON.stringify(a.feedback),
+      JSON.stringify(a.credits),
+      a.id,
+      a.user_id,
+      a.revision,
+      Date.now(),
+    );
+  if (!change.changes)
+    throw new StorageError(
+      "Jawaban belum tersimpan karena sesi berubah atau waktu habis. Muat ulang sesi.",
+      409,
+    );
+  a.revision++;
 }
+
 export function getMastery(userId: string): Mastery[] {
   return db
-    .prepare("SELECT data FROM mastery WHERE user_id=?")
+    .prepare("SELECT data FROM mastery WHERE user_id=? ORDER BY topic")
     .all(userId)
     .map((r) => JSON.parse(r.data as string));
+}
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`;
+  if (value && typeof value === "object")
+    return `{${Object.entries(value)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`)
+      .join(",")}}`;
+  return JSON.stringify(value);
 }
 export function finalize(
   a: Attempt,
   result: Attempt["result"],
   masteries: Mastery[],
+  old: Mastery[],
 ) {
   db.exec("BEGIN IMMEDIATE");
   try {
-    const change = db
-      .prepare(
-        "UPDATE attempts SET status='completed',result=? WHERE id=? AND user_id=? AND status='active'",
-      )
-      .run(JSON.stringify(result), a.id, a.user_id);
-    if (change.changes) {
-      for (const m of masteries)
-        db.prepare(
-          "INSERT INTO mastery VALUES(?,?,?) ON CONFLICT(user_id,topic) DO UPDATE SET data=excluded.data",
-        ).run(a.user_id, m.topic, JSON.stringify(m));
-      if (a.kind !== "practice" || Object.keys(a.answers).length >= 5) {
-        const day = new Intl.DateTimeFormat("en-CA", {
-          timeZone: "Asia/Jakarta",
-        }).format(new Date());
-        db.prepare("INSERT OR IGNORE INTO activities VALUES(?,?,?)").run(
-          a.user_id,
-          day,
-          a.kind,
-        );
-      }
+    const current = getAttempt(a.id, a.user_id);
+    if (!current) throw new StorageError("Sesi tidak ditemukan.", 404);
+    if (current.status === "completed") {
+      db.exec("COMMIT");
+      return false;
     }
+    const prior = getMastery(a.user_id);
+    const keyed = (values: Mastery[]) =>
+      Object.fromEntries(values.map((m) => [m.topic, m]));
+    if (
+      current.revision !== a.revision ||
+      canonical(keyed(prior)) !== canonical(keyed(old))
+    )
+      throw new StorageError(
+        "Ada perubahan dari sesi lain. Muat ulang sebelum melanjutkan.",
+        409,
+      );
+    db.prepare(
+      "UPDATE attempts SET status='completed',result=?,revision=revision+1 WHERE id=? AND user_id=? AND status='active'",
+    ).run(JSON.stringify(result), a.id, a.user_id);
+    for (const m of masteries)
+      db.prepare(
+        "INSERT INTO mastery VALUES(?,?,?) ON CONFLICT(user_id,topic) DO UPDATE SET data=excluded.data",
+      ).run(a.user_id, m.topic, JSON.stringify(m));
+    if (activityQualifies(current.kind, current.answers))
+      db.prepare("INSERT OR IGNORE INTO activities VALUES(?,?,?)").run(
+        a.user_id,
+        learningDay(),
+        current.kind,
+      );
     db.exec("COMMIT");
-  } catch (e) {
+    return true;
+  } catch (error) {
     db.exec("ROLLBACK");
-    throw e;
+    throw error;
   }
 }
 export function progress(userId: string) {
@@ -220,18 +260,12 @@ export function progress(userId: string) {
     )
     .all(userId)
     .map((r) => r.day as string);
-  let streak = 0;
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-  }).format(new Date());
-  const todayMs = Date.parse(today + "T00:00:00Z");
-  let cursor = todayMs;
-  if (!days.includes(today)) cursor -= 86400000;
-  while (days.includes(new Date(cursor).toISOString().slice(0, 10))) {
-    streak++;
-    cursor -= 86400000;
-  }
-  return { mastery: getMastery(userId), history, days, streak };
+  return {
+    mastery: getMastery(userId),
+    history,
+    days,
+    streak: streakForDays(days),
+  };
 }
 
 /** Only question IDs from the owner's recent sessions; never sent to the browser. */
@@ -248,4 +282,33 @@ export function seenQuestionIds(userId: string): string[] {
       ),
     ),
   ];
+}
+
+// Evidence lives in the existing mastery JSON; no extra domain tables are needed.
+db.exec("BEGIN IMMEDIATE");
+try {
+  const rows = db.prepare("SELECT user_id,topic,data FROM mastery").all();
+  for (const row of rows) {
+    const old = JSON.parse(row.data as string) as Mastery;
+    if (old.uniqueEvidence) continue;
+    const attempts = db
+      .prepare(
+        "SELECT snapshot,answers FROM attempts WHERE user_id=? AND status='completed'",
+      )
+      .all(row.user_id as string)
+      .map((a) => ({
+        snapshot: JSON.parse(a.snapshot as string) as Question[],
+        answers: JSON.parse(a.answers as string) as Record<string, number>,
+      }));
+    const rebuilt = rebuildUniqueEvidence(old, attempts);
+    db.prepare("UPDATE mastery SET data=? WHERE user_id=? AND topic=?").run(
+      JSON.stringify(rebuilt),
+      row.user_id as string,
+      row.topic as string,
+    );
+  }
+  db.exec("COMMIT");
+} catch (error) {
+  db.exec("ROLLBACK");
+  throw error;
 }

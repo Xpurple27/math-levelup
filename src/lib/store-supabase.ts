@@ -1,17 +1,11 @@
 import "server-only";
 import { createClient, type User as AuthUser } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "./supabase/server";
-import type { User, Attempt } from "./store-local";
+import type { User, Attempt } from "./store-types";
 import type { Question } from "./content";
 import type { Mastery } from "./scoring";
-export class StorageError extends Error {
-  constructor(
-    message: string,
-    public status = 503,
-  ) {
-    super(message);
-  }
-}
+import { StorageError } from "./store-errors";
+import { streakForDays } from "./learning-rules";
 function admin() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
     key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -180,7 +174,12 @@ export async function getMastery(userId: string): Promise<Mastery[]> {
     .select("data")
     .eq("user_id", userId)
     .order("topic");
-  return checked(data, error)?.map((r) => r.data as Mastery) || [];
+  const masteries = checked(data, error)?.map((r) => r.data as Mastery) || [];
+  if (masteries.some((m) => !m.uniqueEvidence))
+    throw new StorageError(
+      "Progres belajar membutuhkan pembaruan penyimpanan. Hubungi pengelola.",
+    );
+  return masteries;
 }
 export async function finalize(
   a: Attempt,
@@ -196,7 +195,7 @@ export async function finalize(
     p_masteries: masteries,
     p_old: Object.fromEntries(old.map((m) => [m.topic, m])),
   });
-  checked(data, error);
+  return checked(data, error) as boolean;
 }
 export async function progress(userId: string) {
   const client = admin();
@@ -219,17 +218,7 @@ export async function progress(userId: string) {
     days = [
       ...new Set((checked(d.data, d.error) || []).map((r) => r.day as string)),
     ];
-  let streak = 0;
-  const today = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Jakarta",
-  }).format(new Date());
-  let cursor = Date.parse(today + "T00:00:00Z");
-  if (!days.includes(today)) cursor -= 86400000;
-  while (days.includes(new Date(cursor).toISOString().slice(0, 10))) {
-    streak++;
-    cursor -= 86400000;
-  }
-  return { mastery: m, history, days, streak };
+  return { mastery: m, history, days, streak: streakForDays(days) };
 }
 
 /** Scoped recent exposure for fresh-first server-side selection. */

@@ -1,4 +1,5 @@
 import "server-only";
+import { isQuestionAllowed } from "./content-qa";
 import { bank } from "./content";
 import { findTryoutPackage } from "./tryout-packages";
 // Fixed assignments from the shared seed bank, pinned to exact versions.
@@ -153,7 +154,11 @@ export function tryoutQuestions(slug: string) {
   if (!pack || !assignments[slug]) throw new Error("Paket tidak tersedia.");
   const questions = assignments[slug].map((id) => {
     const question = bank.find((q) => q.id === id && q.version === 1);
-    if (!question || question.section !== pack.section)
+    if (
+      !question ||
+      !isQuestionAllowed(question) ||
+      question.section !== pack.section
+    )
       throw new Error("Versi soal paket tidak tersedia.");
     return question;
   });

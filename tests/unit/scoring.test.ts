@@ -92,4 +92,41 @@ describe("deterministic scoring and mastery", () => {
       }),
     ).toBe("Foundation");
   });
+  it("does not inflate confidence from repeating one question or revising its version", () => {
+    const q = bank.find((q) => q.id === "rasio-25")!;
+    const a = { [q.id]: q.correct };
+    let m = updateMastery(undefined, [q], a, "tryout");
+    for (let i = 0; i < 50; i++)
+      m = updateMastery(m, [{ ...q, version: 2 }], a, "tryout");
+    expect(m.count).toBe(1);
+    expect(m.advanced).toBe(1);
+    expect(m.confidence).toBe(1.5 / 20);
+    expect(masteryLabel(m)).toBe("Perlu bukti tambahan");
+  });
+  it("counts only answered unique questions and gives Medium/Hard more confidence weight", () => {
+    const basic = bank.find((q) => q.id === "rasio-1")!,
+      medium = bank.find((q) => q.id === "rasio-13")!,
+      hard = bank.find((q) => q.id === "rasio-25")!;
+    const empty = updateMastery(
+      undefined,
+      [basic, medium, hard],
+      {},
+      "diagnostic",
+    );
+    expect(empty.count).toBe(0);
+    expect(empty.advanced).toBe(0);
+    expect(empty.confidence).toBe(0);
+    const m = updateMastery(
+      undefined,
+      [basic, medium, hard],
+      { [medium.id]: 0, [hard.id]: 0 },
+      "diagnostic",
+    );
+    expect(m.count).toBe(2);
+    expect(m.advanced).toBe(2);
+    expect(m.confidence).toBe(2.5 / 20);
+    const b = updateMastery(undefined, [basic], { [basic.id]: 0 }, "practice");
+    expect(b.confidence).toBe(0.5 / 20);
+    expect(b.confidence).toBeLessThan(m.confidence);
+  });
 });

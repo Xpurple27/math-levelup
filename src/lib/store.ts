@@ -2,8 +2,8 @@ import "server-only";
 import { onlineBackend } from "./backend";
 import type { Question } from "./content";
 import type { Mastery } from "./scoring";
-export type { User, Attempt } from "./store-local";
-import type { Attempt } from "./store-local";
+export type { User, Attempt } from "./store-types";
+import type { Attempt } from "./store-types";
 async function adapter() {
   return onlineBackend() ? import("./store-supabase") : import("./store-local");
 }
@@ -45,6 +45,11 @@ export async function logout(token: string) {
   return (await adapter()).logout(token);
 }
 export async function getAttempt(id: string, userId: string) {
+  // Both adapters use UUID identities; malformed input must not become a Postgres storage error.
+  if (
+    !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i.test(id)
+  )
+    return null;
   return (await adapter()).getAttempt(id, userId);
 }
 export async function activeAttempt(
@@ -81,7 +86,7 @@ export async function finalize(
       masteries,
       old,
     );
-  return (await import("./store-local")).finalize(a, result, masteries);
+  return (await import("./store-local")).finalize(a, result, masteries, old);
 }
 export async function progress(userId: string) {
   return (await adapter()).progress(userId);

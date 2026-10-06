@@ -11,7 +11,9 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "content:qa": "node scripts/content-qa.mjs",
+    "audit:repository": "node scripts/audit-repository.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

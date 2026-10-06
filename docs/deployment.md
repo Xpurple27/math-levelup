@@ -18,6 +18,8 @@ Next, run `supabase/migrations/202610060003_tryout_20_questions.sql` to activate
 
 Then run `supabase/migrations/202610060004_tryout_package_02.sql` to enable Package 02 for PK, PM, and PU (20 questions / 20 minutes). If 001–003 are already applied, only 004 is new. The migration is replayable and preserves all existing attempts.
 
+Finally, run `supabase/migrations/202610070001_unique_mastery_evidence.sql` when rolling out the stabilization release. It rebuilds legacy confidence/count/advanced from unique answered question IDs in completed snapshots. Existing mastery values, attempt snapshots, answers, results, and activity days remain unchanged. It is replayable; if earlier migrations are already applied, only this file is new. Existing online accounts need this upgrade so the adapter can safely use lifetime unique evidence. Use a quiet testing window: activate the new deployment, wait for old requests to finish, then run this SQL. Legacy accounts may show an upgrade-required notice until it finishes. Do not use retired/older preview deployments against this database afterwards; old scoring code does not retain the new evidence metadata.
+
 ## 2. Import GitHub repository into Vercel
 
 Import `Xpurple27/math-levelup`, choose **Next.js**, root directory `.`, and use **Node.js 24.x**. Keep the normal install/build commands (`npm ci`, `npm run build`).

@@ -23,7 +23,7 @@ Open the development server on port 3000 in a local development setup. Create a 
 - Guided practice: 2 Basic + 2 Medium + 2 Hard questions, hint on first mistake, one retry, discounted retry evidence.
 - Mini assessment: 3 Medium + 2 Hard, no hints/retries/live feedback, 80% pass threshold.
 - Practice filtered by PK/PM/PU, subtopic, and Basic/Medium/Hard/Mixed. Mixed sessions support 5/10/15/20 questions; a single level supports 5/10. Fresh questions are prioritized against the last 30 sessions, with review fallback after exhaustion. First answer stays locked.
-- Progress, evidence confidence, mastery states, history, and learning streak using Asia/Jakarta days.
+- Progress with confidence from unique answered question IDs, mastery states, history, and learning streak using Asia/Jakarta days. Repeating the same question does not raise confidence.
 - Free beta PK/PM/PU package catalog with Package 01 and Package 02 in each section, section filter, package details, fixed version-pinned 20-question sets, server-owned 20-minute timer, autosave/resume, result/analysis/solution tabs, repeat attempts, and recent package history. Diagnostic remains a separate initial assessment.
 - Responsive dashboard and mobile navigation.
 
@@ -56,4 +56,10 @@ Vercel always selects online persistence and never falls back to SQLite. Local d
 
 Local tests verify the migration, access denials, concurrency safeguards, identity adapter behavior, and the existing learning flow. Hosted Supabase writes/authentication and a Vercel deployment still require environment configuration and live verification.
 
+Read [the stabilization report](docs/stabilization.md) for module boundaries, adapter parity, CI routing, content QA and remaining release risks. `npm run content:qa` reports source review status; `npm run audit:repository` checks available Git history/working files for private material without printing credentials. Repository privacy is recommended because source contains answer keys.
+
 Before broad student use: complete content QA, password recovery, durable rate limits, and broader question coverage. Deferred: paid packages, competitive tryouts, leaderboards, payments, AI, similar questions, spaced review, weekly snapshots, and achievements.
+
+## CI routing
+
+Default PR checks run format, lint, typecheck, unit, and build with npm caching. Critical E2E runs in its own workflow for API/auth, trust libraries, persistence/migrations, exam/auth/assessment-control UI, content QA registry, package/config, and E2E changes, or via workflow_dispatch. Ordinary styles/Learn/Dashboard presentation edits do not install Chromium automatically. When changing assessment behavior in an otherwise presentation file, dispatch Critical learning flows manually. Local critical tests remain required before pushing critical changes.

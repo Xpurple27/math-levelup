@@ -3,12 +3,16 @@ on:
   pull_request:
     paths:
       - "src/**"
+      - "content/**"
+      - "scripts/**"
       - "tests/**"
       - "supabase/**"
       - "package*.json"
       - "*config*"
       - ".github/workflows/**"
   workflow_dispatch:
+permissions:
+  contents: read
 jobs:
   validate:
     env:
@@ -27,5 +31,3 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e

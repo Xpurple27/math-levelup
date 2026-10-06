@@ -31,3 +31,14 @@ No Supabase database, RLS, pgTAP, remote CI execution, push, application deploym
 - Production build, TypeScript, ESLint, and formatting checks passed.
 - Browser checks cover the original loop, mobile navigation, authority/expiry, and the new search/filter/fresh-first/resume flow on local persistence. Hosted Supabase behavior remains subject to the earlier deployment prerequisites.
 - No database migration was added; the current snapshot/history schema supports the expansion. Existing question records remain unchanged and previously created attempts retain their frozen content.
+
+## MVP stabilization — 7 October 2026
+
+- No new product features or questions; the bank remains 252. The UI/API were split into domain modules with the same endpoints/layout and learning flow.
+- Format, ESLint (no warnings), TypeScript and production build passed.
+- 57 unit/database tests passed, including a shared SQLite/production Postgres RPC contract, legacy confidence backfill/replay, lifetime unique evidence, actual Supabase RPC conflict handling, and QA/secret scanner checks.
+- 10 Playwright tests passed on the production runtime with local persistence, including both fixed packages and a new repeated-tryout confidence/redaction regression.
+- Content QA tooling passed: 0 VALID, 252 NEEDS_REVIEW, 0 REJECTED; 0 exact duplicate groups and 56 numeric-normalized similarity groups. Aggregate distractor review flags 171 minimum keys / 0 maximum keys, including all 144 additional questions having the minimum numeric answer. This remains a content-quality blocker for unsupervised student assessments.
+- Repository scan of 118 historical blobs available before this release plus commit-eligible working files found no flagged private material; the scanner does not print matching values and is not a comprehensive proof of secret/PII absence.
+- GitHub API visibility read was denied (Forbidden). Repository visibility was not changed; private is recommended because source contains keys.
+- Hosted SQL/Auth/Vercel behavior and GitHub Actions runner execution were not verified. A new Supabase migration is supplied for user execution, not applied remotely by these tests. See stabilization.md for rollout and user-testing conditions.

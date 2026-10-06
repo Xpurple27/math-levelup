@@ -1,4 +1,5 @@
 import "server-only";
+import { isQuestionAllowed } from "./content-qa";
 import { randomInt } from "node:crypto";
 import { additionalBank } from "./additional-content";
 import { topics } from "./topics";
@@ -159,6 +160,7 @@ export function selectQuestions(
   ) {
     const pool = bank.filter(
       (q) =>
+        isQuestionAllowed(q) &&
         q.topic === topicId &&
         (difficulty === "Mixed" || q.difficulty === difficulty),
     );

@@ -1,10 +1,11 @@
-import type { Question } from "./content";
+import type { Question, Difficulty } from "./content";
 export type Mastery = {
   topic: string;
   value: number;
   count: number;
   advanced: number;
   confidence: number;
+  uniqueEvidence?: Record<string, Difficulty>;
 };
 export function grade(questions: Question[], answers: Record<string, number>) {
   let correct = 0,
@@ -45,6 +46,48 @@ export function evidence(
       : 60;
   return Math.min(cap, Math.round((earned / total) * 100));
 }
+// Unique answered question IDs, irrespective of revision or repeated attempts.
+// These weights describe evidence diversity, not calibrated exam difficulty.
+const confidenceWeights = { Basic: 0.5, Medium: 1, Hard: 1.5 };
+export function summarizeUniqueEvidence(
+  uniqueEvidence: Record<string, Difficulty>,
+) {
+  const levels = Object.values(uniqueEvidence);
+  return {
+    count: levels.length,
+    advanced: levels.filter((d) => d !== "Basic").length,
+    confidence: Math.min(
+      1,
+      levels.reduce((sum, d) => sum + confidenceWeights[d], 0) / 20,
+    ),
+  };
+}
+export function rebuildUniqueEvidence(
+  old: Mastery,
+  attempts: { snapshot: Question[]; answers: Record<string, number> }[],
+): Mastery {
+  const uniqueEvidence: Record<string, Difficulty> = {};
+  for (const a of attempts)
+    for (const q of a.snapshot) {
+      if (q.topic !== old.topic || !Object.hasOwn(a.answers, q.id)) continue;
+      const previous = uniqueEvidence[q.id];
+      if (
+        !previous ||
+        confidenceWeights[q.difficulty] > confidenceWeights[previous]
+      )
+        uniqueEvidence[q.id] = q.difficulty;
+    }
+  return { ...old, ...summarizeUniqueEvidence(uniqueEvidence), uniqueEvidence };
+}
+export function publicMastery({
+  topic,
+  value,
+  count,
+  advanced,
+  confidence,
+}: Mastery) {
+  return { topic, value, count, advanced, confidence };
+}
 export function updateMastery(
   old: Mastery | undefined,
   questions: Question[],
@@ -52,11 +95,18 @@ export function updateMastery(
   kind: string,
   credits?: Record<string, number>,
 ): Mastery {
-  const count = (old?.count ?? 0) + questions.length,
-    advanced =
-      (old?.advanced ?? 0) +
-      questions.filter((q) => q.difficulty !== "Basic").length;
-  const confidence = Math.min(1, count / 20);
+  const uniqueEvidence = { ...old?.uniqueEvidence };
+  for (const q of questions) {
+    if (!Object.hasOwn(answers, q.id)) continue;
+    const previous = uniqueEvidence[q.id];
+    if (
+      !previous ||
+      confidenceWeights[q.difficulty] > confidenceWeights[previous]
+    )
+      uniqueEvidence[q.id] = q.difficulty;
+  }
+  const { count, advanced, confidence } =
+    summarizeUniqueEvidence(uniqueEvidence);
   const weight =
     (
       {
@@ -75,6 +125,7 @@ export function updateMastery(
     count,
     advanced,
     confidence,
+    uniqueEvidence,
   };
 }
 export function masteryLabel(m?: Mastery) {
