@@ -1,6 +1,7 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { tryoutQuestions } from "../../src/lib/tryout-content";
 import { selectQuestions } from "../../src/lib/content";
 let db: PGlite;
 const user = "00000000-0000-4000-8000-000000000001",
@@ -51,6 +52,12 @@ beforeAll(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202610060002_tryout_packages.sql",
+      "utf8",
+    ),
+  );
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -60,6 +67,18 @@ describe("Postgres migration and trusted write boundaries", () => {
     await db.exec(
       readFileSync(
         "supabase/migrations/202610060001_online_learning.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060002_tryout_packages.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060002_tryout_packages.sql",
         "utf8",
       ),
     );
@@ -163,5 +182,30 @@ describe("Postgres migration and trusted write boundaries", () => {
     expect((await finish(second.id, 0, [m], { rasio: m })).rows[0].done).toBe(
       true,
     );
+  });
+  it("creates a timed package attempt and resumes only the same owner/package", async () => {
+    await db.exec("SET ROLE service_role");
+    try {
+      const args = [
+        user,
+        "tryout",
+        "pk-01-v1",
+        JSON.stringify(tryoutQuestions("pk-01-v1")),
+      ];
+      const query = () =>
+        db.query<{
+          a: { id: string; started: number; deadline: number; topic: string };
+        }>("SELECT public.levelup_start_attempt($1,$2,$3,$4) a", args);
+      const a = (await query()).rows[0].a;
+      expect(a.deadline - a.started).toBe(1800000);
+      expect(a.topic).toBe("pk-01-v1");
+      expect((await query()).rows[0].a.id).toBe(a.id);
+      args[0] = other;
+      expect((await query()).rows[0].a.id).not.toBe(a.id);
+      args[2] = "invalid-package";
+      await expect(query()).rejects.toThrow("invalid package");
+    } finally {
+      await db.exec("RESET ROLE");
+    }
   });
 });

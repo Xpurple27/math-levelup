@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { topics, selectQuestions, publicQuestion } from "@/lib/content";
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
+import { findTryoutPackage } from "@/lib/tryout-packages";
+import { tryoutQuestions } from "@/lib/tryout-content";
 import { onlineBackend } from "@/lib/backend";
 export const runtime = "nodejs";
 const cookie = "levelup_session";
@@ -201,10 +203,19 @@ export async function POST(req: NextRequest) {
       return r;
     }
     if (b.action === "start") {
-      if (!["diagnostic", "guided", "mini", "practice"].includes(b.kind))
+      if (
+        !["diagnostic", "guided", "mini", "practice", "tryout"].includes(b.kind)
+      )
         return response({ error: "Jenis sesi tidak valid." }, 400);
-      const topic = b.kind === "diagnostic" ? null : b.topic;
-      if (topic !== null && !topics.some((t) => t.id === topic))
+      const pack =
+        b.kind === "tryout" ? findTryoutPackage(b.packageSlug) : undefined;
+      if (b.kind === "tryout" && (!pack || pack.access !== "FREE"))
+        return response(
+          { error: "Paket tidak tersedia atau belum dapat diakses." },
+          400,
+        );
+      const topic = b.kind === "diagnostic" ? null : pack ? pack.slug : b.topic;
+      if (!pack && topic !== null && !topics.some((t) => t.id === topic))
         return response({ error: "Topik tidak valid." }, 400);
       const count = [5, 10, 15, 20].includes(b.count) ? b.count : 5;
       const difficulty = b.difficulty ?? "Mixed";
@@ -218,15 +229,17 @@ export async function POST(req: NextRequest) {
       let a = await store.activeAttempt(user.id, b.kind, topic);
       if (a) a = await expire(a);
       if (!a || a.status === "completed") {
-        const excludedIds = await store.seenQuestionIds(user.id);
+        const excludedIds = pack ? [] : await store.seenQuestionIds(user.id);
         a = await store.createAttempt(
           user.id,
           b.kind,
           topic,
-          selectQuestions(b.kind, topic ?? undefined, count, {
-            difficulty,
-            excludedIds,
-          }),
+          pack
+            ? tryoutQuestions(pack.slug)
+            : selectQuestions(b.kind, topic ?? undefined, count, {
+                difficulty,
+                excludedIds,
+              }),
         );
       }
       return response({ attempt: safe(a) });

@@ -8,6 +8,8 @@ Open your Supabase project's **SQL Editor**. Review and run the complete file:
 
 `supabase/migrations/202610060001_online_learning.sql`
 
+Then run `supabase/migrations/202610060002_tryout_packages.sql` for package-based tryouts. If the first migration was already applied, only the second is new. It expands the allowed attempt kinds and adds a server-owned 30-minute package deadline; previous sessions and users are preserved.
+
 It adds only `levelup_*` tables/functions/indexes. It preserves existing Auth users and unrelated tables. It is replayable. Do not paste server credentials into SQL. Public/anonymous/authenticated roles cannot read the tables or execute trusted scoring/storage functions. The Next.js server uses the server key and scopes every query to the verified user ID.
 
 The migration was tested in local PostgreSQL via PGlite, including denied browser access, frozen attempts, deadline enforcement, concurrent updates, atomic finalization, and duplicate submission. This is not evidence that the hosted migration has already been applied.

@@ -23,6 +23,8 @@ import {
   CheckCircle2,
   ShieldCheck,
 } from "lucide-react";
+import { TryoutCatalog } from "@/components/tryout-catalog";
+import { findTryoutPackage } from "@/lib/tryout-packages";
 import { topics } from "@/lib/topics";
 import type { Mastery } from "@/lib/scoring";
 import { masteryLabel } from "@/lib/scoring";
@@ -91,12 +93,15 @@ const nav = [
 ] as const;
 const kindLabel: Record<string, string> = {
   diagnostic: "Diagnostik awal",
+  tryout: "Tryout paket",
   guided: "Latihan terbimbing",
   mini: "Mini assessment",
   practice: "Latihan mandiri",
 };
 const topicName = (id: string | null) =>
-  topics.find((t) => t.id === id)?.name || "PK · PM · PU";
+  findTryoutPackage(id)?.title ||
+  topics.find((t) => t.id === id)?.name ||
+  "PK · PM · PU";
 export default function Levelup() {
   const [user, setUser] = useState<User | null>(null),
     [ready, setReady] = useState(false),
@@ -108,6 +113,7 @@ export default function Levelup() {
   const [difficulty, setDifficulty] = useState("Mixed");
   const [section, setSection] = useState("All");
   const [search, setSearch] = useState("");
+  const [resultTab, setResultTab] = useState("result");
   const [backend, setBackend] = useState<"local" | "supabase">("local");
   const [auth, setAuth] = useState<
       "login" | "register" | "confirmation" | null
@@ -168,6 +174,7 @@ export default function Levelup() {
   const syncAttempt = useCallback(
     (a: Attempt) => {
       setAttempt(a);
+      setResultTab("result");
       setOffset(a.serverNow - Date.now());
       if (a.status === "completed") {
         setView("result");
@@ -269,6 +276,7 @@ export default function Levelup() {
       topic: t,
       count,
       difficulty,
+      ...(kind === "tryout" ? { packageSlug: t } : {}),
     });
     if (d) {
       syncAttempt(d.attempt);
@@ -933,56 +941,41 @@ export default function Levelup() {
           {view === "tryout" && (
             <>
               <PageHeading
-                eyebrow="KENALI TITIK AWALMU"
-                title="Siap mengukur kemampuan?"
-                subtitle="Hasil tes adalah petunjuk untuk belajar, bukan batas kemampuanmu."
+                eyebrow="TRYOUT UTBK"
+                title="Pilih paket, ukur kemampuanmu"
+                subtitle="Paket PK, PM, dan PU dengan susunan soal tetap. Selesaikan tes, temukan kelemahan, lalu belajar terarah."
               />
-              <div className="assessment-card panel">
-                <div className="assessment-cover">
-                  <Target size={75} />
-                  <span>INITIAL SKILL PROFILE</span>
-                  <h2>
-                    Kenali dirimu.
-                    <br />
-                    Temukan arahmu.
-                  </h2>
-                  <span className="tag white-tag">PK · PM · PU</span>
-                </div>
-                <div className="assessment-info">
-                  <span className="eyebrow purple-text">DIAGNOSTIK GRATIS</span>
-                  <h2>
-                    Langkah pertama menuju
-                    <br />
-                    persiapan yang lebih terarah.
-                  </h2>
-                  <p>
-                    15 soal dari tujuh subtopik, seimbang PK/PM/PU. Tidak ada
-                    petunjuk atau pembahasan selama tes. Jawaban tersimpan
-                    setiap kali kamu memilih.
-                  </p>
-                  <div className="tag-row">
-                    <span>15 soal</span>
-                    <span>30 menit</span>
-                    <span>Resume tersedia</span>
-                  </div>
-                  <div className="info-box">
-                    Timer dimulai di server. Saat waktu habis, jawaban yang
-                    tersimpan dinilai otomatis. Profil awal ini bukan estimasi
-                    skor UTBK.
-                  </div>
-                  <button
-                    className="button primary"
-                    disabled={busy}
-                    onClick={() => start("diagnostic")}
-                  >
-                    Mulai / lanjutkan diagnostik <ArrowRight size={17} />
-                  </button>
-                </div>
-              </div>
-              <p className="muted scope-note">
-                Paket tryout kompetitif sedang disiapkan. Versi awal berfokus
-                pada diagnostik, belajar, dan latihan.
-              </p>
+              <TryoutCatalog
+                history={history}
+                busy={busy}
+                onStart={(slug) => void start("tryout", slug)}
+                onResult={async (id) => {
+                  const r = await fetch(`/api/action?attempt=${id}`);
+                  const d = await r.json();
+                  if (d.attempt) {
+                    syncAttempt(d.attempt);
+                    setView("result");
+                  } else setError(d.error || "Hasil belum tersedia.");
+                }}
+              />
+              <section className="panel">
+                <span className="eyebrow purple-text">
+                  DIAGNOSTIK AWAL · TERPISAH DARI PAKET
+                </span>
+                <h2>Belum tahu titik awalmu?</h2>
+                <p>
+                  Diagnostik singkat: 15 soal campuran PK/PM/PU, 30 menit, untuk
+                  membuat profil kemampuan awal.
+                </p>
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => start("diagnostic")}
+                >
+                  Mulai / lanjutkan diagnostik
+                  <ArrowRight size={17} />
+                </button>
+              </section>
             </>
           )}
           {view === "progress" && (
@@ -1249,7 +1242,9 @@ export default function Levelup() {
                     {answered}/{attempt.questions.length} jawaban tersimpan
                   </p>
                   <div className="info-box">
-                    {attempt.kind === "diagnostic" || attempt.kind === "mini"
+                    {attempt.kind === "diagnostic" ||
+                    attempt.kind === "mini" ||
+                    attempt.kind === "tryout"
                       ? "Tidak ada petunjuk atau umpan balik selama asesmen. Kamu bisa meninjau jawaban sebelum mengirim."
                       : "Baca pembahasan sebelum melanjutkan. Jawaban latihan mandiri tidak bisa diulang."}
                   </div>
@@ -1277,7 +1272,9 @@ export default function Levelup() {
                 title={
                   attempt.kind === "diagnostic"
                     ? "Profil kemampuan awalmu"
-                    : "Satu langkah maju. Kerja bagus!"
+                    : attempt.kind === "tryout"
+                      ? `Hasil ${topicName(attempt.topic)}`
+                      : "Satu langkah maju. Kerja bagus!"
                 }
                 subtitle={
                   attempt.kind === "diagnostic"
@@ -1285,84 +1282,116 @@ export default function Levelup() {
                     : "Nilai sesi dan bukti mastery adalah dua ukuran berbeda."
                 }
               />
-              <section className="result-summary panel">
-                <div className="score-circle">
-                  <strong>
-                    {attempt.result.score}
-                    <small>%</small>
-                  </strong>
-                  <span>Akurasi sesi</span>
+              {attempt.kind === "tryout" && (
+                <div
+                  className="tag-row"
+                  role="tablist"
+                  aria-label="Hasil paket"
+                >
+                  {[
+                    ["result", "Hasil"],
+                    ["analysis", "Analisis"],
+                    ["solutions", "Pembahasan"],
+                  ].map(([id, label]) => (
+                    <button
+                      key={id}
+                      role="tab"
+                      aria-selected={resultTab === id}
+                      className={`button ${resultTab === id ? "primary" : "secondary"}`}
+                      onClick={() => setResultTab(id)}
+                    >
+                      {label}
+                    </button>
+                  ))}
                 </div>
-                <div>
-                  <span className="eyebrow purple-text">
-                    {kindLabel[attempt.kind]}
-                  </span>
-                  <h2>
-                    {attempt.kind === "mini"
-                      ? attempt.result.score >= 80
-                        ? "Lulus mini assessment"
-                        : "Masih ada konsep untuk diperkuat"
-                      : "Sekarang kamu tahu langkah berikutnya."}
-                  </h2>
-                  <div className="result-counts">
-                    <span>
-                      <strong>{attempt.result.correct}</strong>Benar
-                    </span>
-                    <span>
-                      <strong>{attempt.result.incorrect}</strong>Salah
-                    </span>
-                    <span>
-                      <strong>{attempt.result.unanswered}</strong>Belum dijawab
-                    </span>
+              )}
+              {(attempt.kind !== "tryout" || resultTab === "result") && (
+                <section className="result-summary panel">
+                  <div className="score-circle">
+                    <strong>
+                      {attempt.result.score}
+                      <small>%</small>
+                    </strong>
+                    <span>Akurasi sesi</span>
                   </div>
-                  <p className="muted small-text">
-                    {attempt.kind === "mini"
-                      ? "Lulus ≥80% tidak otomatis berarti Mastered."
-                      : "Skor ini bukan estimasi skor UTBK. Mastery memakai bobot kesulitan dan confidence."}
-                  </p>
+                  <div>
+                    <span className="eyebrow purple-text">
+                      {kindLabel[attempt.kind]}
+                    </span>
+                    <h2>
+                      {attempt.kind === "mini"
+                        ? attempt.result.score >= 80
+                          ? "Lulus mini assessment"
+                          : "Masih ada konsep untuk diperkuat"
+                        : "Sekarang kamu tahu langkah berikutnya."}
+                    </h2>
+                    <div className="result-counts">
+                      <span>
+                        <strong>{attempt.result.correct}</strong>Benar
+                      </span>
+                      <span>
+                        <strong>{attempt.result.incorrect}</strong>Salah
+                      </span>
+                      <span>
+                        <strong>{attempt.result.unanswered}</strong>Belum
+                        dijawab
+                      </span>
+                    </div>
+                    <p className="muted small-text">
+                      {attempt.kind === "mini"
+                        ? "Lulus ≥80% tidak otomatis berarti Mastered."
+                        : "Skor ini bukan estimasi skor UTBK. Mastery memakai bobot kesulitan dan confidence."}
+                    </p>
+                  </div>
+                </section>
+              )}
+              {(attempt.kind !== "tryout" || resultTab === "analysis") && (
+                <div className="result-topics">
+                  {topics
+                    .filter((t) =>
+                      attempt.questions.some((q) => q.topic === t.id),
+                    )
+                    .map((t) => {
+                      const qs = attempt.questions.filter(
+                          (q) => q.topic === t.id,
+                        ),
+                        c = qs.filter(
+                          (q) => attempt.answers[q.id] === q.correct,
+                        ).length;
+                      return (
+                        <div className="panel" key={t.id}>
+                          <span className="tag">
+                            {c / qs.length >= 0.8
+                              ? "Kekuatan awal"
+                              : "Perlu diperkuat"}
+                          </span>
+                          <h3>{t.name}</h3>
+                          <p>
+                            {c} dari {qs.length} soal benar
+                          </p>
+                          <button
+                            className="text-button purple-text"
+                            onClick={() => {
+                              setTopic(t.id);
+                              go("learn");
+                            }}
+                          >
+                            Pelajari konsep <ArrowRight size={15} />
+                          </button>
+                        </div>
+                      );
+                    })}
                 </div>
-              </section>
-              <div className="result-topics">
-                {topics
-                  .filter((t) =>
-                    attempt.questions.some((q) => q.topic === t.id),
-                  )
-                  .map((t) => {
-                    const qs = attempt.questions.filter(
-                        (q) => q.topic === t.id,
-                      ),
-                      c = qs.filter(
-                        (q) => attempt.answers[q.id] === q.correct,
-                      ).length;
-                    return (
-                      <div className="panel" key={t.id}>
-                        <span className="tag">
-                          {c / qs.length >= 0.8
-                            ? "Kekuatan awal"
-                            : "Perlu diperkuat"}
-                        </span>
-                        <h3>{t.name}</h3>
-                        <p>
-                          {c} dari {qs.length} soal benar
-                        </p>
-                        <button
-                          className="text-button purple-text"
-                          onClick={() => {
-                            setTopic(t.id);
-                            go("learn");
-                          }}
-                        >
-                          Pelajari konsep <ArrowRight size={15} />
-                        </button>
-                      </div>
-                    );
-                  })}
-              </div>
+              )}
               <div className="result-actions">
                 <button
                   className="button primary"
                   onClick={() => {
-                    setTopic(attempt.topic || recommended);
+                    setTopic(
+                      attempt.kind === "tryout"
+                        ? recommended
+                        : attempt.topic || recommended,
+                    );
                     go("learn");
                   }}
                 >
@@ -1375,45 +1404,47 @@ export default function Levelup() {
                   Lihat progres
                 </button>
               </div>
-              <section className="panel solutions">
-                <h2>Pembahasan lengkap</h2>
-                {attempt.questions.map((item, i) => (
-                  <details key={item.id}>
-                    <summary>
-                      <span
-                        className={
-                          attempt.answers[item.id] === item.correct
-                            ? "solution-correct"
-                            : "solution-wrong"
-                        }
-                      >
+              {(attempt.kind !== "tryout" || resultTab === "solutions") && (
+                <section className="panel solutions">
+                  <h2>Pembahasan lengkap</h2>
+                  {attempt.questions.map((item, i) => (
+                    <details key={item.id}>
+                      <summary>
+                        <span
+                          className={
+                            attempt.answers[item.id] === item.correct
+                              ? "solution-correct"
+                              : "solution-wrong"
+                          }
+                        >
+                          {attempt.answers[item.id] === undefined
+                            ? "—"
+                            : attempt.answers[item.id] === item.correct
+                              ? "✓"
+                              : "×"}
+                        </span>
+                        Soal {i + 1} · {topicName(item.topic)}
+                        <ChevronRight size={17} />
+                      </summary>
+                      <h3>{item.stem}</h3>
+                      <p>
+                        Jawabanmu:{" "}
                         {attempt.answers[item.id] === undefined
-                          ? "—"
-                          : attempt.answers[item.id] === item.correct
-                            ? "✓"
-                            : "×"}
-                      </span>
-                      Soal {i + 1} · {topicName(item.topic)}
-                      <ChevronRight size={17} />
-                    </summary>
-                    <h3>{item.stem}</h3>
-                    <p>
-                      Jawabanmu:{" "}
-                      {attempt.answers[item.id] === undefined
-                        ? "Tidak dijawab"
-                        : item.options[attempt.answers[item.id]]}{" "}
-                      · Jawaban benar: {item.options[item.correct!]}
-                    </p>
-                    <strong>Langkah pertama</strong>
-                    <p>{item.explanation?.firstStep}</p>
-                    <strong>Penyelesaian</strong>
-                    <p>{item.explanation?.solution}</p>
-                    <p className="muted">
-                      Kesalahan umum: {item.explanation?.mistake}
-                    </p>
-                  </details>
-                ))}
-              </section>
+                          ? "Tidak dijawab"
+                          : item.options[attempt.answers[item.id]]}{" "}
+                        · Jawaban benar: {item.options[item.correct!]}
+                      </p>
+                      <strong>Langkah pertama</strong>
+                      <p>{item.explanation?.firstStep}</p>
+                      <strong>Penyelesaian</strong>
+                      <p>{item.explanation?.solution}</p>
+                      <p className="muted">
+                        Kesalahan umum: {item.explanation?.mistake}
+                      </p>
+                    </details>
+                  ))}
+                </section>
+              )}
             </>
           )}
           {!ready && (

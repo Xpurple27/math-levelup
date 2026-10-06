@@ -304,63 +304,64 @@ test("assessment authority and ownership boundaries", async ({
   expect(changed.attempt.answers[a.questions[0].id]).toBe(1);
 });
 
-test("expired diagnostic rejects late answers and finalizes once", async ({
-  request: rawRequest,
-}) => {
-  const request = localApi(rawRequest);
-  const post = (data: unknown) =>
-    request.post("/api/action", {
-      data,
-      headers: { origin: "http://127.0.0.1:3000" },
+for (const kind of ["diagnostic", "tryout"])
+  test(`expired ${kind} rejects late answers and finalizes once`, async ({
+    request: rawRequest,
+  }) => {
+    const request = localApi(rawRequest);
+    const post = (data: unknown) =>
+      request.post("/api/action", {
+        data,
+        headers: { origin: "http://127.0.0.1:3000" },
+      });
+    await post({
+      action: "register",
+      email: `expiry-${Date.now()}@example.com`,
+      name: "Expiry Test",
+      password: "test-password-123",
     });
-  await post({
-    action: "register",
-    email: `expiry-${Date.now()}@example.com`,
-    name: "Expiry Test",
-    password: "test-password-123",
-  });
-  const { attempt: a } = await (
-    await post({ action: "start", kind: "diagnostic" })
-  ).json();
-  await post({
-    action: "answer",
-    id: a.id,
-    questionId: a.questions[0].id,
-    selected: 0,
-  });
-  const resumed = await (
-    await post({ action: "start", kind: "diagnostic" })
-  ).json();
-  expect(resumed.attempt.id).toBe(a.id);
-  expect(resumed.attempt.deadline).toBe(a.deadline);
-  // Change only this newly created fixture's deadline; never delete or reset student data.
-  const { DatabaseSync } = await import("node:sqlite");
-  const { resolve } = await import("node:path");
-  const db = new DatabaseSync(
-    resolve(process.env.LEVELUP_DATA_DIR || ".data", "levelup.sqlite"),
-  );
-  db.prepare("UPDATE attempts SET deadline=? WHERE id=?").run(
-    Date.now() - 1000,
-    a.id,
-  );
-  db.close();
-  const expired = await (
+    const { attempt: a } = await (
+      await post({ action: "start", kind, packageSlug: "pk-01-v1" })
+    ).json();
     await post({
       action: "answer",
       id: a.id,
-      questionId: a.questions[1].id,
-      selected: 1,
-    })
-  ).json();
-  expect(expired.attempt.status).toBe("completed");
-  expect(expired.attempt.answers[a.questions[1].id]).toBeUndefined();
-  expect(expired.attempt.result.unanswered).toBe(14);
-  const before = await (await request.get("/api/action")).json();
-  await post({ action: "submit", id: a.id });
-  const after = await (await request.get("/api/action")).json();
-  expect(after.mastery).toEqual(before.mastery);
-  expect(after.history).toHaveLength(1);
-});
+      questionId: a.questions[0].id,
+      selected: 0,
+    });
+    const resumed = await (
+      await post({ action: "start", kind, packageSlug: "pk-01-v1" })
+    ).json();
+    expect(resumed.attempt.id).toBe(a.id);
+    expect(resumed.attempt.deadline).toBe(a.deadline);
+    // Change only this newly created fixture's deadline; never delete or reset student data.
+    const { DatabaseSync } = await import("node:sqlite");
+    const { resolve } = await import("node:path");
+    const db = new DatabaseSync(
+      resolve(process.env.LEVELUP_DATA_DIR || ".data", "levelup.sqlite"),
+    );
+    db.prepare("UPDATE attempts SET deadline=? WHERE id=?").run(
+      Date.now() - 1000,
+      a.id,
+    );
+    db.close();
+    const expired = await (
+      await post({
+        action: "answer",
+        id: a.id,
+        questionId: a.questions[1].id,
+        selected: 1,
+      })
+    ).json();
+    expect(expired.attempt.status).toBe("completed");
+    expect(expired.attempt.answers[a.questions[1].id]).toBeUndefined();
+    expect(expired.attempt.result.unanswered).toBe(14);
+    const before = await (await request.get("/api/action")).json();
+    await post({ action: "submit", id: a.id });
+    const after = await (await request.get("/api/action")).json();
+    expect(after.mastery).toEqual(before.mastery);
+    expect(after.history).toHaveLength(1);
+  });
 
 test("new topic search, practice filters, fresh-first selection, and frozen resume", async ({
   page,
@@ -527,4 +528,118 @@ test("pending Supabase signup explains confirmation and returns to login", async
     dialog.getByRole("heading", { name: "Selamat datang kembali." }),
   ).toBeVisible();
   await expect(dialog.getByLabel("Nama lengkap")).toHaveCount(0);
+});
+
+test("package catalog → fixed test with resume → result tabs → history and repeat", async ({
+  page,
+  request: rawRequest,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await page.getByLabel("Nama lengkap").fill("Paket Uji");
+  await page
+    .getByLabel("Email", { exact: true })
+    .fill(`paket-${Date.now()}@example.com`);
+  await page.getByLabel("Kata sandi").fill("fixture-package-123");
+  await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Halo, Paket" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Tryout UTBK" }).click();
+  await page.getByLabel("Bagian paket").selectOption("PK");
+  await expect(
+    page.getByRole("button", { name: "Detail PM — Paket 01" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Detail PK — Paket 01" }).click();
+  await expect(
+    page.getByRole("region", { name: "Detail paket" }),
+  ).toContainText("15 soal · 30 menit");
+  const started = page.waitForResponse(
+    (r) =>
+      r.url().endsWith("/api/action") &&
+      r.request().method() === "POST" &&
+      r.request().postDataJSON().action === "start",
+  );
+  await page.getByRole("button", { name: "Mulai / lanjutkan paket" }).click();
+  const { attempt: initial } = await (await started).json();
+  expect(initial.kind).toBe("tryout");
+  expect(initial.topic).toBe("pk-01-v1");
+  expect(initial.questions).toHaveLength(15);
+  expect(initial.deadline - initial.started).toBe(1800000);
+  expect(
+    initial.questions.every(
+      (q: Record<string, unknown>) =>
+        q.correct === undefined &&
+        q.explanation === undefined &&
+        q.hint === undefined,
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: /Pilihan A:/ }).click();
+  await expect(
+    page.getByText("Tersimpan di server", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Jawaban benar", { exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Satu soal, satu langkah." }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Selesaikan sesi", exact: true })
+    .click();
+  await page.getByRole("button", { name: "Kirim jawaban" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Hasil PK — Paket 01" }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Analisis", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Rasio & perbandingan" }),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Pembahasan", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Pembahasan lengkap" }),
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Lanjut belajar", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Contoh yang dikerjakan" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Tryout UTBK" }).click();
+  await page.getByRole("button", { name: "Detail PK — Paket 01" }).click();
+  await expect(page.getByRole("button", { name: /Lihat hasil/ })).toBeVisible();
+  const repeated = page.waitForResponse(
+    (r) =>
+      r.url().endsWith("/api/action") &&
+      r.request().method() === "POST" &&
+      r.request().postDataJSON().action === "start",
+  );
+  await page.getByRole("button", { name: "Mulai / lanjutkan paket" }).click();
+  const { attempt: next } = await (await repeated).json();
+  expect(next.id).not.toBe(initial.id);
+  expect(next.questions).toEqual(initial.questions);
+  const other = localApi(rawRequest);
+  await other.post("/api/action", {
+    headers: { origin: "http://127.0.0.1:3000" },
+    data: {
+      action: "register",
+      name: "Paket Lain",
+      email: `other-paket-${Date.now()}@example.com`,
+      password: "fixture-password-123",
+    },
+  });
+  expect((await other.get(`/api/action?attempt=${initial.id}`)).status()).toBe(
+    404,
+  );
+  expect(
+    (
+      await other.post("/api/action", {
+        headers: { origin: "http://127.0.0.1:3000" },
+        data: {
+          action: "start",
+          kind: "tryout",
+          packageSlug: "forged-premium",
+        },
+      })
+    ).status(),
+  ).toBe(400);
 });

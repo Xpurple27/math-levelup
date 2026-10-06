@@ -143,7 +143,7 @@ export function createAttempt(
   const id = randomUUID(),
     now = Date.now(),
     deadline =
-      kind === "diagnostic"
+      kind === "diagnostic" || kind === "tryout"
         ? now + 30 * 60000
         : kind === "mini"
           ? now + 10 * 60000

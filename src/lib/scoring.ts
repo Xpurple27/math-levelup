@@ -59,10 +59,13 @@ export function updateMastery(
   const confidence = Math.min(1, count / 20);
   const weight =
     (
-      { diagnostic: 0.3, guided: 0.1, mini: 0.35, practice: 0.2 } as Record<
-        string,
-        number
-      >
+      {
+        diagnostic: 0.3,
+        guided: 0.1,
+        mini: 0.35,
+        practice: 0.2,
+        tryout: 0.35,
+      } as Record<string, number>
     )[kind] ?? 0.2;
   const e = evidence(questions, answers, credits),
     alpha = weight * Math.min(1, questions.length / 5);
