@@ -1,4 +1,5 @@
 import "server-only";
+import { findTryoutPackage } from "./tryout-packages";
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import { resolve } from "node:path";
@@ -143,11 +144,13 @@ export function createAttempt(
   const id = randomUUID(),
     now = Date.now(),
     deadline =
-      kind === "diagnostic" || kind === "tryout"
-        ? now + 30 * 60000
-        : kind === "mini"
-          ? now + 10 * 60000
-          : null;
+      kind === "tryout"
+        ? now + (findTryoutPackage(topic)?.minutes ?? 20) * 60000
+        : kind === "diagnostic"
+          ? now + 30 * 60000
+          : kind === "mini"
+            ? now + 10 * 60000
+            : null;
   db.prepare(
     "INSERT INTO attempts(id,user_id,kind,topic,started,deadline,snapshot) VALUES(?,?,?,?,?,?,?)",
   ).run(id, userId, kind, topic, now, deadline, JSON.stringify(questions));

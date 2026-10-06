@@ -58,6 +58,12 @@ beforeAll(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202610060003_tryout_20_questions.sql",
+      "utf8",
+    ),
+  );
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -79,6 +85,18 @@ describe("Postgres migration and trusted write boundaries", () => {
     await db.exec(
       readFileSync(
         "supabase/migrations/202610060002_tryout_packages.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060003_tryout_20_questions.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060003_tryout_20_questions.sql",
         "utf8",
       ),
     );
@@ -189,16 +207,16 @@ describe("Postgres migration and trusted write boundaries", () => {
       const args = [
         user,
         "tryout",
-        "pk-01-v1",
-        JSON.stringify(tryoutQuestions("pk-01-v1")),
+        "pk-01-v2",
+        JSON.stringify(tryoutQuestions("pk-01-v2")),
       ];
       const query = () =>
         db.query<{
           a: { id: string; started: number; deadline: number; topic: string };
         }>("SELECT public.levelup_start_attempt($1,$2,$3,$4) a", args);
       const a = (await query()).rows[0].a;
-      expect(a.deadline - a.started).toBe(1800000);
-      expect(a.topic).toBe("pk-01-v1");
+      expect(a.deadline - a.started).toBe(1200000);
+      expect(a.topic).toBe("pk-01-v2");
       expect((await query()).rows[0].a.id).toBe(a.id);
       args[0] = other;
       expect((await query()).rows[0].a.id).not.toBe(a.id);
@@ -207,5 +225,43 @@ describe("Postgres migration and trusted write boundaries", () => {
     } finally {
       await db.exec("RESET ROLE");
     }
+  });
+  it("keeps legacy attempt snapshots and deadlines when the 20-minute migration is applied", async () => {
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060002_tryout_packages.sql",
+        "utf8",
+      ),
+    );
+    const args = [
+      user,
+      "tryout",
+      "pm-01-v1",
+      JSON.stringify(tryoutQuestions("pm-01-v1")),
+    ];
+    const query = () =>
+      db.query<{
+        a: {
+          id: string;
+          started: number;
+          deadline: number;
+          snapshot: unknown[];
+        };
+      }>("SELECT public.levelup_start_attempt($1,$2,$3,$4) a", args);
+    const before = (await query()).rows[0].a;
+    expect(before.snapshot).toHaveLength(15);
+    expect(before.deadline - before.started).toBe(1800000);
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060003_tryout_20_questions.sql",
+        "utf8",
+      ),
+    );
+    expect((await query()).rows[0].a).toEqual(before);
+    args[2] = "pm-01-v2";
+    args[3] = JSON.stringify(tryoutQuestions("pm-01-v2"));
+    const revised = (await query()).rows[0].a;
+    expect(revised.snapshot).toHaveLength(20);
+    expect(revised.deadline - revised.started).toBe(1200000);
   });
 });

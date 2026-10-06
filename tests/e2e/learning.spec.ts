@@ -321,7 +321,7 @@ for (const kind of ["diagnostic", "tryout"])
       password: "test-password-123",
     });
     const { attempt: a } = await (
-      await post({ action: "start", kind, packageSlug: "pk-01-v1" })
+      await post({ action: "start", kind, packageSlug: "pk-01-v2" })
     ).json();
     await post({
       action: "answer",
@@ -330,7 +330,7 @@ for (const kind of ["diagnostic", "tryout"])
       selected: 0,
     });
     const resumed = await (
-      await post({ action: "start", kind, packageSlug: "pk-01-v1" })
+      await post({ action: "start", kind, packageSlug: "pk-01-v2" })
     ).json();
     expect(resumed.attempt.id).toBe(a.id);
     expect(resumed.attempt.deadline).toBe(a.deadline);
@@ -355,7 +355,7 @@ for (const kind of ["diagnostic", "tryout"])
     ).json();
     expect(expired.attempt.status).toBe("completed");
     expect(expired.attempt.answers[a.questions[1].id]).toBeUndefined();
-    expect(expired.attempt.result.unanswered).toBe(14);
+    expect(expired.attempt.result.unanswered).toBe(kind === "tryout" ? 19 : 14);
     const before = await (await request.get("/api/action")).json();
     await post({ action: "submit", id: a.id });
     const after = await (await request.get("/api/action")).json();
@@ -553,7 +553,7 @@ test("package catalog → fixed test with resume → result tabs → history and
   await page.getByRole("button", { name: "Detail PK — Paket 01" }).click();
   await expect(
     page.getByRole("region", { name: "Detail paket" }),
-  ).toContainText("15 soal · 30 menit");
+  ).toContainText("20 soal · 20 menit");
   const started = page.waitForResponse(
     (r) =>
       r.url().endsWith("/api/action") &&
@@ -563,9 +563,9 @@ test("package catalog → fixed test with resume → result tabs → history and
   await page.getByRole("button", { name: "Mulai / lanjutkan paket" }).click();
   const { attempt: initial } = await (await started).json();
   expect(initial.kind).toBe("tryout");
-  expect(initial.topic).toBe("pk-01-v1");
-  expect(initial.questions).toHaveLength(15);
-  expect(initial.deadline - initial.started).toBe(1800000);
+  expect(initial.topic).toBe("pk-01-v2");
+  expect(initial.questions).toHaveLength(20);
+  expect(initial.deadline - initial.started).toBe(1200000);
   expect(
     initial.questions.every(
       (q: Record<string, unknown>) =>

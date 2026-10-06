@@ -56,6 +56,31 @@ const assignments: Record<string, string[]> = {
     "pola-f10-v1",
   ],
 };
+// Revision 2 extends each frozen revision-one assignment; no previous set changes.
+assignments["pk-01-v2"] = [
+  ...assignments["pk-01-v1"],
+  "rasio-26",
+  "persen-f7-v1",
+  "persen-f10-v1",
+  "geometri-f7-v1",
+  "geometri-f10-v1",
+];
+assignments["pm-01-v2"] = [
+  ...assignments["pm-01-v1"],
+  "aljabar-16",
+  "aljabar-27",
+  "peluang-f3-v1",
+  "peluang-f8-v1",
+  "peluang-f11-v1",
+];
+assignments["pu-01-v2"] = [
+  ...assignments["pu-01-v1"],
+  "statistika-16",
+  "statistika-27",
+  "pola-f3-v1",
+  "pola-f8-v1",
+  "pola-f11-v1",
+];
 export function tryoutQuestions(slug: string) {
   const pack = findTryoutPackage(slug);
   if (!pack || !assignments[slug]) throw new Error("Paket tidak tersedia.");

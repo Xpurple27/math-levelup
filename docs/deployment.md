@@ -14,6 +14,8 @@ It adds only `levelup_*` tables/functions/indexes. It preserves existing Auth us
 
 The migration was tested in local PostgreSQL via PGlite, including denied browser access, frozen attempts, deadline enforcement, concurrent updates, atomic finalization, and duplicate submission. This is not evidence that the hosted migration has already been applied.
 
+Next, run `supabase/migrations/202610060003_tryout_20_questions.sql` to activate revision-two packages with 20 questions and 20-minute deadlines. Existing attempts retain their original snapshots and deadlines. If migrations 001 and 002 are already applied, only 003 is new.
+
 ## 2. Import GitHub repository into Vercel
 
 Import `Xpurple27/math-levelup`, choose **Next.js**, root directory `.`, and use **Node.js 24.x**. Keep the normal install/build commands (`npm ci`, `npm run build`).

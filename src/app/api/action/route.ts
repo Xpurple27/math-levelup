@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { topics, selectQuestions, publicQuestion } from "@/lib/content";
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
-import { findTryoutPackage } from "@/lib/tryout-packages";
+import { findTryoutPackage, tryoutPackages } from "@/lib/tryout-packages";
 import { tryoutQuestions } from "@/lib/tryout-content";
 import { onlineBackend } from "@/lib/backend";
 export const runtime = "nodejs";
@@ -209,7 +209,12 @@ export async function POST(req: NextRequest) {
         return response({ error: "Jenis sesi tidak valid." }, 400);
       const pack =
         b.kind === "tryout" ? findTryoutPackage(b.packageSlug) : undefined;
-      if (b.kind === "tryout" && (!pack || pack.access !== "FREE"))
+      if (
+        b.kind === "tryout" &&
+        (!pack ||
+          pack.access !== "FREE" ||
+          !tryoutPackages.some((p) => p.slug === pack.slug))
+      )
         return response(
           { error: "Paket tidak tersedia atau belum dapat diakses." },
           400,
