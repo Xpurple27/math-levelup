@@ -4,7 +4,7 @@ The attachment is product/reference material. The user authorized building Level
 
 ## Current shape
 
-Next.js App Router + TypeScript + Tailwind, a single student workspace with five navigable views, a trusted Node route handler, and SQLite persistence. Keep the existing checkout; cloud tasks are already isolated. Supabase packages and an optional SSR client are installed, but Supabase Auth/Postgres migration is a separate, unconfigured integration.
+Next.js App Router + TypeScript + Tailwind, a single student workspace with five navigable views, a trusted Node route handler, and SQLite persistence. Keep the existing checkout; cloud tasks are already isolated. The online adapter uses Supabase Auth with server-managed SSR cookies and Postgres persistence. Vercel always selects it. SQLite remains an isolated local development adapter. Deployment prerequisites are in deployment.md.
 
 Public educational content is in `topics.ts`. The original question bank, answer keys, hints, and explanations live in a server-only module. Each attempt stores full question/version snapshots so changes to the seed bank cannot rewrite a student's historical result. Completed attempt answers and result snapshots are immutable through the API. There is no content publishing/admin workflow yet.
 
@@ -14,7 +14,7 @@ Authentication hashes passwords with salted scrypt and stores random opaque sess
 
 Diagnostic deadlines come from the server at attempt creation. Answers autosave individually. After expiry, every read/mutation touching that attempt finalizes stored answers before accepting any change. The UI checks expiry every second and polls every 15 seconds. If a student closes the browser, finalization is performed on the next access; there is no background expiry worker. No late answer can alter the snapshot/result. A deployment requires a trusted host clock.
 
-Finalization updates the result, mastery, and learning-activity day in one transaction. SQLite is suitable for this single-process local environment. Do not present the adapter as production Supabase security or deploy it onto an ephemeral filesystem.
+Finalization updates the result, mastery, and learning-activity day in one transaction. SQLite is suitable for this single-process local environment. The Postgres adapter uses database-created deadlines, conditional revision saves, and advisory locks around creation/finalization. Finalization verifies both attempt revision and the expected prior mastery state in one transaction. Conflicting mutations return a retryable error instead of overwriting concurrent state. Supabase tables use RLS with no browser grants/policies; trusted RPCs are invoker-rights and executable only by service_role. The server key never enters browser code.
 
 ## Mastery
 

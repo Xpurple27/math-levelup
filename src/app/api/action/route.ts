@@ -2,12 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { topics, selectQuestions, publicQuestion } from "@/lib/content";
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
+import { onlineBackend } from "@/lib/backend";
 export const runtime = "nodejs";
 const cookie = "levelup_session";
 const limits = new Map<string, { count: number; until: number }>();
-function finish(a: store.Attempt) {
+async function finish(a: store.Attempt) {
   if (a.status === "completed") return a;
-  const old = store.getMastery(a.user_id);
+  const old = await store.getMastery(a.user_id);
   const masteries = topics.flatMap((t) => {
     const qs = a.snapshot.filter((q) => q.topic === t.id);
     return qs.length
@@ -22,8 +23,8 @@ function finish(a: store.Attempt) {
         ]
       : [];
   });
-  store.finalize(a, grade(a.snapshot, a.answers), masteries);
-  return store.getAttempt(a.id, a.user_id)!;
+  await store.finalize(a, grade(a.snapshot, a.answers), masteries, old);
+  return (await store.getAttempt(a.id, a.user_id))!;
 }
 function safe(a: store.Attempt) {
   return {
@@ -50,28 +51,49 @@ function safe(a: store.Attempt) {
     })),
   };
 }
-function expire(a: store.Attempt) {
+async function expire(a: store.Attempt) {
   return a.status === "active" && a.deadline && Date.now() >= a.deadline
     ? finish(a)
     : a;
 }
-function response(data: unknown, status = 200) {
-  return NextResponse.json(data, {
-    status,
-    headers: { "Cache-Control": "no-store" },
-  });
+function response(data: Record<string, unknown>, status = 200) {
+  return NextResponse.json(
+    { ...data, backend: onlineBackend() ? "supabase" : "local" },
+    {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
 }
 export async function GET(req: NextRequest) {
-  const user = store.getUser(req.cookies.get(cookie)?.value);
-  if (!user) return response({ user: null });
-  const id = req.nextUrl.searchParams.get("attempt");
-  if (id) {
-    let a = store.getAttempt(id, user.id);
-    if (!a) return response({ error: "Sesi tidak ditemukan." }, 404);
-    a = expire(a);
-    return response({ attempt: safe(a) });
+  try {
+    const user = await store.getUser(req.cookies.get(cookie)?.value);
+    if (!user) return response({ user: null });
+    const id = req.nextUrl.searchParams.get("attempt");
+    if (id) {
+      const a = await store.getAttempt(id, user.id);
+      if (!a) return response({ error: "Sesi tidak ditemukan." }, 404);
+      return response({ attempt: safe(await expire(a)) });
+    }
+    try {
+      return response({ user, ...(await store.progress(user.id)) });
+    } catch {
+      return response({
+        user,
+        mastery: [],
+        history: [],
+        days: [],
+        streak: 0,
+        notice:
+          "Penyimpanan belajar belum tersedia. Coba lagi setelah pengelola menyelesaikan pengaturan.",
+      });
+    }
+  } catch {
+    return response({
+      user: null,
+      notice: "Akun online belum tersedia. Materi tetap bisa dijelajahi.",
+    });
   }
-  return response({ user, ...store.progress(user.id) });
 }
 export async function POST(req: NextRequest) {
   const origin = req.headers.get("origin");
@@ -134,38 +156,46 @@ export async function POST(req: NextRequest) {
           ? b.grade
           : "Kelas 12";
         try {
-          user = store.createUser(
+          const registered = await store.register(
             email,
             b.name.trim(),
             b.password,
             level,
             goal,
+            origin!,
           );
-        } catch {
+          if (registered.confirmationRequired)
+            return response({ confirmationRequired: true });
+          user = registered.user;
+        } catch (error) {
+          if (error instanceof Error && "status" in error)
+            return response({ error: error.message }, Number(error.status));
           return response(
             { error: "Email sudah terdaftar. Silakan masuk." },
             409,
           );
         }
-      } else user = store.authenticate(email, b.password);
+      } else user = await store.authenticate(email, b.password);
       if (!user)
         return response({ error: "Email atau kata sandi tidak cocok." }, 401);
       const r = response({ user });
-      r.cookies.set(cookie, store.newSession(user.id), {
-        httpOnly: true,
-        sameSite: "lax",
-        secure: process.env.NODE_ENV === "production",
-        path: "/",
-        maxAge: 604800,
-      });
+      const session = await store.newSession(user.id);
+      if (session)
+        r.cookies.set(cookie, session, {
+          httpOnly: true,
+          sameSite: "lax",
+          secure: process.env.NODE_ENV === "production",
+          path: "/",
+          maxAge: 604800,
+        });
       return r;
     }
     const token = req.cookies.get(cookie)?.value,
-      user = store.getUser(token);
+      user = await store.getUser(token);
     if (!user)
       return response({ error: "Silakan masuk terlebih dahulu." }, 401);
     if (b.action === "logout") {
-      if (token) store.logout(token);
+      await store.logout(token || "");
       const r = response({ ok: true });
       r.cookies.delete(cookie);
       return r;
@@ -177,10 +207,10 @@ export async function POST(req: NextRequest) {
       if (topic !== null && !topics.some((t) => t.id === topic))
         return response({ error: "Topik tidak valid." }, 400);
       const count = [5, 10, 15, 20].includes(b.count) ? b.count : 5;
-      let a = store.activeAttempt(user.id, b.kind, topic);
-      if (a) a = expire(a);
+      let a = await store.activeAttempt(user.id, b.kind, topic);
+      if (a) a = await expire(a);
       if (!a || a.status === "completed")
-        a = store.createAttempt(
+        a = await store.createAttempt(
           user.id,
           b.kind,
           topic,
@@ -188,9 +218,10 @@ export async function POST(req: NextRequest) {
         );
       return response({ attempt: safe(a) });
     }
-    let a = typeof b.id === "string" ? store.getAttempt(b.id, user.id) : null;
+    let a =
+      typeof b.id === "string" ? await store.getAttempt(b.id, user.id) : null;
     if (!a) return response({ error: "Sesi tidak ditemukan." }, 404);
-    a = expire(a);
+    a = await expire(a);
     if (b.action === "submit") {
       if (
         a.status === "active" &&
@@ -201,7 +232,7 @@ export async function POST(req: NextRequest) {
           { error: "Selesaikan semua soal sebelum mengakhiri sesi." },
           400,
         );
-      return response({ attempt: safe(finish(a)) });
+      return response({ attempt: safe(await finish(a)) });
     }
     if (b.action !== "answer")
       return response({ error: "Aksi tidak valid." }, 400);
@@ -226,9 +257,11 @@ export async function POST(req: NextRequest) {
         a.credits[q.id] = tries > 1 ? 0.5 : 1;
       }
     } else a.answers[q.id] = b.selected;
-    store.saveAttempt(a);
+    await store.saveAttempt(a);
     return response({ attempt: safe(a) });
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && "status" in error)
+      return response({ error: error.message }, Number(error.status));
     return response(
       { error: "Permintaan gagal diproses. Silakan coba lagi." },
       400,

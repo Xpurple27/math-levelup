@@ -13,3 +13,12 @@ Verified in this cloud instance with Node.js 24.19.0, npm 11.9.0, Next.js 16.3.8
 The API-only production fixtures explicitly replay their own session cookie on loopback because Playwright's API cookie transport treats Secure cookies differently from the browser. The full browser flow verifies actual production login/session behavior. No cookies or passwords are logged.
 
 No Supabase database, RLS, pgTAP, remote CI execution, push, application deployment, environment publication, or fresh-task snapshot restoration was tested or claimed. See architecture.md for local-runtime and content limitations.
+
+## Supabase/Vercel integration revision
+
+- 15 tests passed: 8 scoring/content, 3 PostgreSQL migration/permission/concurrency, 4 mocked Supabase identity/confirmation/backend-selection tests.
+- Format, lint, TypeScript, and production build passed.
+- The 4 browser tests passed after the async adapter refactor in both local development and local production runtime.
+- A production server launched with `VERCEL=1` and an intentionally local backend setting selected Supabase and created no SQLite directory. Public homepage remained available with missing online configuration.
+- Direct read-only Supabase Auth settings access was denied by the cloud egress proxy (HTTP CONNECT 403). The project domain and server-key requirement were saved in the environment draft. No hosted SQL was executed and no real Supabase account was created by these checks.
+- Live Supabase persistence and a Vercel deployment remain unverified until the migration, credentials, network policy, and Auth redirects are applied. Local database tests and mocked Auth tests do not establish hosted readiness.

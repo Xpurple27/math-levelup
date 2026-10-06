@@ -1,10 +1,10 @@
 # LevelUP Math
 
-A local-first, Indonesian learning MVP for UTBK preparation. Built from the supplied handoff in `docs/handoff/`. The working checkout is `Xpurple27/math-levelup`; the handoff's repository name is a reference, not a reason to create another remote.
+An Indonesian learning MVP for UTBK preparation. Built from the supplied handoff in `docs/handoff/`. The working checkout is `Xpurple27/math-levelup`; the handoff's repository name is a reference, not a reason to create another remote.
 
 ## Run
 
-Requires **Node.js 24+** (built-in SQLite), npm, and a writable persistent filesystem. No external service or secret is needed for the local MVP.
+Requires **Node.js 24+** (built-in SQLite), npm, and a writable persistent filesystem. Local SQLite development requires no external service or secret. For Vercel and online persistence, follow [the Supabase deployment guide](docs/deployment.md).
 
 ```sh
 cd /workspace/math-levelup
@@ -45,12 +45,14 @@ For production-mode validation, build then run `npm run start` and set `LEVELUP_
 
 ## Runtime boundaries
 
-`src/lib/content.ts` and `store.ts` are server-only. Browser code imports only public topic/module content and scoring labels. Assessment payloads omit answer keys and explanations until finalization. The server validates session ownership, answer choices, deadline, and attempt state. Scores and mastery are recalculated server-side; client-supplied scores and deadlines have no authority. Finalization and mastery writes share a transaction; repeated submission does not duplicate evidence. No public mastery mutation endpoint exists.
+`src/lib/content.ts` and the persistence adapters are server-only. Browser code imports only public topic/module content and scoring labels. Assessment payloads omit answer keys and explanations until finalization. The server validates session ownership, answer choices, deadline, and attempt state. Scores and mastery are recalculated server-side; client-supplied scores and deadlines have no authority. Finalization and mastery writes share a transaction; repeated submission does not duplicate evidence. No public mastery mutation endpoint exists.
 
-## Production work remaining
+## Online deployment
 
-This is a **working local MVP, not a production Supabase deployment**. The Supabase SSR client baseline is in `src/lib/supabase/server.ts`, but it is not wired to the runtime. Adding Supabase environment variables does not switch persistence or authentication.
+Supabase Auth and the Postgres adapter are now implemented. Follow [docs/deployment.md](docs/deployment.md) to apply the migration, set Vercel environment variables, and configure Auth redirect URLs. The supplied public key is not committed; configure it in environment settings. The server key is required for trusted storage and scoring and must never enter frontend code.
 
-Before real student use, replace the SQLite/local identity adapter with Supabase Auth/Postgres, implement and verify RLS/private answer authority and immutable published versions, migrate data explicitly, and add email verification, password recovery, persistent rate limits, content QA, and broader question coverage. Local SQLite cannot be deployed as-is to Vercel's ephemeral/serverless filesystem.
+Vercel always selects online persistence and never falls back to SQLite. Local development still defaults to SQLite unless `LEVELUP_BACKEND=supabase`. Existing local user accounts/progress are preserved but not migrated into Supabase automatically.
 
-Deferred: commercial tryouts, packages, leaderboards, payments, AI, custom difficulty filters, similar-question generation, spaced review, weekly snapshots, and achievement systems. See `docs/architecture.md` for decisions and exact limitations. Application deployment and the Supabase production integration are separate next steps.
+Local tests verify the migration, access denials, concurrency safeguards, identity adapter behavior, and the existing learning flow. Hosted Supabase writes/authentication and a Vercel deployment still require environment configuration and live verification.
+
+Before broad student use: complete content QA, password recovery, durable rate limits, and broader question coverage. Deferred: commercial tryouts, packages, leaderboards, payments, AI, custom difficulty filters, similar questions, spaced review, weekly snapshots, and achievements.

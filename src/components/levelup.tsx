@@ -105,6 +105,7 @@ export default function Levelup() {
     [history, setHistory] = useState<History[]>([]),
     [streak, setStreak] = useState(0),
     [days, setDays] = useState<string[]>([]);
+  const [backend, setBackend] = useState<"local" | "supabase">("local");
   const [auth, setAuth] = useState<"login" | "register" | null>(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
@@ -121,6 +122,8 @@ export default function Levelup() {
     const r = await fetch("/api/action");
     const d = await r.json();
     setUser(d.user);
+    setBackend(d.backend || "local");
+    if (d.notice) setError(d.notice);
     setMastery(d.mastery || []);
     setHistory(d.history || []);
     setStreak(d.streak || 0);
@@ -128,6 +131,14 @@ export default function Levelup() {
     setReady(true);
   }, []);
   useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("auth_error"))
+      setTimeout(
+        () =>
+          setError(
+            "Tautan konfirmasi tidak berlaku. Coba masuk atau minta email konfirmasi baru.",
+          ),
+        0,
+      );
     const timer = setTimeout(() => void refresh(), 0);
     return () => clearTimeout(timer);
   }, [refresh]);
@@ -398,6 +409,18 @@ export default function Levelup() {
           </div>
         </header>
         <main>
+          {notice && !auth && (
+            <div className="info-box" role="status">
+              {notice}
+              <button
+                className="icon-button"
+                aria-label="Tutup informasi"
+                onClick={() => setNotice("")}
+              >
+                <X size={16} />
+              </button>
+            </div>
+          )}
           {error && (
             <div className="error" role="alert">
               {error}
@@ -1351,7 +1374,11 @@ export default function Levelup() {
                 const d = await call({ action: auth, ...data });
                 if (d) {
                   setAuth(null);
-                  setNotice("");
+                  setNotice(
+                    d.confirmationRequired
+                      ? "Pendaftaran diterima. Periksa email untuk mengonfirmasi akun, lalu masuk kembali."
+                      : "",
+                  );
                   await refresh();
                 }
               }}
@@ -1442,9 +1469,13 @@ export default function Levelup() {
                 : "Belum punya akun? Daftar gratis"}
             </button>
             <div className="demo-label">
-              Versi pengembangan · akun tersimpan lokal di server ini.
+              {backend === "supabase"
+                ? "Akun online dikelola melalui Supabase."
+                : "Versi pengembangan · akun tersimpan lokal di server ini."}
               <br />
-              Gunakan kata sandi khusus untuk mencoba aplikasi.
+              {backend === "supabase"
+                ? "Jika diminta, konfirmasikan email sebelum masuk."
+                : "Gunakan kata sandi khusus untuk mencoba aplikasi."}
             </div>
           </section>
         </div>

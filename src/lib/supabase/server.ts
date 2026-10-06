@@ -1,16 +1,20 @@
 import "server-only";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-/** Optional SSR integration baseline. The current application uses the SQLite adapter. */
 export async function createSupabaseServerClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL,
-    key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key)
-    throw new Error(
-      "Supabase is not configured. The local MVP does not require Supabase.",
-    );
+    key =
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new Error("Supabase Auth belum dikonfigurasi.");
   const jar = await cookies();
   return createServerClient(url, key, {
+    cookieOptions: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      path: "/",
+    },
     cookies: {
       getAll() {
         return jar.getAll();
