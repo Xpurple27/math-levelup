@@ -16,6 +16,8 @@ The migration was tested in local PostgreSQL via PGlite, including denied browse
 
 Next, run `supabase/migrations/202610060003_tryout_20_questions.sql` to activate revision-two packages with 20 questions and 20-minute deadlines. Existing attempts retain their original snapshots and deadlines. If migrations 001 and 002 are already applied, only 003 is new.
 
+Then run `supabase/migrations/202610060004_tryout_package_02.sql` to enable Package 02 for PK, PM, and PU (20 questions / 20 minutes). If 001–003 are already applied, only 004 is new. The migration is replayable and preserves all existing attempts.
+
 ## 2. Import GitHub repository into Vercel
 
 Import `Xpurple27/math-levelup`, choose **Next.js**, root directory `.`, and use **Node.js 24.x**. Keep the normal install/build commands (`npm ci`, `npm run build`).

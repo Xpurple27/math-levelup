@@ -27,6 +27,21 @@ describe("fixed free beta packages", () => {
       }
     },
   );
+  it.each(["pk", "pm", "pu"])(
+    "gives %s Package 02 separate questions and metadata",
+    (section) => {
+      const first = tryoutQuestions(`${section}-01-v2`);
+      const second = tryoutQuestions(`${section}-02-v1`);
+      expect(
+        second.some((q) =>
+          first.some((old) => old.id === q.id || old.stem === q.stem),
+        ),
+      ).toBe(false);
+      const pack = tryoutPackages.find((p) => p.slug === `${section}-02-v1`)!;
+      expect(pack.questionCount).toBe(20);
+      expect(pack.minutes).toBe(20);
+    },
+  );
   it("preserves the legacy package assignments", () => {
     const old = tryoutQuestions("pk-01-v1");
     expect(old).toHaveLength(15);

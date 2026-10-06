@@ -64,6 +64,12 @@ beforeAll(async () => {
       "utf8",
     ),
   );
+  await db.exec(
+    readFileSync(
+      "supabase/migrations/202610060004_tryout_package_02.sql",
+      "utf8",
+    ),
+  );
 }, 30000);
 afterAll(async () => {
   await db.close();
@@ -97,6 +103,18 @@ describe("Postgres migration and trusted write boundaries", () => {
     await db.exec(
       readFileSync(
         "supabase/migrations/202610060003_tryout_20_questions.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060004_tryout_package_02.sql",
+        "utf8",
+      ),
+    );
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060004_tryout_package_02.sql",
         "utf8",
       ),
     );
@@ -263,5 +281,51 @@ describe("Postgres migration and trusted write boundaries", () => {
     const revised = (await query()).rows[0].a;
     expect(revised.snapshot).toHaveLength(20);
     expect(revised.deadline - revised.started).toBe(1200000);
+  });
+  it("keeps package-one attempts intact and gives all package-two sections a 20-minute deadline", async () => {
+    await db.exec(
+      readFileSync(
+        "supabase/migrations/202610060004_tryout_package_02.sql",
+        "utf8",
+      ),
+    );
+    const first = (
+      await db.query<{
+        a: { id: string; deadline: number; snapshot: unknown[] };
+      }>("SELECT public.levelup_start_attempt($1,'tryout','pk-01-v2',$2) a", [
+        user,
+        JSON.stringify(tryoutQuestions("pk-01-v2")),
+      ])
+    ).rows[0].a;
+    for (const section of ["pk", "pm", "pu"]) {
+      const slug = `${section}-02-v1`;
+      const args = [
+        user,
+        "tryout",
+        slug,
+        JSON.stringify(tryoutQuestions(slug)),
+      ];
+      const query = () =>
+        db.query<{
+          a: {
+            id: string;
+            started: number;
+            deadline: number;
+            snapshot: unknown[];
+          };
+        }>("SELECT public.levelup_start_attempt($1,$2,$3,$4) a", args);
+      const attempt = (await query()).rows[0].a;
+      expect(attempt.id).not.toBe(first.id);
+      expect(attempt.snapshot).toHaveLength(20);
+      expect(attempt.deadline - attempt.started).toBe(1200000);
+      expect((await query()).rows[0].a).toEqual(attempt);
+    }
+    const old = (
+      await db.query<{ a: unknown }>(
+        "SELECT to_jsonb(a) a FROM public.levelup_attempts a WHERE id=$1",
+        [first.id],
+      )
+    ).rows[0].a;
+    expect(old).toEqual(first);
   });
 });
