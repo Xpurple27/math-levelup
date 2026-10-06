@@ -361,3 +361,119 @@ test("expired diagnostic rejects late answers and finalizes once", async ({
   expect(after.mastery).toEqual(before.mastery);
   expect(after.history).toHaveLength(1);
 });
+
+test("new topic search, practice filters, fresh-first selection, and frozen resume", async ({
+  page,
+}) => {
+  const api = localApi(page.request),
+    origin = "http://127.0.0.1:3000";
+  const post = (data: unknown) =>
+    api.post("/api/action", { headers: { origin }, data });
+  await post({
+    action: "register",
+    name: "Konten Baru",
+    email: `content-${Date.now()}@example.com`,
+    password: "test-password-123",
+  });
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "Halo, Konten" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Belajar", exact: true }).click();
+  await page.getByLabel("Cari materi").fill("geometri");
+  await page
+    .getByRole("button", { name: "Luas, keliling & volume", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Luas, keliling & volume", exact: true }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Latihan", exact: true }).click();
+  await page.getByLabel("Bagian UTBK").selectOption("PK");
+  await page
+    .getByRole("combobox", { name: "Subtopik", exact: true })
+    .selectOption("persen");
+  await page.getByLabel("Jumlah soal").selectOption("20");
+  await page.getByLabel("Tingkat kesulitan").selectOption("Hard");
+  await expect(page.getByLabel("Jumlah soal")).toHaveValue("10");
+  await page.getByLabel("Jumlah soal").selectOption("5");
+  await page
+    .getByRole("button", { name: "Mulai latihan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Satu soal, satu langkah." }),
+  ).toBeVisible();
+  const id = await page.evaluate(() => localStorage.getItem("levelup-attempt"));
+  const initial = await (await api.get(`/api/action?attempt=${id}`)).json();
+  expect(initial.attempt.questions).toHaveLength(5);
+  expect(
+    initial.attempt.questions.every(
+      (q: { topic: string; difficulty: string }) =>
+        q.topic === "persen" && q.difficulty === "Hard",
+    ),
+  ).toBe(true);
+  const resumed = await (
+    await post({
+      action: "start",
+      kind: "practice",
+      topic: "persen",
+      count: 10,
+      difficulty: "Basic",
+    })
+  ).json();
+  expect(resumed.attempt.id).toBe(id);
+  expect(resumed.attempt.questions).toEqual(initial.attempt.questions);
+  for (let i = 0; i < 5; i++) {
+    await page.getByRole("button", { name: /Pilihan A:/ }).click();
+    await expect(page.getByText("Penyelesaian", { exact: true })).toBeVisible();
+    if (i < 4)
+      await page
+        .getByRole("button", { name: "Berikutnya", exact: true })
+        .click();
+  }
+  await page
+    .getByRole("button", { name: "Selesaikan sesi", exact: true })
+    .first()
+    .click();
+  await page.getByRole("button", { name: "Kirim jawaban" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Satu langkah maju. Kerja bagus!" }),
+  ).toBeVisible();
+  const next = await (
+    await post({
+      action: "start",
+      kind: "practice",
+      topic: "persen",
+      count: 5,
+      difficulty: "Hard",
+    })
+  ).json();
+  expect(next.attempt.id).not.toBe(id);
+  expect(
+    next.attempt.questions.every(
+      (q: { id: string }) =>
+        !initial.attempt.questions.some((p: { id: string }) => p.id === q.id),
+    ),
+  ).toBe(true);
+  expect(
+    (
+      await post({
+        action: "start",
+        kind: "practice",
+        topic: "pola",
+        count: 20,
+        difficulty: "Hard",
+      })
+    ).status(),
+  ).toBe(400);
+  expect(
+    (
+      await post({
+        action: "start",
+        kind: "practice",
+        topic: "pola",
+        count: 5,
+        difficulty: "wrong",
+      })
+    ).status(),
+  ).toBe(400);
+});

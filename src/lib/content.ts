@@ -1,4 +1,6 @@
 import "server-only";
+import { randomInt } from "node:crypto";
+import { additionalBank } from "./additional-content";
 import { topics } from "./topics";
 export { topics } from "./topics";
 export type Difficulty = "Basic" | "Medium" | "Hard";
@@ -19,7 +21,7 @@ export type Question = {
   };
   hint: string;
 };
-export const bank: Question[] = topics.flatMap((t, ti) =>
+const originalBank: Question[] = topics.slice(0, 3).flatMap((t, ti) =>
   Array.from({ length: 36 }, (_, i) => {
     const difficulty: Difficulty =
       i < 12 ? "Basic" : i < 24 ? "Medium" : "Hard";
@@ -128,15 +130,82 @@ export const bank: Question[] = topics.flatMap((t, ti) =>
     };
   }),
 );
-export function selectQuestions(kind: string, topic?: string, count = 5) {
-  if (kind === "diagnostic")
-    return topics.flatMap((t) =>
-      [0, 3, 13, 17, 26].map((i) => bank.filter((q) => q.topic === t.id)[i]),
+export const bank: Question[] = [...originalBank, ...additionalBank];
+export type SelectionOptions = {
+  difficulty?: Difficulty | "Mixed";
+  excludedIds?: string[];
+  random?: (max: number) => number;
+};
+export function selectQuestions(
+  kind: string,
+  topic?: string,
+  count = 5,
+  options: SelectionOptions = {},
+) {
+  const random = options.random ?? randomInt,
+    seen = new Set(options.excludedIds || []);
+  function shuffle<T>(values: T[]): T[] {
+    const out = [...values];
+    for (let i = out.length - 1; i > 0; i--) {
+      const j = random(i + 1);
+      [out[i], out[j]] = [out[j], out[i]];
+    }
+    return out;
+  }
+  function pick(
+    topicId: string,
+    difficulty: Difficulty | "Mixed",
+    amount: number,
+  ) {
+    const pool = bank.filter(
+      (q) =>
+        q.topic === topicId &&
+        (difficulty === "Mixed" || q.difficulty === difficulty),
     );
-  const pool = bank.filter((q) => q.topic === (topic || "rasio"));
-  if (kind === "guided") return [1, 5, 14, 19, 25, 28].map((i) => pool[i]);
-  if (kind === "mini") return [15, 18, 21, 29, 32].map((i) => pool[i]);
-  return Array.from({ length: count }, (_, i) => pool[(i * 7 + 2) % 36]);
+    if (pool.length < amount)
+      throw new Error(
+        "Jumlah soal melebihi bank pada tingkat kesulitan ini. Pilih jumlah lebih kecil.",
+      );
+    const fresh = shuffle(pool.filter((q) => !seen.has(q.id))),
+      review = shuffle(pool.filter((q) => seen.has(q.id)));
+    return [...fresh, ...review].slice(0, amount);
+  }
+  if (kind === "diagnostic") {
+    // 15 items, exactly five per section, covering all seven available subtopics.
+    const quotas: Record<string, Difficulty[]> = {
+      rasio: ["Basic", "Medium"],
+      aljabar: ["Basic", "Medium", "Hard"],
+      statistika: ["Basic", "Medium", "Hard"],
+      persen: ["Medium"],
+      geometri: ["Basic", "Hard"],
+      peluang: ["Basic", "Medium"],
+      pola: ["Medium", "Hard"],
+    };
+    return shuffle(
+      topics.flatMap((t) => quotas[t.id].flatMap((d) => pick(t.id, d, 1))),
+    );
+  }
+  const topicId = topic || "rasio";
+  if (kind === "guided")
+    return (["Basic", "Medium", "Hard"] as const).flatMap((d) =>
+      pick(topicId, d, 2),
+    );
+  if (kind === "mini")
+    return shuffle([
+      ...pick(topicId, "Medium", 3),
+      ...pick(topicId, "Hard", 2),
+    ]);
+  const difficulty = options.difficulty || "Mixed";
+  if (difficulty !== "Mixed") return shuffle(pick(topicId, difficulty, count));
+  // Mixed sessions include every level, not an accidentally Basic-only random draw.
+  const basic = Math.floor(count / 3),
+    medium = Math.floor(count / 3),
+    hard = count - basic - medium;
+  return shuffle([
+    ...pick(topicId, "Basic", basic),
+    ...pick(topicId, "Medium", medium),
+    ...pick(topicId, "Hard", hard),
+  ]);
 }
 export function publicQuestion(q: Question) {
   return {

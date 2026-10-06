@@ -225,3 +225,20 @@ export async function progress(userId: string) {
   }
   return { mastery: m, history, days, streak };
 }
+
+/** Scoped recent exposure for fresh-first server-side selection. */
+export async function seenQuestionIds(userId: string): Promise<string[]> {
+  const { data, error } = await admin()
+    .from("levelup_attempts")
+    .select("snapshot")
+    .eq("user_id", userId)
+    .order("started", { ascending: false })
+    .limit(30);
+  return [
+    ...new Set(
+      (checked(data, error) || []).flatMap((r) =>
+        (r.snapshot as Question[]).map((q) => q.id),
+      ),
+    ),
+  ];
+}

@@ -230,3 +230,19 @@ export function progress(userId: string) {
   }
   return { mastery: getMastery(userId), history, days, streak };
 }
+
+/** Only question IDs from the owner's recent sessions; never sent to the browser. */
+export function seenQuestionIds(userId: string): string[] {
+  const rows = db
+    .prepare(
+      "SELECT snapshot FROM attempts WHERE user_id=? ORDER BY started DESC LIMIT 30",
+    )
+    .all(userId);
+  return [
+    ...new Set(
+      rows.flatMap((r) =>
+        (JSON.parse(r.snapshot as string) as Question[]).map((q) => q.id),
+      ),
+    ),
+  ];
+}

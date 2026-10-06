@@ -105,6 +105,9 @@ export default function Levelup() {
     [history, setHistory] = useState<History[]>([]),
     [streak, setStreak] = useState(0),
     [days, setDays] = useState<string[]>([]);
+  const [difficulty, setDifficulty] = useState("Mixed");
+  const [section, setSection] = useState("All");
+  const [search, setSearch] = useState("");
   const [backend, setBackend] = useState<"local" | "supabase">("local");
   const [auth, setAuth] = useState<"login" | "register" | null>(null),
     [error, setError] = useState(""),
@@ -240,6 +243,7 @@ export default function Levelup() {
     }
   }, [clock, offset, view, attempt, busy, submit]);
   const go = (v: View) => {
+    if (v === "learn") setSearch("");
     setView(v);
     setMobile(false);
     setError("");
@@ -251,7 +255,13 @@ export default function Levelup() {
       setNotice("Buat akun untuk menyimpan jawaban dan progres Anda.");
       return;
     }
-    const d = await call({ action: "start", kind, topic: t, count });
+    const d = await call({
+      action: "start",
+      kind,
+      topic: t,
+      count,
+      difficulty,
+    });
     if (d) {
       syncAttempt(d.attempt);
       setIndex(0);
@@ -684,19 +694,43 @@ export default function Levelup() {
               <PageHeading
                 eyebrow="PAHAMI, BUKAN HAFALKAN"
                 title="Belajar dengan arah"
-                subtitle="Konsep singkat, langkah jelas, lalu buktikan pemahamanmu."
+                subtitle="7 modul belajar · 252 soal. Pilih konsep, pahami langkahnya, lalu buktikan pemahamanmu."
               />
+              <label className="field lesson-search">
+                Cari materi
+                <input
+                  type="search"
+                  placeholder="Nama materi, domain, atau PK/PM/PU…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </label>
               <div className="topic-tabs">
-                {topics.map((t) => (
-                  <button
-                    className={topic === t.id ? "selected" : ""}
-                    onClick={() => setTopic(t.id)}
-                    key={t.id}
-                  >
-                    {t.name}
-                  </button>
-                ))}
+                {topics
+                  .filter((t) =>
+                    `${t.name} ${t.domain} ${t.section}`
+                      .toLowerCase()
+                      .includes(search.toLowerCase().trim()),
+                  )
+                  .map((t) => (
+                    <button
+                      className={topic === t.id ? "selected" : ""}
+                      onClick={() => setTopic(t.id)}
+                      key={t.id}
+                    >
+                      {t.name}
+                    </button>
+                  ))}
               </div>
+              {!topics.some((t) =>
+                `${t.name} ${t.domain} ${t.section}`
+                  .toLowerCase()
+                  .includes(search.toLowerCase().trim()),
+              ) && (
+                <p className="info-box">
+                  Materi belum ditemukan. Coba kata kunci lain.
+                </p>
+              )}
               <div className="learning-grid">
                 <section className="panel lesson">
                   <span className="eyebrow purple-text">
@@ -781,20 +815,60 @@ export default function Levelup() {
                   </span>
                   <h2>Rancang latihanmu</h2>
                   <p className="muted">
-                    Pilih satu subtopik dan jumlah soal. Jawaban pertama menjadi
-                    bukti kemampuanmu.
+                    Pilih bagian, subtopik, kesulitan, dan jumlah soal. Jawaban
+                    pertama menjadi bukti kemampuanmu.
                   </p>
+                  <label className="field">
+                    Bagian UTBK
+                    <select
+                      value={section}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setSection(v);
+                        if (
+                          v !== "All" &&
+                          topics.find((t) => t.id === topic)?.section !== v
+                        )
+                          setTopic(topics.find((t) => t.section === v)!.id);
+                      }}
+                    >
+                      <option value="All">Semua bagian</option>
+                      <option value="PK">PK — Pengetahuan Kuantitatif</option>
+                      <option value="PM">PM — Penalaran Matematika</option>
+                      <option value="PU">PU — Penalaran Umum</option>
+                    </select>
+                  </label>
                   <label className="field">
                     Subtopik
                     <select
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
                     >
-                      {topics.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.name} · {t.section}
-                        </option>
-                      ))}
+                      {topics
+                        .filter(
+                          (t) => section === "All" || t.section === section,
+                        )
+                        .map((t) => (
+                          <option key={t.id} value={t.id}>
+                            {t.name} · {t.section}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    Tingkat kesulitan
+                    <select
+                      value={difficulty}
+                      onChange={(e) => {
+                        setDifficulty(e.target.value);
+                        if (e.target.value !== "Mixed" && count > 10)
+                          setCount(10);
+                      }}
+                    >
+                      <option value="Mixed">Campuran</option>
+                      <option value="Basic">Basic — fondasi</option>
+                      <option value="Medium">Medium — penerapan</option>
+                      <option value="Hard">Hard — lebih menantang</option>
                     </select>
                   </label>
                   <label className="field">
@@ -803,14 +877,18 @@ export default function Levelup() {
                       value={count}
                       onChange={(e) => setCount(Number(e.target.value))}
                     >
-                      {[5, 10, 15, 20].map((n) => (
-                        <option key={n}>{n}</option>
-                      ))}
+                      {(difficulty === "Mixed" ? [5, 10, 15, 20] : [5, 10]).map(
+                        (n) => (
+                          <option key={n}>{n}</option>
+                        ),
+                      )}
                     </select>
                   </label>
                   <div className="info-box">
-                    Kesulitan campuran · Pembahasan setelah menjawab · Progres
-                    tersimpan
+                    {difficulty === "Mixed"
+                      ? "Campuran 3 tingkat kesulitan"
+                      : difficulty}{" "}
+                    · Soal baru diprioritaskan · Pembahasan setelah menjawab
                   </div>
                   <button
                     className="button primary"
@@ -870,9 +948,9 @@ export default function Levelup() {
                     persiapan yang lebih terarah.
                   </h2>
                   <p>
-                    15 soal dari tiga subtopik awal. Tidak ada petunjuk atau
-                    pembahasan selama tes. Jawaban tersimpan setiap kali kamu
-                    memilih.
+                    15 soal dari tujuh subtopik, seimbang PK/PM/PU. Tidak ada
+                    petunjuk atau pembahasan selama tes. Jawaban tersimpan
+                    setiap kali kamu memilih.
                   </p>
                   <div className="tag-row">
                     <span>15 soal</span>

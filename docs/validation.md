@@ -22,3 +22,12 @@ No Supabase database, RLS, pgTAP, remote CI execution, push, application deploym
 - A production server launched with `VERCEL=1` and an intentionally local backend setting selected Supabase and created no SQLite directory. Public homepage remained available with missing online configuration.
 - Direct read-only Supabase Auth settings access was denied by the cloud egress proxy (HTTP CONNECT 403). The project domain and server-key requirement were saved in the environment draft. No hosted SQL was executed and no real Supabase account was created by these checks.
 - Live Supabase persistence and a Vercel deployment remain unverified until the migration, credentials, network policy, and Auth redirects are applied. Local database tests and mocked Auth tests do not establish hosted readiness.
+
+## Expanded question bank and practice filters
+
+- 252 unique question IDs/stems across seven topics, each with 12 items per difficulty.
+- 144 new answer keys checked against independently worked numeric grids.
+- 20 unit/database tests passed, including fresh-first sampling, review fallback, difficulty/count constraints, and the seven-topic diagnostic with five items per section.
+- Production build, TypeScript, ESLint, and formatting checks passed.
+- Browser checks cover the original loop, mobile navigation, authority/expiry, and the new search/filter/fresh-first/resume flow on local persistence. Hosted Supabase behavior remains subject to the earlier deployment prerequisites.
+- No database migration was added; the current snapshot/history schema supports the expansion. Existing question records remain unchanged and previously created attempts retain their frozen content.

@@ -17,16 +17,16 @@ Open the development server on port 3000 in a local development setup. Create a 
 ## Implemented slice
 
 - Registration/login, logout, education level, and target UTBK score.
-- 15-question diagnostic with a server-owned 30-minute deadline, autosave, resume, expiry finalization, and immutable completion.
+- 15-question diagnostic covering seven subtopics with five items per PK/PM/PU section, a server-owned 30-minute deadline, autosave, resume, expiry finalization, and immutable completion.
 - Initial skill profile with correct/incorrect/unanswered counts and strengths/weaknesses. This is **not** an estimated UTBK score.
-- Three concept modules: ratios, linear equations, means/data interpretation. Each includes recognition, first step, worked example, and common mistakes.
+- Seven concept modules: ratios, linear equations, means/data interpretation, percentages, geometry, probability/counting, and sequences. Each includes recognition, first step, worked example, and common mistakes.
 - Guided practice: 2 Basic + 2 Medium + 2 Hard questions, hint on first mistake, one retry, discounted retry evidence.
 - Mini assessment: 3 Medium + 2 Hard, no hints/retries/live feedback, 80% pass threshold.
-- Practice with 5/10/15/20 questions, feedback after an answer, first answer locked.
+- Practice filtered by PK/PM/PU, subtopic, and Basic/Medium/Hard/Mixed. Mixed sessions support 5/10/15/20 questions; a single level supports 5/10. Fresh questions are prioritized against the last 30 sessions, with review fallback after exhaustion. First answer stays locked.
 - Progress, evidence confidence, mastery states, history, and learning streak using Asia/Jakarta days.
 - Responsive dashboard and mobile navigation.
 
-The 108 original, generated seed questions are pedagogical examples requiring editorial QA before student use. This bank is not comprehensive UTBK coverage or exam calibration.
+The 252 original, generated seed questions (108 existing + 144 added) are pedagogical examples requiring editorial QA before student use. This bank is not comprehensive UTBK coverage or exam calibration.
 
 ## Verify
 
@@ -55,4 +55,4 @@ Vercel always selects online persistence and never falls back to SQLite. Local d
 
 Local tests verify the migration, access denials, concurrency safeguards, identity adapter behavior, and the existing learning flow. Hosted Supabase writes/authentication and a Vercel deployment still require environment configuration and live verification.
 
-Before broad student use: complete content QA, password recovery, durable rate limits, and broader question coverage. Deferred: commercial tryouts, packages, leaderboards, payments, AI, custom difficulty filters, similar questions, spaced review, weekly snapshots, and achievements.
+Before broad student use: complete content QA, password recovery, durable rate limits, and broader question coverage. Deferred: commercial tryouts, packages, leaderboards, payments, AI, similar questions, spaced review, weekly snapshots, and achievements.

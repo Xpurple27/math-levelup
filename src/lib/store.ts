@@ -86,3 +86,7 @@ export async function finalize(
 export async function progress(userId: string) {
   return (await adapter()).progress(userId);
 }
+
+export async function seenQuestionIds(userId: string) {
+  return (await adapter()).seenQuestionIds(userId);
+}

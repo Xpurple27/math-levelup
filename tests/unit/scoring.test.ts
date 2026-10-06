@@ -59,11 +59,11 @@ describe("deterministic scoring and mastery", () => {
     }
   });
   it("does not award mastered from a single perfect diagnostic", () => {
-    const subset = qs.filter((q) => q.topic === "rasio"),
+    const subset = qs.filter((q) => q.topic === "aljabar"),
       a = Object.fromEntries(subset.map((q) => [q.id, q.correct]));
     const m = updateMastery(undefined, subset, a, "diagnostic");
     expect(m.value).toBe(100);
-    expect(m.confidence).toBe(0.25);
+    expect(m.confidence).toBe(subset.length / 20);
     expect(masteryLabel(m)).toBe("Perlu bukti tambahan");
   });
   it("discounts correct retries and applies source weight", () => {

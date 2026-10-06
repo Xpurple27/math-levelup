@@ -207,15 +207,28 @@ export async function POST(req: NextRequest) {
       if (topic !== null && !topics.some((t) => t.id === topic))
         return response({ error: "Topik tidak valid." }, 400);
       const count = [5, 10, 15, 20].includes(b.count) ? b.count : 5;
+      const difficulty = b.difficulty ?? "Mixed";
+      if (!["Basic", "Medium", "Hard", "Mixed"].includes(difficulty))
+        return response({ error: "Tingkat kesulitan tidak valid." }, 400);
+      if (b.kind === "practice" && difficulty !== "Mixed" && count > 10)
+        return response(
+          { error: "Untuk satu tingkat kesulitan, pilih 5 atau 10 soal." },
+          400,
+        );
       let a = await store.activeAttempt(user.id, b.kind, topic);
       if (a) a = await expire(a);
-      if (!a || a.status === "completed")
+      if (!a || a.status === "completed") {
+        const excludedIds = await store.seenQuestionIds(user.id);
         a = await store.createAttempt(
           user.id,
           b.kind,
           topic,
-          selectQuestions(b.kind, topic ?? undefined, count),
+          selectQuestions(b.kind, topic ?? undefined, count, {
+            difficulty,
+            excludedIds,
+          }),
         );
+      }
       return response({ attempt: safe(a) });
     }
     let a =

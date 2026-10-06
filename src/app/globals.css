@@ -2099,3 +2099,8 @@ main {
     scroll-behavior: auto !important;
   }
 }
+
+.lesson-search {
+  max-width: 520px;
+  margin-bottom: 20px;
+}
