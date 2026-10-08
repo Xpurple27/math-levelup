@@ -1,4 +1,5 @@
 import "server-only";
+import { pilotManifest, pilotSet } from "./pilot";
 import { isQuestionAllowed } from "./content-qa";
 import { bank } from "./content";
 import { findTryoutPackage } from "./tryout-packages";
@@ -151,7 +152,12 @@ assignments["pu-02-v1"] = [
 ];
 export function tryoutQuestions(slug: string) {
   const pack = findTryoutPackage(slug);
-  if (!pack || !assignments[slug]) throw new Error("Paket tidak tersedia.");
+  if (!pack || (!assignments[slug] && !(slug in pilotManifest.tryout)))
+    throw new Error("Paket tidak tersedia.");
+  if (slug in pilotManifest.tryout)
+    return pilotSet(
+      pilotManifest.tryout[slug as keyof typeof pilotManifest.tryout],
+    );
   const questions = assignments[slug].map((id) => {
     const question = bank.find((q) => q.id === id && q.version === 1);
     if (

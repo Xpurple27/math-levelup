@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import reviews from "../../content/question-qa.json";
 import type { Question } from "./content";
 export const qaChecks = [
+  "distractorPlausibility",
+  "answerPattern",
   "stemClarity",
   "answerKey",
   "explanation",
@@ -54,7 +56,8 @@ export function structuralIssues(q: Question) {
 }
 export function effectiveQAStatus(
   q: Question,
-  record: QARecord | undefined = questionReviews[q.id],
+  record: QARecord | undefined = questionReviews[`${q.id}@${q.version}`] ??
+    questionReviews[q.id],
 ): QAStatus {
   if (record?.status === "REJECTED") return "REJECTED";
   if (

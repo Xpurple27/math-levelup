@@ -44,7 +44,11 @@ const records = JSON.parse(readFileSync(qaPath, "utf8")) as Record<
 describe("source-based content QA", () => {
   it("tracks all 252 questions without auto-approving generated content", () => {
     expect(bank).toHaveLength(252);
-    expect(Object.keys(records).sort()).toEqual(bank.map((q) => q.id).sort());
+    expect(
+      Object.keys(records)
+        .filter((id) => !id.includes("@"))
+        .sort(),
+    ).toEqual(bank.map((q) => q.id).sort());
     for (const q of bank) {
       const review = records[q.id];
       expect(["VALID", "NEEDS_REVIEW", "REJECTED"]).toContain(review.status);

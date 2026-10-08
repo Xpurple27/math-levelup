@@ -46,10 +46,19 @@ export function TryoutCatalog({
       </label>
       <div className="result-topics">
         {tryoutPackages
-          .filter((p) => section === "All" || p.section === section)
+          .filter(
+            (p) =>
+              (process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
+                p.slug.includes("-pilot-")) &&
+              (section === "All" || p.section === section),
+          )
           .map((p) => (
             <section className="panel" key={p.slug}>
-              <span className="tag">Gratis · Beta</span>
+              <span className="tag">
+                {p.slug.includes("-pilot-")
+                  ? "Pilot RC · Perlu review"
+                  : "Gratis · Beta"}
+              </span>
               <h2>{p.title}</h2>
               <p>{p.description}</p>
               <div className="tag-row">

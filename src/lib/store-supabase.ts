@@ -237,3 +237,45 @@ export async function seenQuestionIds(userId: string): Promise<string[]> {
     ),
   ];
 }
+
+export async function reportIssue(
+  userId: string,
+  attemptId: string,
+  questionId: string,
+  category: string,
+  view: string,
+  message: string,
+) {
+  const { data, error } = await admin().rpc("levelup_report_issue", {
+    p_user_id: userId,
+    p_attempt_id: attemptId,
+    p_question_id: questionId,
+    p_category: category,
+    p_view: view,
+    p_message: message,
+  });
+  checked(data, error);
+  if (data !== true)
+    throw new StorageError("Laporan belum tersimpan. Coba lagi.");
+}
+
+export async function reportPage(
+  userId: string,
+  category: string,
+  view: string,
+  topic: string,
+  message: string,
+  attemptId?: string,
+) {
+  const { data, error } = await admin().rpc("levelup_report_page", {
+    p_user_id: userId,
+    p_category: category,
+    p_view: view,
+    p_topic: topic,
+    p_message: message,
+    p_attempt_id: attemptId ?? null,
+  });
+  checked(data, error);
+  if (data !== true)
+    throw new StorageError("Laporan belum tersimpan. Coba lagi.");
+}

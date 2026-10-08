@@ -61,3 +61,7 @@ Key release limits: the seed content needs editorial/mathematical QA; mastery co
 Use the same four environment names in cloud environment settings. The project hostname must be allowed for outbound HTTPS. The onboarding draft declares these requirements but does not apply the hosted database migration, provide a secret value, or create a Vercel deployment.
 
 For local SQLite development, omit `VERCEL`, use `LEVELUP_BACKEND=local`, and keep the existing `.data` directory. For online local development set `LEVELUP_BACKEND=supabase`; never silently fall back if it fails.
+
+## Pilot release candidate
+
+After confidence backfill, apply `supabase/migrations/202610070002_pilot_reports.sql` for the three fixed Package 01 pilot deadlines and private question/page reports. Set `NEXT_PUBLIC_LEVELUP_PILOT_MODE=1` before the pilot build. Run `supabase/verify-pilot.sql` (read-only, all rows true), then follow [pilot-release.md](pilot-release.md) for hosted verification and human content review. Existing attempt rows are not rewritten.

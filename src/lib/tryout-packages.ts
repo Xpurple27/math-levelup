@@ -1,6 +1,42 @@
 // Public catalog only. Revision slugs are stable; revised sets need a new slug.
 export const tryoutPackages = [
   {
+    slug: "pk-pilot-v1",
+    title: "PK — Paket 01 Pilot RC",
+    section: "PK",
+    revision: 1,
+    questionCount: 20,
+    minutes: 20,
+    access: "FREE",
+    topics: ["rasio", "persen", "geometri"],
+    description:
+      "Kandidat pilot terbatas: 20 soal dengan distraktor direvisi. Peninjauan manusia masih diperlukan.",
+  },
+  {
+    slug: "pm-pilot-v1",
+    title: "PM — Paket 01 Pilot RC",
+    section: "PM",
+    revision: 1,
+    questionCount: 20,
+    minutes: 20,
+    access: "FREE",
+    topics: ["aljabar", "peluang"],
+    description:
+      "Paket 01 revisi pilot: aljabar dan peluang; menunggu review manusia.",
+  },
+  {
+    slug: "pu-pilot-v1",
+    title: "PU — Paket 01 Pilot RC",
+    section: "PU",
+    revision: 1,
+    questionCount: 20,
+    minutes: 20,
+    access: "FREE",
+    topics: ["statistika", "pola"],
+    description:
+      "Paket 01 revisi pilot: data dan pola; menunggu review manusia.",
+  },
+  {
     slug: "pk-01-v2",
     title: "PK — Paket 01",
     section: "PK",

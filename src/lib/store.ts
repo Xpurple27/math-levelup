@@ -95,3 +95,39 @@ export async function progress(userId: string) {
 export async function seenQuestionIds(userId: string) {
   return (await adapter()).seenQuestionIds(userId);
 }
+
+export async function reportIssue(
+  userId: string,
+  attemptId: string,
+  questionId: string,
+  category: string,
+  view: string,
+  message: string,
+) {
+  return (await adapter()).reportIssue(
+    userId,
+    attemptId,
+    questionId,
+    category,
+    view,
+    message,
+  );
+}
+
+export async function reportPage(
+  userId: string,
+  category: string,
+  view: string,
+  topic: string,
+  message: string,
+  attemptId?: string,
+) {
+  return (await adapter()).reportPage(
+    userId,
+    category,
+    view,
+    topic,
+    message,
+    attemptId,
+  );
+}

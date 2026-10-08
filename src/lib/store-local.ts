@@ -1,3 +1,4 @@
+import { reportCategories, reportPages, reportTopics } from "./feedback-rules";
 import "server-only";
 import {
   attemptDurationMs,
@@ -311,4 +312,104 @@ try {
 } catch (error) {
   db.exec("ROLLBACK");
   throw error;
+}
+
+db.exec(
+  `CREATE TABLE IF NOT EXISTS reports(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),attempt_id TEXT NOT NULL REFERENCES attempts(id),question_id TEXT NOT NULL,category TEXT NOT NULL,view TEXT NOT NULL,message TEXT NOT NULL,context TEXT NOT NULL,created INTEGER NOT NULL,UNIQUE(user_id,attempt_id,question_id,category,view))`,
+);
+export function reportIssue(
+  userId: string,
+  attemptId: string,
+  questionId: string,
+  category: string,
+  view: string,
+  message: string,
+) {
+  const a = getAttempt(attemptId, userId),
+    q = a?.snapshot.find((q) => q.id === questionId);
+  if (
+    !a ||
+    !q ||
+    !reportCategories.includes(category) ||
+    !["exam", "solutions"].includes(view) ||
+    (view === "solutions" && a.status !== "completed") ||
+    !message.trim() ||
+    message.trim().length > 1000
+  )
+    throw new StorageError("Konteks laporan tidak valid.", 400);
+  db.prepare(
+    "INSERT INTO reports VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,attempt_id,question_id,category,view) DO NOTHING",
+  ).run(
+    randomUUID(),
+    userId,
+    attemptId,
+    questionId,
+    category,
+    view,
+    message.trim(),
+    JSON.stringify({
+      version: q.version,
+      topic: q.topic,
+      kind: a.kind,
+      package: a.kind === "tryout" ? a.topic : null,
+      status: a.status,
+    }),
+    Date.now(),
+  );
+}
+
+db.exec(
+  `CREATE TABLE IF NOT EXISTS page_reports(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),category TEXT NOT NULL,message TEXT NOT NULL,view TEXT NOT NULL,topic TEXT NOT NULL,context TEXT NOT NULL,created INTEGER NOT NULL,UNIQUE(user_id,category,view,topic))`,
+);
+// Additive upgrade for local development databases from the initial RC iteration.
+const pageReportColumns = db.prepare("PRAGMA table_info(page_reports)").all();
+if (!pageReportColumns.some((c) => c.name === "attempt_id"))
+  db.exec(
+    "ALTER TABLE page_reports ADD COLUMN attempt_id TEXT REFERENCES attempts(id)",
+  );
+if (!pageReportColumns.some((c) => c.name === "question_id"))
+  db.exec("ALTER TABLE page_reports ADD COLUMN question_id TEXT");
+export function reportPage(
+  userId: string,
+  category: string,
+  view: string,
+  topic: string,
+  message: string,
+  attemptId?: string,
+) {
+  const a = attemptId ? getAttempt(attemptId, userId) : null;
+  if (attemptId && !a) throw new StorageError("Sesi tidak ditemukan.", 404);
+  if (
+    !reportCategories.includes(category) ||
+    !reportPages.includes(view) ||
+    !reportTopics.includes(topic) ||
+    !message.trim() ||
+    message.trim().length > 1000
+  )
+    throw new StorageError("Konteks laporan tidak valid.", 400);
+  db.prepare(
+    "INSERT INTO page_reports(id,user_id,category,message,view,topic,context,created,attempt_id,question_id) VALUES(?,?,?,?,?,?,?,?,?,?) ON CONFLICT(user_id,category,view,topic) DO NOTHING",
+  ).run(
+    randomUUID(),
+    userId,
+    category,
+    message.trim(),
+    view,
+    topic,
+    JSON.stringify({
+      page: view,
+      topic: topic || null,
+      ...(a
+        ? {
+            attempt_id: a.id,
+            kind: a.kind,
+            package: a.kind === "tryout" ? a.topic : null,
+            status: a.status,
+          }
+        : {}),
+    }),
+    Date.now(),
+    attemptId ?? null,
+    null,
+  );
 }

@@ -4,13 +4,17 @@ import { tryoutQuestions } from "../../src/lib/tryout-content";
 import { publicQuestion } from "../../src/lib/content";
 describe("fixed free beta packages", () => {
   it.each(tryoutPackages)(
-    "pins $slug to 20 unique version-one questions in its section",
+    "pins $slug to 20 unique pinned questions in its section",
     (pack) => {
       const questions = tryoutQuestions(pack.slug);
       expect(questions).toHaveLength(pack.questionCount);
       expect(new Set(questions.map((q) => q.id)).size).toBe(20);
       expect(
-        questions.every((q) => q.version === 1 && q.section === pack.section),
+        questions.every(
+          (q) =>
+            q.version === (pack.slug.includes("-pilot-") ? 2 : 1) &&
+            q.section === pack.section,
+        ),
       ).toBe(true);
       expect(new Set(questions.map((q) => q.topic))).toEqual(
         new Set(pack.topics),

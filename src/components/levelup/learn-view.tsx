@@ -13,6 +13,11 @@ type Props = {
   busy: boolean;
   start: (kind: string, t?: string) => Promise<void>;
 };
+const learningTopics = topics.filter(
+  (t) =>
+    process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
+    ["rasio", "aljabar", "persen"].includes(t.id),
+);
 export function LearnView({
   search,
   setSearch,
@@ -27,7 +32,11 @@ export function LearnView({
       <PageHeading
         eyebrow="PAHAMI, BUKAN HAFALKAN"
         title="Belajar dengan arah"
-        subtitle="7 modul belajar · 252 soal. Pilih konsep, pahami langkahnya, lalu buktikan pemahamanmu."
+        subtitle={
+          process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"
+            ? "Pilot: rasio, persamaan linear, dan persen. Pelajari konsep, contoh, lalu latihan."
+            : "7 modul belajar · 252 soal. Pilih konsep, pahami langkahnya, lalu buktikan pemahamanmu."
+        }
       />
       <label className="field lesson-search">
         Cari materi
@@ -39,7 +48,12 @@ export function LearnView({
         />
       </label>
       <div className="topic-tabs">
-        {topics
+        {learningTopics
+          .filter(
+            (t) =>
+              process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
+              ["rasio", "aljabar", "persen"].includes(t.id),
+          )
           .filter((t) =>
             `${t.name} ${t.domain} ${t.section}`
               .toLowerCase()
@@ -55,7 +69,7 @@ export function LearnView({
             </button>
           ))}
       </div>
-      {!topics.some((t) =>
+      {!learningTopics.some((t) =>
         `${t.name} ${t.domain} ${t.section}`
           .toLowerCase()
           .includes(search.toLowerCase().trim()),

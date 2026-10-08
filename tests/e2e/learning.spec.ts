@@ -554,7 +554,10 @@ for (const packageNumber of ["01", "02"])
       page.getByRole("button", { name: "Detail PM — Paket 01" }),
     ).toHaveCount(0);
     await page
-      .getByRole("button", { name: `Detail PK — Paket ${packageNumber}` })
+      .getByRole("button", {
+        name: `Detail PK — Paket ${packageNumber}`,
+        exact: true,
+      })
       .click();
     await expect(
       page.getByRole("region", { name: "Detail paket" }),
@@ -615,7 +618,10 @@ for (const packageNumber of ["01", "02"])
     ).toBeVisible();
     await page.getByRole("button", { name: "Tryout UTBK" }).click();
     await page
-      .getByRole("button", { name: `Detail PK — Paket ${packageNumber}` })
+      .getByRole("button", {
+        name: `Detail PK — Paket ${packageNumber}`,
+        exact: true,
+      })
       .click();
     await expect(
       page.getByRole("button", { name: /Lihat hasil/ }),
@@ -723,4 +729,179 @@ test("repeated fixed tryout does not inflate confidence or expose internal evide
     else expect(diversity).toEqual(before);
     expect(progress.history).toHaveLength(i + 1);
   }
+});
+
+test("pilot contextual feedback: persisted context, retries, ownership, and unchanged answers", async ({
+  page,
+  request: rawRequest,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await page.getByLabel("Nama lengkap").fill("Pilot Uji");
+  await page
+    .getByLabel("Email", { exact: true })
+    .fill(`pilot-${Date.now()}@example.com`);
+  await page.getByLabel("Kata sandi").fill("fixture-pilot-password");
+  await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "Halo, Pilot" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Tryout UTBK" }).click();
+  await page
+    .getByRole("button", { name: "Detail PK — Paket 01 Pilot RC" })
+    .click();
+  const starting = page.waitForResponse(
+    (r) =>
+      r.url().endsWith("/api/action") &&
+      r.request().method() === "POST" &&
+      r.request().postDataJSON().action === "start",
+  );
+  await page.getByRole("button", { name: "Mulai / lanjutkan paket" }).click();
+  const a = (await (await starting).json()).attempt;
+  expect(a.questions).toHaveLength(20);
+  expect(
+    a.questions.every(
+      (q: { version: number; correct?: number }) =>
+        q.version === 2 && q.correct === undefined,
+    ),
+  ).toBe(true);
+  await page.getByRole("button", { name: "Laporkan masalah soal" }).click();
+  await page
+    .getByLabel("Detail masalah")
+    .fill("Pilot test: please review wording.");
+  await page
+    .getByRole("button", { name: "Kirim laporan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Laporan tersimpan" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Kirim laporan", exact: true }),
+  ).toBeDisabled();
+  await expect(page.getByText("0/20 jawaban tersimpan")).toBeVisible();
+  const { DatabaseSync } = await import("node:sqlite");
+  const db = new DatabaseSync(
+    `${process.env.LEVELUP_DATA_DIR || ".data"}/levelup.sqlite`,
+  );
+  try {
+    const row = db
+      .prepare("SELECT context FROM reports WHERE attempt_id=?")
+      .get(a.id);
+    expect(JSON.parse(String(row!.context))).toMatchObject({
+      version: 2,
+      package: "pk-pilot-v1",
+      status: "active",
+    });
+    expect(
+      db.prepare("SELECT count(*) n FROM reports WHERE attempt_id=?").get(a.id)!
+        .n,
+    ).toBe(1);
+  } finally {
+    db.close();
+  }
+  const owner = await localApi(page.request).get(`/api/action?attempt=${a.id}`);
+  expect((await owner.json()).attempt.answers).toEqual({});
+  await page.reload();
+  await expect(
+    page.getByRole("heading", { name: "Satu soal, satu langkah." }),
+  ).toBeVisible();
+  // A failed report leaves the form retryable and does not claim persistence.
+  await page.getByRole("button", { name: "Laporkan masalah soal" }).click();
+  await page.getByLabel("Detail masalah").fill("Retry fixture");
+  await page.route("**/api/action", async (route) => {
+    if (
+      route.request().method() === "POST" &&
+      route.request().postDataJSON().action === "reportIssue"
+    )
+      return route.fulfill({
+        status: 503,
+        contentType: "application/json",
+        body: JSON.stringify({ error: "Laporan belum tersimpan." }),
+      });
+    return route.continue();
+  });
+  await page
+    .getByRole("button", { name: "Kirim laporan", exact: true })
+    .click();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Laporan belum tersimpan" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Kirim laporan", exact: true }),
+  ).toBeEnabled();
+  await page.unroute("**/api/action");
+  const other = localApi(rawRequest);
+  const post = (data: unknown) =>
+    other.post("/api/action", {
+      headers: { origin: "http://127.0.0.1:3000" },
+      data,
+    });
+  expect(
+    (
+      await post({
+        action: "reportIssue",
+        id: a.id,
+        questionId: a.questions[0].id,
+        category: "question",
+        view: "exam",
+        message: "Unauthorized",
+      })
+    ).status(),
+  ).toBe(401);
+  await post({
+    action: "register",
+    name: "Pilot Other",
+    email: `pilot-other-${Date.now()}@example.com`,
+    password: "fixture-other-password",
+  });
+  expect(
+    (
+      await post({
+        action: "reportIssue",
+        id: a.id,
+        questionId: a.questions[0].id,
+        category: "question",
+        view: "exam",
+        message: "Wrong owner",
+      })
+    ).status(),
+  ).toBe(404);
+  const scopedPost = (data: unknown) =>
+    localApi(page.request).post("/api/action", {
+      headers: { origin: "http://127.0.0.1:3000" },
+      data,
+    });
+  for (const extra of [
+    { questionId: "forged" },
+    { category: "forged" },
+    { view: "solutions" },
+    { message: " " },
+    { message: "x".repeat(1001) },
+  ])
+    expect(
+      (
+        await scopedPost({
+          action: "reportIssue",
+          id: a.id,
+          questionId: a.questions[0].id,
+          category: "question",
+          view: "exam",
+          message: "Invalid",
+          ...extra,
+        })
+      ).status(),
+    ).toBe(400);
+  await scopedPost({ action: "submit", id: a.id });
+  expect(
+    (
+      await scopedPost({
+        action: "reportIssue",
+        id: a.id,
+        questionId: a.questions[0].id,
+        category: "explanation",
+        view: "solutions",
+        message: "Post-test review",
+      })
+    ).status(),
+  ).toBe(200);
 });

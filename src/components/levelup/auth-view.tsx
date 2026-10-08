@@ -61,6 +61,11 @@ export function AuthDialog({
         </p>
         {auth === "confirmation" ? (
           <div>
+            <p>
+              Akun berhasil dibuat. Kami mengirim tautan verifikasi ke emailmu.
+              Konfirmasi email tersebut lalu kembali ke LevelUP Math untuk mulai
+              diagnostik.
+            </p>
             <ol>
               <li>Buka email dari Supabase, termasuk folder spam.</li>
               <li>Klik tautan konfirmasi email.</li>

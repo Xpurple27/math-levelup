@@ -67,13 +67,23 @@ export function PracticeView({
               <option value="All">Semua bagian</option>
               <option value="PK">PK — Pengetahuan Kuantitatif</option>
               <option value="PM">PM — Penalaran Matematika</option>
-              <option value="PU">PU — Penalaran Umum</option>
+              <option
+                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
+                value="PU"
+              >
+                PU — Penalaran Umum
+              </option>
             </select>
           </label>
           <label className="field">
             Subtopik
             <select value={topic} onChange={(e) => setTopic(e.target.value)}>
               {topics
+                .filter(
+                  (t) =>
+                    process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
+                    ["rasio", "aljabar", "persen"].includes(t.id),
+                )
                 .filter((t) => section === "All" || t.section === section)
                 .map((t) => (
                   <option key={t.id} value={t.id}>
@@ -92,9 +102,24 @@ export function PracticeView({
               }}
             >
               <option value="Mixed">Campuran</option>
-              <option value="Basic">Basic — fondasi</option>
-              <option value="Medium">Medium — penerapan</option>
-              <option value="Hard">Hard — lebih menantang</option>
+              <option
+                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
+                value="Basic"
+              >
+                Basic — fondasi
+              </option>
+              <option
+                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
+                value="Medium"
+              >
+                Medium — penerapan
+              </option>
+              <option
+                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
+                value="Hard"
+              >
+                Hard — lebih menantang
+              </option>
             </select>
           </label>
           <label className="field">
@@ -103,7 +128,12 @@ export function PracticeView({
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
             >
-              {(difficulty === "Mixed" ? [5, 10, 15, 20] : [5, 10]).map((n) => (
+              {(process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"
+                ? [5]
+                : difficulty === "Mixed"
+                  ? [5, 10, 15, 20]
+                  : [5, 10]
+              ).map((n) => (
                 <option key={n}>{n}</option>
               ))}
             </select>

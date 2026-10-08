@@ -63,3 +63,5 @@ Before broad student use: complete content QA, password recovery, durable rate l
 ## CI routing
 
 Default PR checks run format, lint, typecheck, unit, and build with npm caching. Critical E2E runs in its own workflow for API/auth, trust libraries, persistence/migrations, exam/auth/assessment-control UI, content QA registry, package/config, and E2E changes, or via workflow_dispatch. Ordinary styles/Learn/Dashboard presentation edits do not install Chromium automatically. When changing assessment behavior in an otherwise presentation file, dispatch Critical learning flows manually. Local critical tests remain required before pushing critical changes.
+
+Pilot release candidate: use [the pilot checklist](docs/pilot-release.md), `npm run pilot:qa`, and `npm run verify:hosted`. The bounded pilot uses 63 exact revised question IDs across diagnostic, three learning modules and Package 01 PK/PM/PU. Enable `NEXT_PUBLIC_LEVELUP_PILOT_MODE=1` before building; human approval is still pending. Private contextual reports cover questions and general pages. See [content scope](docs/pilot-content.md) and [readiness](docs/pilot-readiness.md).

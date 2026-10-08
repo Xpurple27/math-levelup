@@ -2,6 +2,9 @@
 -- Rebuild only legacy confidence metadata from completed, answered snapshots.
 -- Scores, attempt snapshots/results, mastery values and activity days stay intact.
 BEGIN;
+-- Fail atomically rather than waiting indefinitely for an active writer.
+SET LOCAL lock_timeout = '5s';
+SET LOCAL statement_timeout = '120s';
 -- Keep the historical-read/backfill statement isolated from concurrent learning writes.
 LOCK TABLE public.levelup_attempts, public.levelup_mastery IN SHARE ROW EXCLUSIVE MODE;
 WITH answered AS (

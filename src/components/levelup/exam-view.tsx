@@ -1,4 +1,5 @@
 "use client";
+import { ReportIssue } from "./report-issue";
 import {
   Check,
   ChevronLeft,
@@ -130,6 +131,12 @@ export function ExamView({
               <small>Hindari: {q.explanation.mistake}</small>
             </div>
           )}
+          <ReportIssue
+            key={q.id}
+            attemptId={attempt.id}
+            questionId={q.id}
+            view="exam"
+          />
           <div className="question-nav">
             <button
               className="button secondary"

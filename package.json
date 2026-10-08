@@ -13,7 +13,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "content:qa": "node scripts/content-qa.mjs",
-    "audit:repository": "node scripts/audit-repository.mjs"
+    "audit:repository": "node scripts/audit-repository.mjs",
+    "verify:hosted": "node scripts/verify-hosted.mjs",
+    "pilot:qa": "node scripts/pilot-qa.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",

@@ -1,3 +1,4 @@
+import { reportIssue } from "@/features/feedback/actions";
 import { NextRequest } from "next/server";
 import * as store from "@/lib/store";
 import { response, cookie, type ActionBody } from "@/features/http";
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
     if (!user)
       return response({ error: "Silakan masuk terlebih dahulu." }, 401);
     if (b.action === "logout") return await logoutAction(token || "");
+    if (b.action === "reportIssue") return await reportIssue(b, user);
     return await assessmentAction(b, user);
   } catch (error) {
     if (error instanceof Error && "status" in error)

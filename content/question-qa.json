@@ -1762,5 +1762,446 @@
     "family": "pola-f12",
     "variant": "3",
     "notes": "Generated seed; independent human review pending."
+  },
+  "rasio-1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "562faa35155697143ede4b85752d07bd226033293f0c1c3bb3e9e4433028c7f3",
+    "family": "rasio-basic-template",
+    "variant": "rasio-1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-2@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "0a0ed64acd76718614abd8d723500bb9860c2f671ef9bea8c06f53bb48568d96",
+    "family": "rasio-basic-template",
+    "variant": "rasio-2",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-13@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "87b588448255e5b656341161df816e813175f850b518217ada2886324d224db2",
+    "family": "rasio-medium-template",
+    "variant": "rasio-13",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-14@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "4165963735872419228d00b5e92df6cf9b15dc63af6a21bae30df271023b1c26",
+    "family": "rasio-medium-template",
+    "variant": "rasio-14",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-25@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "235b5af3812971db367faa67054598cfad71b47354c0bca3296ea8dc02d303df",
+    "family": "rasio-hard-template",
+    "variant": "rasio-25",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f1-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "07d4dbd87c2079c0adf11867b68e447a7e8b7b5f0e787b93b875eb10d5a23b45",
+    "family": "persen-f1",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f2-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "1103ce2370cf3c91532814195fabf195aff371a6f6a93e7cd6c2506cc80f734f",
+    "family": "persen-f2",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f5-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "b5b5b1a5a20a67a89a5b74af71bec246863f0f7f3babdf15f8f8a3a7e6c3a762",
+    "family": "persen-f5",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f6-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "e7044641b0603ddc8903d5beb694cf2e136a2765a11bfb3f0d3da50d38c882ae",
+    "family": "persen-f6",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f9-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "477b478e4d14545ded4feb9e81a295d06ec1f0fd7540db5a7a4e164da8d6cc89",
+    "family": "persen-f9",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f1-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "54d7f6b6c71290be5cc79e7546ccb84bb24fc6dc184115852ab1472b16369cfa",
+    "family": "geometri-f1",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f2-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "73938ff881eeb2ba134ee51b94ea51e32271b06722be0eaec9e2772823bb5eb2",
+    "family": "geometri-f2",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f5-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "2f1e5baf81e44bd765b0d978332e7148d895cfe07fe6fbc268f02bd0e844dc04",
+    "family": "geometri-f5",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f6-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "de340039b3b8c1415081820f30758f230d515ec112abe104ab060ca1b77b8084",
+    "family": "geometri-f6",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f9-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "5ca5a4c1a08f381218f47f5290c1189af5eeb9cff0ec6a464a455b65b2c11142",
+    "family": "geometri-f9",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-26@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "4d44dd963a6779305a495c84ac21e5e98f942a9b9f018e5bfa00f9871fad5131",
+    "family": "rasio-hard-template",
+    "variant": "rasio-26",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f7-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "d4e180eb6bb65ed3ee6cdd8ae8b73fd32711f924c8bcdbaa7a938008f6dee428",
+    "family": "persen-f7",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f10-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "3f20b6534e61dff04a9bcfdaa8b83403cb0347a78be79a6d840fcd6251814240",
+    "family": "persen-f10",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f7-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "c5db2d030e8b8196260881ace72c577be747711fadd65ef0f5aa4717b5d37f31",
+    "family": "geometri-f7",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "geometri-f10-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "53709e5dc5b6432ce0e38ebea3dbb01bcad9645f34e109cd57b224e3547a36c9",
+    "family": "geometri-f10",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "d42176585d14ed8295476abe8c5e7d975b73982d19bcc22e536fcbb78eed4426",
+    "family": "aljabar-basic-template",
+    "variant": "aljabar-1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-2@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "f6720e618de07b2ddf1b349c613e1fade10b50046c72494cc0fe101974d5fb12",
+    "family": "aljabar-basic-template",
+    "variant": "aljabar-2",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-3@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a22d464c79dd0a6425dbe610a9369292d5c1b6070ed0a10d0337ea0e1014d3f2",
+    "family": "aljabar-basic-template",
+    "variant": "aljabar-3",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-13@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "1275b09abae77f9cee84acbd882743a6af3f61cbb8b10d3e7d3d72ac7967df1f",
+    "family": "aljabar-medium-template",
+    "variant": "aljabar-13",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-14@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "77a3dcc89550fb98fa0233f19f6c194dc76ab9ef60ebe17552efa9e3a4bf1b12",
+    "family": "aljabar-medium-template",
+    "variant": "aljabar-14",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-15@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "b28fc540f4de0038652176097d963921d84900b6e3372179be8f0b9b258bd390",
+    "family": "aljabar-medium-template",
+    "variant": "aljabar-15",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-25@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "738c2c66e9d2db49a7301c68970648acb64b1d8cdff1deb57b0c0315294b5a78",
+    "family": "aljabar-hard-template",
+    "variant": "aljabar-25",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-26@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "8aeabdf2ed93915c0235ab630dde2d70a2a29b85d9daf1e2308abc769fdf02f5",
+    "family": "aljabar-hard-template",
+    "variant": "aljabar-26",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f1-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "bf85833e30e7931904fab733e13c88ebb9d7f1eb69983c049fec84c9277963fe",
+    "family": "peluang-f1",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f2-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "882dc1f7d107a4951012df19d1be88600bab5d5436dbcb677e9b2a6fc58db77d",
+    "family": "peluang-f2",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f5-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "f36711a2ec1a212e822b3e5ac8625042155c5123b652d1c5b4c1122f13b2c42d",
+    "family": "peluang-f5",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f6-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a7bde0daa0752855541133d771c6efdc8768f3e00dc2878c60f6f6510b80271d",
+    "family": "peluang-f6",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f7-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "26ee3bd964ac99a7c4fef9bd28c6bcd578ed18ef46770cd291a32a8f2476e09d",
+    "family": "peluang-f7",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f9-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "5f2953348770806af15f63b25b848cca60afd465aaec833761abc5eab5a6c2c0",
+    "family": "peluang-f9",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f10-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "c27183caa7c68417d08822e45482690b9d151d229049cdc3e0c20e625ae1d390",
+    "family": "peluang-f10",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-16@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "d739af949834af52bdedb0f6b806a2eead284dd7c924afd476a3ac6512672a12",
+    "family": "aljabar-medium-template",
+    "variant": "aljabar-16",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "aljabar-27@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "02359f9a17d53ee9cdabad89738a5f9445d3cf32ed221c5287d0d812f670da05",
+    "family": "aljabar-hard-template",
+    "variant": "aljabar-27",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f3-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "ea6b9aa29bfb322f89ba031c4ed400c7826e6998c0581192a2c4ebc0f988003d",
+    "family": "peluang-f3",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f8-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "6eeecd0b11a53906862b46ea5c848eaede70c9444066977bd9478892ea6d4ccd",
+    "family": "peluang-f8",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "peluang-f11-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "b40a9e0da26a4020f020075fdafb1148c7c9cbeb80d0f14c9462c963262dca39",
+    "family": "peluang-f11",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "c39255aa9df100208b97adfa1f695be91b5cfdf4245cd06b7d391e16b1fe6bfb",
+    "family": "statistika-basic-template",
+    "variant": "statistika-1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-2@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "f6fad3f77a6b14acec3b219ac6e6e7e530bf19afd95b68e1889924cde25030e2",
+    "family": "statistika-basic-template",
+    "variant": "statistika-2",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-3@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "2674297ee5dbbdbf93076fe19671009ff75f178829e984d26e18e573c3a3526f",
+    "family": "statistika-basic-template",
+    "variant": "statistika-3",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-13@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a98677b0af1bc52ba2a6007b1fc7a4669b3da04345aa9835ec37c431b1c4c051",
+    "family": "statistika-medium-template",
+    "variant": "statistika-13",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-14@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "7b89ada8eedacd154ffd327bb38b6eaed47f5bf01c0363cb9d7069fb5d322be6",
+    "family": "statistika-medium-template",
+    "variant": "statistika-14",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-15@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "910af70c28ef5860c54987116760f823995c58ab2a6938d79920adccca8ec082",
+    "family": "statistika-medium-template",
+    "variant": "statistika-15",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-25@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "bc8e321aa7cb22ac09d90486eded051574a859b4a578126eef962a73a4e85ef6",
+    "family": "statistika-hard-template",
+    "variant": "statistika-25",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-26@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "7d32ab2b87c2dcfd40a6476c01460a202da149a992084e2962c3ad8510436912",
+    "family": "statistika-hard-template",
+    "variant": "statistika-26",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f1-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "907e84057e4bf767dda1eae0a15caca08d05b5bd497280938097a5fc05807182",
+    "family": "pola-f1",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f2-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "0123b4be5f710f801d52aaa7d76e99dcb389f580ae3d2d6ce0a1606e8eadbff2",
+    "family": "pola-f2",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f5-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a7f150db272313082d095966850d85236bd3f133f27b054f1f8e5765bff559cf",
+    "family": "pola-f5",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f6-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "4bb465d72be423b409caac5727e46572ccba12b2a30a26ef9227a14e7bca0044",
+    "family": "pola-f6",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f7-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a05a615babb0179d0bddf3109d75498a9f67cb7009b5e2e19db692a1e3522cd1",
+    "family": "pola-f7",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f9-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "e69f63d5c9631ad84f5ef9ab901f7ae07053d1f45ad9071c72f850b2c1a49b2b",
+    "family": "pola-f9",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f10-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "e74d772c3333ba293318d90dedc95c4bb72cf8c7a584a80e84810427a4c4bfde",
+    "family": "pola-f10",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-16@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "0b694906b52d75d7968605e845bffeb82109ed38325fea285c6054e9e775e455",
+    "family": "statistika-medium-template",
+    "variant": "statistika-16",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "statistika-27@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "bd53d4d49442ed4a80756769805ad9687388b584836b9cdf3fb015e80e9837b8",
+    "family": "statistika-hard-template",
+    "variant": "statistika-27",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f3-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "472dfc7b96d9e56a14e4aaa5678ffa479cb663e9ac2e2fbf5558e82eb451daeb",
+    "family": "pola-f3",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f8-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "8e32a716eb15abf903219398c308a90da00aca8555ddb220b96ab3d0d89a15eb",
+    "family": "pola-f8",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "pola-f11-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "4afd3674c8a667bd3c85def94d73ba366315ce9242e2786280342cec21f3d835",
+    "family": "pola-f11",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-15@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "dfe1d5ea6eca06db8f3c5b0825550aafcda86dcbcfdcc7c2000854b186ccf52c",
+    "family": "rasio-medium-template",
+    "variant": "rasio-15",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "rasio-27@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "a98c6575970bb1882b5579e8cb5ed88fe2f48e13f92c4456f22b00586fffb6dc",
+    "family": "rasio-hard-template",
+    "variant": "rasio-27",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
+  },
+  "persen-f11-v1@2": {
+    "status": "NEEDS_REVIEW",
+    "contentHash": "69617695a8ec8130f9903721f22159228a4926fc8d649857e90c569516c2b072",
+    "family": "persen-f11",
+    "variant": "1",
+    "notes": "Pilot revision 2: mathematical key checked against independent test grid; options target operation/order, denominator, counting or index errors. Difficulty, wording and distractor plausibility require independent human review; not approved."
   }
 }

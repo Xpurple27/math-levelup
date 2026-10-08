@@ -145,7 +145,7 @@ export function DashboardView({
         <Stat
           icon={<Target size={21} />}
           label="Math mastery"
-          value={avg === null ? "—" : `${avg}%`}
+          value={avg === null ? "Belum diukur" : `${avg}%`}
           foot={
             avg === null
               ? "Kenali kemampuan awalmu"
@@ -193,7 +193,7 @@ export function DashboardView({
               <p>
                 {weakest
                   ? "Perkuat konsep dari profil kemampuan awalmu."
-                  : "Bangun fondasi kuat, satu konsep setiap kali."}
+                  : "Rekomendasi awal ini belum berbasis diagnostik. Mulai dari fondasi atau ukur kemampuanmu terlebih dahulu."}
               </p>
               <div className="tag-row">
                 <span>Konsep + contoh</span>

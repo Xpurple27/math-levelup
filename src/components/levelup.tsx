@@ -1,4 +1,5 @@
 "use client";
+import { ReportIssue } from "./levelup/report-issue";
 import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import {
@@ -217,9 +218,13 @@ export default function Levelup() {
       setView(d.attempt.status === "completed" ? "result" : "exam");
     }
   };
-  const weakest = [...mastery].sort(
-    (a, b) => a.value - b.value || a.confidence - b.confidence,
-  )[0];
+  const weakest = [...mastery]
+    .filter(
+      (m) =>
+        process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
+        ["rasio", "aljabar", "persen"].includes(m.topic),
+    )
+    .sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
   const recommended = weakest?.topic || "rasio";
   const avg = mastery.length
     ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length)
@@ -486,6 +491,24 @@ export default function Levelup() {
               Memuat ruang belajarmu…
             </div>
           )}
+          {user &&
+            [
+              "dashboard",
+              "learn",
+              "progress",
+              "result",
+              "practice",
+              "tryout",
+            ].includes(view) && (
+              <ReportIssue
+                key={`${view}-${topic}-${view === "result" ? attempt?.id : ""}`}
+                view={view}
+                attemptId={view === "result" ? attempt?.id : undefined}
+                topic={
+                  view === "learn" || view === "practice" ? topic : undefined
+                }
+              />
+            )}
         </main>
       </div>
       {auth && (

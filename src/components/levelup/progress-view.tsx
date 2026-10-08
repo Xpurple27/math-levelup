@@ -46,7 +46,7 @@ export function ProgressView({
         <Stat
           icon={<TrendingUp size={21} />}
           label="Math mastery"
-          value={avg === null ? "—" : `${avg}%`}
+          value={avg === null ? "Belum diukur" : `${avg}%`}
           foot="Rata-rata subtopik yang diukur"
           color="purple"
         />
@@ -94,7 +94,7 @@ export function ProgressView({
                 <div className="skill-track">
                   <span style={{ width: `${m?.value || 0}%` }} />
                 </div>
-                <strong>{m ? `${m.value}%` : "—"}</strong>
+                <strong>{m ? `${m.value}%` : "Belum diukur"}</strong>
                 <span className="tag">{masteryLabel(m)}</span>
               </div>
             );

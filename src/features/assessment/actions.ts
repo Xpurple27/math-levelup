@@ -1,3 +1,4 @@
+import { pilotMode, selectPilot } from "../../lib/pilot";
 import "server-only";
 import {
   topics,
@@ -85,6 +86,11 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         { error: "Paket tidak tersedia atau belum dapat diakses." },
         400,
       );
+    if (pilotMode() && pack && !pack.slug.includes("-pilot-"))
+      return response(
+        { error: "Pilih Paket 01 Pilot RC untuk sesi pilot." },
+        400,
+      );
     const topic = b.kind === "diagnostic" ? null : pack ? pack.slug : b.topic;
     if (
       topic !== null &&
@@ -117,10 +123,12 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         topic,
         pack
           ? tryoutQuestions(pack.slug)
-          : selectQuestions(b.kind, topic ?? undefined, count, {
-              difficulty: difficulty as Difficulty | "Mixed",
-              excludedIds,
-            }),
+          : pilotMode()
+            ? selectPilot(b.kind, topic, count, difficulty, excludedIds)
+            : selectQuestions(b.kind, topic ?? undefined, count, {
+                difficulty: difficulty as Difficulty | "Mixed",
+                excludedIds,
+              }),
       );
     }
     return response({ attempt: safe(a) });

@@ -1,4 +1,5 @@
 "use client";
+import { ReportIssue } from "./report-issue";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { topics } from "@/lib/topics";
 import { PageHeading } from "./view-ui";
@@ -117,6 +118,10 @@ export function ResultView({
                   </p>
                   <button
                     className="text-button purple-text"
+                    disabled={
+                      process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1" &&
+                      !["rasio", "aljabar", "persen"].includes(t.id)
+                    }
                     onClick={() => {
                       setTopic(t.id);
                       go("learn");
@@ -184,6 +189,11 @@ export function ResultView({
               <p className="muted">
                 Kesalahan umum: {item.explanation?.mistake}
               </p>
+              <ReportIssue
+                attemptId={attempt.id}
+                questionId={item.id}
+                view="solutions"
+              />
             </details>
           ))}
         </section>
