@@ -19,3 +19,23 @@ it("identifies private tokens/JWTs and excludes fixture emails and public anon J
     "runtime-student-data-file",
   );
 });
+
+it("reviews the exact public registry deprecation contact but still detects other lockfile emails", () => {
+  const lock = {
+    packages: {
+      "node_modules/glob": {
+        resolved: "https://registry.npmjs.org/glob/-/glob-7.2.3.tgz",
+        deprecated: "contact " + ["i", "izs.me"].join("@"),
+      },
+    },
+  };
+  expect(
+    detectPrivateMaterial(JSON.stringify(lock), "package-lock.json"),
+  ).toEqual([]);
+  expect(
+    detectPrivateMaterial(
+      JSON.stringify({ ...lock, owner: ["private", "real.test"].join("@") }),
+      "package-lock.json",
+    ),
+  ).toContain("personal-email-review-needed");
+});

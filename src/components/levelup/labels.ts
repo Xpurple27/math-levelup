@@ -1,5 +1,5 @@
-import { topics } from "@/lib/topics";
-import { findTryoutPackage } from "@/lib/tryout-packages";
+"use client";
+import { useTopics } from "../content-context";
 export const kindLabel: Record<string, string> = {
   diagnostic: "Diagnostik awal",
   tryout: "Tryout paket",
@@ -8,6 +8,10 @@ export const kindLabel: Record<string, string> = {
   practice: "Latihan mandiri",
 };
 export const topicName = (id: string | null) =>
-  findTryoutPackage(id)?.title ||
-  topics.find((t) => t.id === id)?.name ||
-  "PK · PM · PU";
+  id ? "Subtopik" : "PK · PM · PU";
+
+export function useTopicName() {
+  const topics = useTopics();
+  return (id: string | null) =>
+    topics.find((t) => t.id === id)?.name || topicName(id);
+}

@@ -2104,3 +2104,125 @@ main {
   max-width: 520px;
   margin-bottom: 20px;
 }
+
+.admin-shell {
+  max-width: 1500px;
+  margin: auto;
+  padding: 24px;
+}
+.admin-shell header,
+.admin-shell nav {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.admin-shell main > h1 {
+  margin-bottom: 16px;
+}
+.admin-shell label {
+  display: block;
+  margin: 12px 0;
+}
+.admin-shell input:not([type="checkbox"]):not([type="radio"]),
+.admin-shell select,
+.admin-shell textarea {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d8d8e4;
+  border-radius: 8px;
+  background: white;
+  color: #222;
+}
+.admin-shell textarea {
+  min-height: 90px;
+  font-family: monospace;
+}
+.admin-shell fieldset {
+  border: 0;
+  padding: 0;
+}
+.admin-shell button {
+  cursor: pointer;
+  border: 1px solid #d8d8e4;
+  padding: 10px;
+  border-radius: 8px;
+}
+.admin-shell button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.editor-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.question-preview {
+  position: sticky;
+  top: 20px;
+}
+.content-markdown {
+  overflow-wrap: anywhere;
+}
+.content-markdown p {
+  margin: 8px 0;
+}
+.content-markdown ul,
+.content-markdown ol {
+  padding-left: 24px;
+}
+.content-markdown img {
+  max-width: 100%;
+  height: auto;
+}
+.content-markdown .katex-display {
+  overflow-x: auto;
+  padding: 8px;
+}
+.preview-option {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+.admin-filters {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.table-scroll {
+  overflow-x: auto;
+}
+.admin-shell table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+}
+.admin-shell th,
+.admin-shell td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+.admin-shell section {
+  margin: 20px 0;
+}
+.admin-shell [role="alert"] {
+  color: #a82335;
+}
+@media (max-width: 900px) {
+  .editor-grid {
+    grid-template-columns: 1fr;
+  }
+  .admin-filters {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .question-preview {
+    position: static;
+  }
+}

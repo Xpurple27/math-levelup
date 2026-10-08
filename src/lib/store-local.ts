@@ -1,4 +1,8 @@
-import { reportCategories, reportPages, reportTopics } from "./feedback-rules";
+import {
+  reportCategories,
+  reportPages,
+  validReportTopic,
+} from "./feedback-rules";
 import "server-only";
 import {
   attemptDurationMs,
@@ -382,7 +386,7 @@ export function reportPage(
   if (
     !reportCategories.includes(category) ||
     !reportPages.includes(view) ||
-    !reportTopics.includes(topic) ||
+    !validReportTopic(topic) ||
     !message.trim() ||
     message.trim().length > 1000
   )
@@ -412,4 +416,57 @@ export function reportPage(
     attemptId ?? null,
     null,
   );
+}
+
+// C1 reset: remove only obsolete generated-content test history; preserve accounts/sessions.
+db.exec("CREATE TABLE IF NOT EXISTS local_migrations(name TEXT PRIMARY KEY)");
+if (
+  !db
+    .prepare("SELECT name FROM local_migrations WHERE name=?")
+    .get("content-v2-reset")
+) {
+  db.exec("BEGIN IMMEDIATE");
+  try {
+    const retired = (
+      db.prepare("SELECT id,user_id,snapshot FROM attempts").all() as {
+        id: string;
+        user_id: string;
+        snapshot: string;
+      }[]
+    ).filter((a) => {
+      try {
+        return (JSON.parse(a.snapshot) as Question[]).some(
+          (q) =>
+            /^(rasio|aljabar|statistika)-[0-9]+$/.test(q.id) ||
+            /^(persen|geometri|peluang|pola)-f[0-9]+-v[0-9]+$/.test(q.id),
+        );
+      } catch {
+        return false;
+      }
+    });
+    const owners = new Set(retired.map((a) => a.user_id));
+    for (const a of retired) {
+      db.prepare("DELETE FROM reports WHERE attempt_id=?").run(a.id);
+      db.prepare("DELETE FROM page_reports WHERE attempt_id=?").run(a.id);
+      db.prepare("DELETE FROM attempts WHERE id=?").run(a.id);
+    }
+    for (const owner of owners) {
+      db.prepare(
+        "DELETE FROM mastery WHERE user_id=? AND topic IN ('rasio','aljabar','statistika','persen','geometri','peluang','pola')",
+      ).run(owner);
+      if (
+        !db
+          .prepare("SELECT id FROM attempts WHERE user_id=? LIMIT 1")
+          .get(owner)
+      )
+        db.prepare("DELETE FROM activities WHERE user_id=?").run(owner);
+    }
+    db.prepare("INSERT INTO local_migrations VALUES(?)").run(
+      "content-v2-reset",
+    );
+    db.exec("COMMIT");
+  } catch (error) {
+    db.exec("ROLLBACK");
+    throw error;
+  }
 }

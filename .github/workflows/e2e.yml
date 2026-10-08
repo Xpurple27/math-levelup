@@ -5,7 +5,14 @@ on:
       - "src/app/api/**"
       - "src/app/auth/**"
       - "src/lib/**"
-      - "content/**"
+      - "scripts/**"
+      - "src/app/admin/**"
+      - "src/components/admin/**"
+      - "public/templates/**"
+      - "src/components/content-media.tsx"
+      - "src/components/explanation.tsx"
+      - "src/components/markdown.tsx"
+      - "src/components/content-context.tsx"
       - "src/features/**"
       - "src/components/levelup.tsx"
       - "src/components/levelup/auth-view.tsx"
@@ -42,6 +49,4 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npx playwright install --with-deps chromium
-      - run: npm run test:e2e -- tests/e2e/learning.spec.ts
-      - run: NEXT_PUBLIC_LEVELUP_PILOT_MODE=1 npm run build
-      - run: NEXT_PUBLIC_LEVELUP_PILOT_MODE=1 npm run test:e2e -- tests/e2e/pilot.spec.ts
+      - run: npm run test:e2e

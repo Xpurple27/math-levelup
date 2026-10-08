@@ -1,4 +1,7 @@
 "use client";
+import { Explanation } from "../explanation";
+import { ContentMedia } from "../content-media";
+import { Markdown } from "../markdown";
 import { ReportIssue } from "./report-issue";
 import {
   Check,
@@ -7,7 +10,7 @@ import {
   Clock,
   CheckCircle2,
 } from "lucide-react";
-import { kindLabel, topicName } from "./labels";
+import { kindLabel, useTopicName } from "./labels";
 import type { View, Q, Attempt, ActionReply } from "./types";
 import type { Dispatch, SetStateAction } from "react";
 type Props = {
@@ -44,6 +47,7 @@ export function ExamView({
   answered,
   go,
 }: Props) {
+  const topicName = useTopicName();
   return (
     <>
       <div className="exam-heading">
@@ -78,7 +82,12 @@ export function ExamView({
               }}
             />
           </div>
-          <h2 className="question-stem">{q.stem}</h2>
+          <ContentMedia media={q.media} />
+          {q.instruction && <Markdown text={q.instruction} />}
+          {q.stimulus && <Markdown text={q.stimulus} />}
+          <div className="question-stem">
+            <Markdown text={q.stem} />
+          </div>
           <div className="answer-options">
             {q.options.map((o, i) => (
               <button
@@ -97,7 +106,7 @@ export function ExamView({
                 }}
               >
                 <span>{String.fromCharCode(65 + i)}</span>
-                {o}
+                <Markdown text={o} />
                 {selected === i && <CheckCircle2 size={19} />}
               </button>
             ))}
@@ -116,21 +125,10 @@ export function ExamView({
           {q.hint && (
             <div className="hint">
               <strong>Belum tepat. Coba sekali lagi.</strong>
-              <p>{q.hint}</p>
+              <Markdown text={q.hint || ""} />
             </div>
           )}
-          {q.explanation && (
-            <div className="explanation">
-              <h3>
-                {feedback?.correct ? "Tepat!" : "Mari pahami langkahnya."}
-              </h3>
-              <strong>Langkah pertama</strong>
-              <p>{q.explanation.firstStep}</p>
-              <strong>Penyelesaian</strong>
-              <p>{q.explanation.solution}</p>
-              <small>Hindari: {q.explanation.mistake}</small>
-            </div>
-          )}
+          {q.explanation && <Explanation value={q.explanation} />}
           <ReportIssue
             key={q.id}
             attemptId={attempt.id}

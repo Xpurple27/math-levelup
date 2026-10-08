@@ -1,9 +1,9 @@
-# Product scope — first usable slice
+# Product scope — C1–C4
 
-Target: Indonesian grade 11–12/gap-year learners preparing for UTBK. Primary direction: tryouts supported by Learn, Practice, and Progress.
+LevelUP Math targets Indonesian UTBK learners. Current delivery keeps the student assessment engine while rebuilding the content authoring foundation. There are zero production questions, no active legacy packages and no generated thin learning modules. Human-curated content can be drafted/imported, previewed, independently reviewed and explicitly published.
 
-Current loop: account/onboarding → diagnostic → initial weakness profile → recommended concept → guided practice → mini assessment → independent practice → progress.
+The phase ends at normalized schema, Question Bank/Editor, Markdown/KaTeX, minimal media references, QA and Excel import. Full Learning/Tryout Builder, PDF/Drive integration, commerce, leaderboards and AI/adaptive features are deferred.
 
-Use “Initial Skill Profile” semantics for the diagnostic. Never label an uncalibrated score as UTBK prediction. Math mastery is concept evidence, not exam performance. Pass at 80% is not automatically Mastered. Do not count login as a learning streak.
+Retain Initial Skill Profile semantics: diagnostics are not calibrated UTBK predictions. Mastery measures unique concept evidence; 80% mini-assessment pass does not automatically mean Mastered. Do not count login as activity. Hosted setup and enough human-approved published content are required before a student release.
 
-The uploaded handoff is retained unchanged under `docs/handoff/`. Future milestones: Supabase production authority and content QA first, then full tryout content and publication; commerce, leaderboards, and AI only after the core flow is reliable.
+The supplied handoff remains under `docs/handoff/` as reference material. The latest C1–C4 user contract supersedes its older generated content/pilot direction. See [content architecture](content-architecture-v2.md) and [reset](content-reset.md).

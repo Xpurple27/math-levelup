@@ -1,4 +1,5 @@
 "use client";
+import { usePublishedCount } from "../content-context";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -15,7 +16,7 @@ import {
 } from "lucide-react";
 import type { Mastery } from "@/lib/scoring";
 import { Stat } from "./view-ui";
-import { topicName } from "./labels";
+import { useTopicName } from "./labels";
 import type { View, User, History } from "./types";
 import type { Dispatch, SetStateAction } from "react";
 type Props = {
@@ -44,6 +45,8 @@ export function DashboardView({
   setTopic,
   go,
 }: Props) {
+  const topicName = useTopicName();
+  const published = usePublishedCount();
   return (
     <>
       <div className="page-heading">
@@ -59,6 +62,12 @@ export function DashboardView({
           <GraduationCap size={17} /> Persiapan UTBK 2027
         </span>
       </div>
+      {!published && (
+        <p role="status">
+          Soal belum diterbitkan. Akun tetap tersedia; latihan menunggu konten
+          selesai dikurasi.
+        </p>
+      )}
       <section className="hero">
         <div className="hero-copy">
           <span className="hero-label">

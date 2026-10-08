@@ -6,11 +6,11 @@ import {
   TrendingUp,
   CheckCircle2,
 } from "lucide-react";
-import { topics } from "@/lib/topics";
+import { useTopics } from "../content-context";
 import type { Mastery } from "@/lib/scoring";
 import { masteryLabel } from "@/lib/scoring";
 import { Stat, PageHeading } from "./view-ui";
-import { kindLabel, topicName } from "./labels";
+import { kindLabel, useTopicName } from "./labels";
 import type { View, Attempt, History } from "./types";
 import type { Dispatch, SetStateAction } from "react";
 type Props = {
@@ -35,6 +35,8 @@ export function ProgressView({
   syncAttempt,
   setView,
 }: Props) {
+  const topicName = useTopicName();
+  const topics = useTopics();
   return (
     <>
       <PageHeading

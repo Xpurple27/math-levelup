@@ -1,7 +1,8 @@
+import { publicTopics } from "../content/runtime";
 import {
   reportCategories,
   reportPages,
-  reportTopics,
+  validReportTopic,
 } from "../../lib/feedback-rules";
 import "server-only";
 import * as store from "../../lib/store";
@@ -28,7 +29,23 @@ export async function reportIssue(b: ActionBody, user: User) {
       (id !== undefined && typeof id !== "string") ||
       questionId !== undefined ||
       typeof topic !== "string" ||
-      !reportTopics.includes(topic)
+      !validReportTopic(topic)
+    )
+      return response({ error: "Konteks halaman tidak valid." }, 400);
+    if (
+      typeof topic === "string" &&
+      topic.includes("-") &&
+      ![
+        "rasio",
+        "aljabar",
+        "statistika",
+        "persen",
+        "geometri",
+        "peluang",
+        "pola",
+        "",
+      ].includes(topic) &&
+      !(await publicTopics()).some((t) => t.id === topic)
     )
       return response({ error: "Konteks halaman tidak valid." }, 400);
     if (typeof id === "string" && !(await store.getAttempt(id, user.id)))

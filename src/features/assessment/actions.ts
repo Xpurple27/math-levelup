@@ -1,7 +1,5 @@
-import { pilotMode, selectPilot } from "../../lib/pilot";
 import "server-only";
 import {
-  topics,
   selectQuestions,
   publicQuestion,
   type Difficulty,
@@ -9,26 +7,28 @@ import {
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
 import { findTryoutPackage, tryoutPackages } from "@/lib/tryout-packages";
-import { tryoutQuestions } from "@/lib/tryout-content";
+import { publicTopics } from "../content/runtime";
 import { response, type ActionBody } from "../http";
 import { applyPracticeAnswer } from "../practice/answer";
 export async function finish(a: store.Attempt) {
   if (a.status === "completed") return a;
   const old = await store.getMastery(a.user_id);
-  const masteries = topics.flatMap((t) => {
-    const qs = a.snapshot.filter((q) => q.topic === t.id);
-    return qs.length
-      ? [
-          updateMastery(
-            old.find((m) => m.topic === t.id),
-            qs,
-            a.answers,
-            a.kind,
-            a.credits,
-          ),
-        ]
-      : [];
-  });
+  const masteries = [...new Set(a.snapshot.map((q) => q.topic))].flatMap(
+    (topic) => {
+      const qs = a.snapshot.filter((q) => q.topic === topic);
+      return qs.length
+        ? [
+            updateMastery(
+              old.find((m) => m.topic === topic),
+              qs,
+              a.answers,
+              a.kind,
+              a.credits,
+            ),
+          ]
+        : [];
+    },
+  );
   await store.finalize(a, grade(a.snapshot, a.answers), masteries, old);
   return (await store.getAttempt(a.id, a.user_id))!;
 }
@@ -47,7 +47,7 @@ export function safe(a: store.Attempt) {
     questions: a.snapshot.map((q) => ({
       ...publicQuestion(q),
       ...(a.status === "completed" || a.feedback[q.id]?.done
-        ? { correct: q.correct, explanation: q.explanation }
+        ? { correct: q.correct, explanation: q.explanation, media: q.media }
         : {}),
       ...(a.kind === "guided" &&
       a.feedback[q.id]?.tries === 1 &&
@@ -86,16 +86,11 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         { error: "Paket tidak tersedia atau belum dapat diakses." },
         400,
       );
-    if (pilotMode() && pack && !pack.slug.includes("-pilot-"))
-      return response(
-        { error: "Pilih Paket 01 Pilot RC untuk sesi pilot." },
-        400,
-      );
     const topic = b.kind === "diagnostic" ? null : pack ? pack.slug : b.topic;
     if (
       topic !== null &&
       (typeof topic !== "string" ||
-        (!pack && !topics.some((t) => t.id === topic)))
+        (!pack && !(await publicTopics()).some((t) => t.id === topic)))
     )
       return response({ error: "Topik tidak valid." }, 400);
     const count =
@@ -121,14 +116,11 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         user.id,
         b.kind,
         topic,
-        pack
-          ? tryoutQuestions(pack.slug)
-          : pilotMode()
-            ? selectPilot(b.kind, topic, count, difficulty, excludedIds)
-            : selectQuestions(b.kind, topic ?? undefined, count, {
-                difficulty: difficulty as Difficulty | "Mixed",
-                excludedIds,
-              }),
+        await selectQuestions(b.kind, topic ?? undefined, count, {
+          difficulty: difficulty as Difficulty | "Mixed",
+          excludedIds,
+          section: typeof b.section === "string" ? b.section : undefined,
+        }),
       );
     }
     return response({ attempt: safe(a) });

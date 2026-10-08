@@ -1,8 +1,8 @@
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
-import { tryoutQuestions } from "../../src/lib/tryout-content";
-import { selectQuestions } from "../../src/lib/content";
+import { tryoutQuestions } from "../fixtures/questions";
+import { selectQuestions } from "../fixtures/questions";
 let db: PGlite;
 const user = "00000000-0000-4000-8000-000000000001",
   other = "00000000-0000-4000-8000-000000000002";

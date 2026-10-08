@@ -1,9 +1,12 @@
 "use client";
+import { Explanation } from "../explanation";
+import { ContentMedia } from "../content-media";
+import { Markdown } from "../markdown";
 import { ReportIssue } from "./report-issue";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { topics } from "@/lib/topics";
+import { useTopics } from "../content-context";
 import { PageHeading } from "./view-ui";
-import { kindLabel, topicName } from "./labels";
+import { kindLabel, useTopicName } from "./labels";
 import type { View, Attempt } from "./types";
 import type { Dispatch, SetStateAction } from "react";
 type Props = {
@@ -22,6 +25,8 @@ export function ResultView({
   go,
   recommended,
 }: Props) {
+  const topicName = useTopicName();
+  const topics = useTopics();
   if (!attempt.result) return null;
   return (
     <>
@@ -118,10 +123,6 @@ export function ResultView({
                   </p>
                   <button
                     className="text-button purple-text"
-                    disabled={
-                      process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1" &&
-                      !["rasio", "aljabar", "persen"].includes(t.id)
-                    }
                     onClick={() => {
                       setTopic(t.id);
                       go("learn");
@@ -174,7 +175,8 @@ export function ResultView({
                 Soal {i + 1} · {topicName(item.topic)}
                 <ChevronRight size={17} />
               </summary>
-              <h3>{item.stem}</h3>
+              <ContentMedia media={item.media} />
+              <Markdown text={item.stem} />
               <p>
                 Jawabanmu:{" "}
                 {attempt.answers[item.id] === undefined
@@ -182,13 +184,7 @@ export function ResultView({
                   : item.options[attempt.answers[item.id]]}{" "}
                 · Jawaban benar: {item.options[item.correct!]}
               </p>
-              <strong>Langkah pertama</strong>
-              <p>{item.explanation?.firstStep}</p>
-              <strong>Penyelesaian</strong>
-              <p>{item.explanation?.solution}</p>
-              <p className="muted">
-                Kesalahan umum: {item.explanation?.mistake}
-              </p>
+              {item.explanation && <Explanation value={item.explanation} />}
               <ReportIssue
                 attemptId={attempt.id}
                 questionId={item.id}

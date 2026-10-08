@@ -9,25 +9,30 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "test:e2e": "playwright test",
+    "test:e2e": "node scripts/test-e2e.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "content:qa": "node scripts/content-qa.mjs",
     "audit:repository": "node scripts/audit-repository.mjs",
-    "verify:hosted": "node scripts/verify-hosted.mjs",
-    "pilot:qa": "node scripts/pilot-qa.mjs"
+    "content:template": "node scripts/create-import-template.mjs",
+    "admin:grant": "node scripts/grant-local-role.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.0",
+    "exceljs": "^4.4.0",
+    "katex": "^0.19.0",
     "lucide-react": "^0.468.0",
     "next": "^16.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "server-only": "^0.0.1"
+    "react-markdown": "^10.1.0",
+    "rehype-katex": "^7.0.1",
+    "rehype-sanitize": "^6.0.0",
+    "remark-math": "^6.0.0",
+    "server-only": "^0.0.1",
+    "@electric-sql/pglite": "^0.5.8"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "^0.5.8",
     "@playwright/test": "^1.51.0",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^24.0.0",

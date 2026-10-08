@@ -5,6 +5,7 @@ on:
       - "src/**"
       - "content/**"
       - "scripts/**"
+      - "public/templates/**"
       - "tests/**"
       - "supabase/**"
       - "package*.json"

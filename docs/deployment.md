@@ -1,67 +1,50 @@
-# Deploy to Vercel with Supabase
+# Supabase + Vercel deployment
 
-This revision supports online Supabase Auth and Postgres persistence. Existing SQLite accounts/history remain untouched and are not automatically migrated; online users register through Supabase.
+Vercel always selects Supabase Auth/Postgres. Do not deploy SQLite/PGlite runtime data. The operator applies SQL and configures environment values; local tests do not prove hosted setup is complete.
 
-## 1. Apply the database migration
+## SQL
 
-Open your Supabase project's **SQL Editor**. Review and run the complete file:
+For a new database, execute all files under `supabase/migrations` in filename order. For a project already on the previous pilot baseline, apply these **three new migrations in order**:
 
-`supabase/migrations/202610060001_online_learning.sql`
+1. `202610090001_content_v2.sql`
+2. `202610090002_content_operations.sql`
+3. `202610090003_reset_generated_content.sql`
 
-Then run `supabase/migrations/202610060002_tryout_packages.sql` for package-based tryouts. If the first migration was already applied, only the second is new. It expands the allowed attempt kinds and adds a server-owned 30-minute package deadline; previous sessions and users are preserved.
+The third migration intentionally removes only obsolete generated-content attempts and dependent mastery/report/activity data as specified in [content reset](content-reset.md). Inspect it and take a project backup before execution. Auth users/profiles and unrelated histories are retained. Do not remove/rewrite historical migration files; they remain needed for replay/upgrades.
 
-It adds only `levelup_*` tables/functions/indexes. It preserves existing Auth users and unrelated tables. It is replayable. Do not paste server credentials into SQL. Public/anonymous/authenticated roles cannot read the tables or execute trusted scoring/storage functions. The Next.js server uses the server key and scopes every query to the verified user ID.
+Run `supabase/verify-content-v2.sql`. Expect no missing tables/browser grants, RLS true, both browser RPC permission flags false, invalid_published zero and initial production_published zero. This verifier is read-only and prints no answer content. Check applied migrations in Supabase's migration history if using its CLI.
 
-The migration was tested in local PostgreSQL via PGlite, including denied browser access, frozen attempts, deadline enforcement, concurrent updates, atomic finalization, and duplicate submission. This is not evidence that the hosted migration has already been applied.
+## Roles
 
-Next, run `supabase/migrations/202610060003_tryout_20_questions.sql` to activate revision-two packages with 20 questions and 20-minute deadlines. Existing attempts retain their original snapshots and deadlines. If migrations 001 and 002 are already applied, only 003 is new.
+Create/confirm two separate accounts with Supabase Auth through the app. In the Supabase SQL Editor, assign roles to the intended existing accounts (replace these placeholders with your own emails):
 
-Then run `supabase/migrations/202610060004_tryout_package_02.sql` to enable Package 02 for PK, PM, and PU (20 questions / 20 minutes). If 001–003 are already applied, only 004 is new. The migration is replayable and preserves all existing attempts.
+```sql
+INSERT INTO public.levelup_roles(user_id,role)
+SELECT id,'ADMIN' FROM auth.users WHERE email='YOUR_ADMIN_EMAIL'
+ON CONFLICT(user_id) DO UPDATE SET role=excluded.role;
+INSERT INTO public.levelup_roles(user_id,role)
+SELECT id,'REVIEWER' FROM auth.users WHERE email='YOUR_REVIEWER_EMAIL'
+ON CONFLICT(user_id) DO UPDATE SET role=excluded.role;
+```
 
-Finally, run `supabase/migrations/202610070001_unique_mastery_evidence.sql` when rolling out the stabilization release. It rebuilds legacy confidence/count/advanced from unique answered question IDs in completed snapshots. Existing mastery values, attempt snapshots, answers, results, and activity days remain unchanged. It is replayable; if earlier migrations are already applied, only this file is new. Existing online accounts need this upgrade so the adapter can safely use lifetime unique evidence. Use a quiet testing window: activate the new deployment, wait for old requests to finish, then run this SQL. Legacy accounts may show an upgrade-required notice until it finishes. Do not use retired/older preview deployments against this database afterwards; old scoring code does not retain the new evidence metadata.
+Verify each statement matches one account. Accounts with no row are STUDENT. Do not grant through signup metadata or browser SQL. A reviewer must differ from question creator/last editor. The service key is required for server operations; never paste it into chat, source, frontend variables or test artifacts.
 
-## 2. Import GitHub repository into Vercel
+## Vercel environment
 
-Import `Xpurple27/math-levelup`, choose **Next.js**, root directory `.`, and use **Node.js 24.x**. Keep the normal install/build commands (`npm ci`, `npm run build`).
+Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the application's supported anon-key fallback) and server-only `SUPABASE_SERVICE_ROLE_KEY`. Use your project's values in Vercel settings. The service key must never have a NEXT_PUBLIC prefix. Redeploy after environment changes. Do not set local test flags as deployment configuration.
 
-In **Project Settings → Environment Variables**, set the following for Preview and Production before deploying:
+Supabase Auth Site URL should be the production Vercel URL. Configure `/auth/callback` redirect allowlist for the production URL and any deliberate preview/local environments. If email confirmation is enabled, the student confirms email then logs in; unconfirmed signup does not grant a session. Existing local accounts do not automatically migrate into Supabase.
 
-| Name                                   | Value                                                                      |
-| -------------------------------------- | -------------------------------------------------------------------------- |
-| `LEVELUP_BACKEND`                      | `supabase`                                                                 |
-| `NEXT_PUBLIC_SUPABASE_URL`             | `https://azrpaihfdtghcbdxkhqh.supabase.co`                                 |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Your `sb_publishable_...` public key                                       |
-| `SUPABASE_SERVICE_ROLE_KEY`            | The project server-only legacy `service_role` key or modern secret API key |
+## Hosted acceptance checklist
 
-The legacy anon JWT can be supplied as `NEXT_PUBLIC_SUPABASE_ANON_KEY` instead of the publishable key; only one public key is necessary. The server key must belong to the same project. Enter its value securely in Vercel; never place it in Git, client code, a `NEXT_PUBLIC_` variable, screenshots, or chat. Do not reuse the public anon/publishable key as the server key.
+1. Run the migration verifier and inspect expected results.
+2. Confirm an ordinary student account persists across reload/login and cannot access `/admin` or authoring APIs.
+3. Confirm ADMIN opens the Question Bank and saves a draft; its options/explanation render Markdown/KaTeX in preview.
+4. Send to QA. Confirm self-review fails, the separate REVIEWER approves, and approval alone does not make content available to students.
+5. ADMIN publishes explicitly. Confirm a new revision leaves the prior published version available and cannot change existing frozen attempts.
+6. Upload the downloadable Excel template: the example must be skipped. Upload real curated rows, inspect preview/errors, confirm DRAFT only and complete independent QA before publication.
+7. With enough published questions, verify diagnostic start, answer autosave, reload/resume, expiry/finalization, results/progress and contextual feedback.
+8. Confirm learning/tryout display their intentional empty state and no obsolete packages appear.
+9. If linking media, upload existing objects to a dedicated public content bucket and register `bucket/path`; verify display and alt text. Keep answer-bearing/private objects out of active question media.
 
-Vercel always selects Supabase, even if `LEVELUP_BACKEND` is accidentally `local`. Missing setup produces a controlled unavailable response; it never stores student data on Vercel's ephemeral filesystem. Setting the four variables does not apply the SQL migration.
-
-## 3. Configure Supabase Auth redirects
-
-After Vercel provides the deployment hostname:
-
-- Supabase **Authentication → URL Configuration → Site URL**: your stable application origin, e.g. `https://your-project.vercel.app`.
-- **Redirect URLs**: add `https://your-project.vercel.app/auth/callback` and `http://localhost:3000/auth/callback` for local online development.
-- Add the exact callback for a Preview deployment if testing that hostname. Avoid broad wildcards for unrelated preview domains.
-- Keep email confirmation enabled if you want verified email ownership. The signup UI asks the student to confirm and then sign in. Opening a confirmation link in the same browser supports the PKCE callback.
-
-If signup returns to the dashboard but practice asks for registration again, check **Authentication → Users** for that email and its confirmation status. A pending signup does not create a logged-in session. Confirm the email, then sign in. The UI now keeps the confirmation instructions visible and directs pending signups to login when starting a lesson. For this deployment use Site URL `https://math-levelup.vercel.app` and allow redirect `https://math-levelup.vercel.app/auth/callback`.
-
-Email confirmation is not password recovery. Reset-password UX and persistent auth throttling remain future work. Set up production SMTP and check Supabase email limits before inviting students.
-
-## 4. Verify the deployed flow
-
-Register with an email you control, confirm it, log in, complete diagnostic, read results, learn, practice, and check progress. Log out and back in to verify persistence. Try another account and ensure the first student's history is inaccessible. Inspect Vercel function logs for configuration failures without logging credentials.
-
-Key release limits: the seed content needs editorial/mathematical QA; mastery confidence still counts repeated questions; this initial release is a beta, not a calibrated UTBK predictor. Published-content/admin workflows and durable rate limiting are not implemented.
-
-## Cloud development setup
-
-Use the same four environment names in cloud environment settings. The project hostname must be allowed for outbound HTTPS. The onboarding draft declares these requirements but does not apply the hosted database migration, provide a secret value, or create a Vercel deployment.
-
-For local SQLite development, omit `VERCEL`, use `LEVELUP_BACKEND=local`, and keep the existing `.data` directory. For online local development set `LEVELUP_BACKEND=supabase`; never silently fall back if it fails.
-
-## Pilot release candidate
-
-After confidence backfill, apply `supabase/migrations/202610070002_pilot_reports.sql` for the three fixed Package 01 pilot deadlines and private question/page reports. Set `NEXT_PUBLIC_LEVELUP_PILOT_MODE=1` before the pilot build. Run `supabase/verify-pilot.sql` (read-only, all rows true), then follow [pilot-release.md](pilot-release.md) for hosted verification and human content review. Existing attempt rows are not rewritten.
+Human mathematical/editorial approval, sufficient published coverage, hosted SQL/role/environment setup and the live checklist remain prerequisites for student release. C1–C4 is an authoring foundation, not a full content library or Learning/Tryout Builder.

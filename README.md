@@ -1,33 +1,37 @@
 # LevelUP Math
 
-An Indonesian learning MVP for UTBK preparation. Built from the supplied handoff in `docs/handoff/`. The working checkout is `Xpurple27/math-levelup`; the handoff's repository name is a reference, not a reason to create another remote.
+UTBK learning engine with normalized content authoring, independent QA and Excel import. Repository: `Xpurple27/math-levelup`. This C1–C4 release removes the former generated bank/packages/thin learning content and starts with **zero published production questions**. Student accounts and the assessment engine remain; curated content can be drafted, reviewed and published through `/admin`.
 
-## Run
+## Run locally
 
-Requires **Node.js 24+** (built-in SQLite), npm, and a writable persistent filesystem. Local SQLite development requires no external service or secret. For Vercel and online persistence, follow [the Supabase deployment guide](docs/deployment.md).
+Node.js 24+, npm and writable persistent filesystem:
 
 ```sh
-cd /workspace/math-levelup
-npm ci --cache /workspace/.npm-cache
+npm ci
 npm run dev
 ```
 
-Open the development server on port 3000 in a local development setup. Create a new account using a test-only password. Accounts, hashed passwords, sessions, frozen attempts, answers, and progress persist in `.data/levelup.sqlite`. `LEVELUP_DATA_DIR` overrides that directory. Never commit the database or `.env.local`.
+Auth/attempts use `.data/levelup.sqlite`; normalized content uses `.data/content-pg` (PGlite). Override both through `LEVELUP_DATA_DIR`. Never commit databases or `.env.local`. Register two local accounts, stop the server, then grant roles:
 
-## Implemented slice
+```sh
+npm run admin:grant -- admin@example.com ADMIN
+npm run admin:grant -- reviewer@example.com REVIEWER
+npm run dev
+```
 
-- Registration/login, logout, education level, and target UTBK score.
-- 15-question diagnostic covering seven subtopics with five items per PK/PM/PU section, a server-owned 30-minute deadline, autosave, resume, expiry finalization, and immutable completion.
-- Initial skill profile with correct/incorrect/unanswered counts and strengths/weaknesses. This is **not** an estimated UTBK score.
-- Seven concept modules: ratios, linear equations, means/data interpretation, percentages, geometry, probability/counting, and sequences. Each includes recognition, first step, worked example, and common mistakes.
-- Guided practice: 2 Basic + 2 Medium + 2 Hard questions, hint on first mistake, one retry, discounted retry evidence.
-- Mini assessment: 3 Medium + 2 Hard, no hints/retries/live feedback, 80% pass threshold.
-- Practice filtered by PK/PM/PU, subtopic, and Basic/Medium/Hard/Mixed. Mixed sessions support 5/10/15/20 questions; a single level supports 5/10. Fresh questions are prioritized against the last 30 sessions, with review fallback after exhaustion. First answer stays locked.
-- Progress with confidence from unique answered question IDs, mastery states, history, and learning streak using Asia/Jakarta days. Repeating the same question does not raise confidence.
-- Free beta PK/PM/PU package catalog with Package 01 and Package 02 in each section, section filter, package details, fixed version-pinned 20-question sets, server-owned 20-minute timer, autosave/resume, result/analysis/solution tabs, repeat attempts, and recent package history. Diagnostic remains a separate initial assessment.
-- Responsive dashboard and mobile navigation.
+There is no default admin account. Signup metadata cannot grant privileges. Open `/admin/questions` for bank/editor, `/admin/qa` for independent review, `/admin/imports` for the template/preview/confirmed draft workflow and `/admin/media` to link existing Supabase Storage objects.
 
-The 252 original, generated seed questions (108 existing + 144 added) are pedagogical examples requiring editorial QA before student use. This bank is not comprehensive UTBK coverage or exam calibration.
+## Content and engine
+
+- Independent exam/section and domain/topic/subtopic taxonomies.
+- Logical questions and immutable published versions; normalized options, Explanation V2, provenance and media references.
+- DRAFT → IN_REVIEW → QA_PASSED → explicit PUBLISHED; role checks in server routes and private database RPCs.
+- Markdown/KaTeX shared by student questions, completed explanations and admin previews.
+- Bounded Excel import, persisted row errors/preview, atomic confirmation into DRAFT only.
+- Preserved Auth, server-owned timer, autosave/resume, frozen attempts, grading/mastery confidence, guided retry rules and contextual reports.
+- Empty learning/tryout views until separately curated content/builders are implemented. New sessions need enough published questions for the existing diagnostic/practice quotas.
+
+Read [content architecture](docs/content-architecture-v2.md), [Excel instructions](docs/content-import.md), [reset decisions](docs/content-reset.md), [engine architecture](docs/architecture.md) and [deployment](docs/deployment.md).
 
 ## Verify
 
@@ -37,31 +41,10 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
-npm run test:e2e
+LEVELUP_E2E_PRODUCTION=1 npm run test:e2e
+npm run audit:repository
 ```
 
-Playwright uses `PLAYWRIGHT_CHROMIUM_EXECUTABLE` if set, otherwise system Chromium when available, otherwise its installed browser. Install the browser with `npx playwright install --with-deps chromium`. E2E tests create uniquely named test accounts; they never delete existing data. They check the complete learning loop, mobile navigation, ownership, payload redaction, scoring authority, deadline expiry, and submit idempotency.
+Install Chromium with `npx playwright install --with-deps chromium` if needed. E2E runs in isolated temporary storage with TEST_ONLY fixtures, never production data. Port 3000 must be free; the runner does not reuse another server. Default CI checks format/lint/types/unit/build; the critical E2E workflow covers engine, admin, import and relevant renderer changes.
 
-For production-mode validation, build then run `npm run start` and set `LEVELUP_E2E_PRODUCTION=1` for E2E. Port 3000 must be free or occupied by this application's intended test server.
-
-## Runtime boundaries
-
-`src/lib/content.ts` and the persistence adapters are server-only. Browser code imports only public topic/module content and scoring labels. Assessment payloads omit answer keys and explanations until finalization. The server validates session ownership, answer choices, deadline, and attempt state. Scores and mastery are recalculated server-side; client-supplied scores and deadlines have no authority. Finalization and mastery writes share a transaction; repeated submission does not duplicate evidence. No public mastery mutation endpoint exists.
-
-## Online deployment
-
-Supabase Auth and the Postgres adapter are now implemented. Follow [docs/deployment.md](docs/deployment.md) to apply the migration, set Vercel environment variables, and configure Auth redirect URLs. The supplied public key is not committed; configure it in environment settings. The server key is required for trusted storage and scoring and must never enter frontend code.
-
-Vercel always selects online persistence and never falls back to SQLite. Local development still defaults to SQLite unless `LEVELUP_BACKEND=supabase`. Existing local user accounts/progress are preserved but not migrated into Supabase automatically.
-
-Local tests verify the migration, access denials, concurrency safeguards, identity adapter behavior, and the existing learning flow. Hosted Supabase writes/authentication and a Vercel deployment still require environment configuration and live verification.
-
-Read [the stabilization report](docs/stabilization.md) for module boundaries, adapter parity, CI routing, content QA and remaining release risks. `npm run content:qa` reports source review status; `npm run audit:repository` checks available Git history/working files for private material without printing credentials. Repository privacy is recommended because source contains answer keys.
-
-Before broad student use: complete content QA, password recovery, durable rate limits, and broader question coverage. Deferred: paid packages, competitive tryouts, leaderboards, payments, AI, similar questions, spaced review, weekly snapshots, and achievements.
-
-## CI routing
-
-Default PR checks run format, lint, typecheck, unit, and build with npm caching. Critical E2E runs in its own workflow for API/auth, trust libraries, persistence/migrations, exam/auth/assessment-control UI, content QA registry, package/config, and E2E changes, or via workflow_dispatch. Ordinary styles/Learn/Dashboard presentation edits do not install Chromium automatically. When changing assessment behavior in an otherwise presentation file, dispatch Critical learning flows manually. Local critical tests remain required before pushing critical changes.
-
-Pilot release candidate: use [the pilot checklist](docs/pilot-release.md), `npm run pilot:qa`, and `npm run verify:hosted`. The bounded pilot uses 63 exact revised question IDs across diagnostic, three learning modules and Package 01 PK/PM/PU. Enable `NEXT_PUBLIC_LEVELUP_PILOT_MODE=1` before building; human approval is still pending. Private contextual reports cover questions and general pages. See [content scope](docs/pilot-content.md) and [readiness](docs/pilot-readiness.md).
+Vercel always uses Supabase Auth/Postgres and never local fallback. Apply migrations and server-only configuration using the deployment guide. Hosted Auth/write/deployment verification still needs operator execution. No full Learning/Tryout Builder, PDF/Drive import, payment, leaderboard or AI/adaptive features are included.

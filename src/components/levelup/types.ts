@@ -25,11 +25,20 @@ export type Q = {
   topic: string;
   section: string;
   difficulty: string;
+  instruction?: string;
+  stimulus?: string;
+  media?: {
+    id: string;
+    role: string;
+    url: string;
+    alt: string;
+    kind?: string;
+  }[];
   stem: string;
   options: string[];
   correct?: number;
   hint?: string;
-  explanation?: { firstStep: string; solution: string; mistake: string };
+  explanation?: import("@/lib/content").Question["explanation"];
 };
 export type Attempt = {
   id: string;

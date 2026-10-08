@@ -17,7 +17,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { topics } from "@/lib/topics";
+import { useTopics } from "./content-context";
 import type { Mastery } from "@/lib/scoring";
 import type { View, User, Attempt, History } from "./levelup/types";
 import { SubmitDialog } from "./levelup/submit-view";
@@ -37,6 +37,7 @@ const nav = [
   { id: "progress", label: "Progres", icon: ChartNoAxesCombined },
 ] as const;
 export default function Levelup() {
+  const topics = useTopics();
   const [user, setUser] = useState<User | null>(null),
     [ready, setReady] = useState(false),
     [view, setView] = useState<View>("dashboard"),
@@ -46,7 +47,6 @@ export default function Levelup() {
     [days, setDays] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("Mixed");
   const [section, setSection] = useState("All");
-  const [search, setSearch] = useState("");
   const [resultTab, setResultTab] = useState("result");
   const [backend, setBackend] = useState<"local" | "supabase">("local");
   const [auth, setAuth] = useState<
@@ -54,7 +54,7 @@ export default function Levelup() {
     >(null),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [topic, setTopic] = useState("rasio"),
+    [topic, setTopic] = useState(topics[0]?.id || ""),
     [count, setCount] = useState(5),
     [attempt, setAttempt] = useState<Attempt | null>(null),
     [index, setIndex] = useState(0),
@@ -187,7 +187,6 @@ export default function Levelup() {
     }
   }, [clock, offset, view, attempt, busy, submit]);
   const go = (v: View) => {
-    if (v === "learn") setSearch("");
     setView(v);
     setMobile(false);
     setError("");
@@ -210,6 +209,7 @@ export default function Levelup() {
       topic: t,
       count,
       difficulty,
+      section,
       ...(kind === "tryout" ? { packageSlug: t } : {}),
     });
     if (d) {
@@ -218,14 +218,10 @@ export default function Levelup() {
       setView(d.attempt.status === "completed" ? "result" : "exam");
     }
   };
-  const weakest = [...mastery]
-    .filter(
-      (m) =>
-        process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
-        ["rasio", "aljabar", "persen"].includes(m.topic),
-    )
-    .sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
-  const recommended = weakest?.topic || "rasio";
+  const weakest = [...mastery].sort(
+    (a, b) => a.value - b.value || a.confidence - b.confidence,
+  )[0];
+  const recommended = weakest?.topic || topics[0]?.id || "";
   const avg = mastery.length
     ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length)
     : null;
@@ -258,7 +254,6 @@ export default function Levelup() {
     year: "numeric",
     timeZone: "Asia/Jakarta",
   }).format(new Date());
-  const currentTopic = topics.find((t) => t.id === topic)!;
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobile ? "open" : ""}`}>
@@ -408,17 +403,7 @@ export default function Levelup() {
               go={go}
             />
           )}
-          {view === "learn" && (
-            <LearnView
-              search={search}
-              setSearch={setSearch}
-              topic={topic}
-              setTopic={setTopic}
-              currentTopic={currentTopic}
-              busy={busy}
-              start={start}
-            />
-          )}
+          {view === "learn" && <LearnView />}
           {view === "practice" && (
             <PracticeView
               section={section}

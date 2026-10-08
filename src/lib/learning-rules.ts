@@ -1,14 +1,10 @@
-import { findTryoutPackage } from "./tryout-packages";
-export function attemptDurationMs(kind: string, topic: string | null) {
+export function attemptDurationMs(kind: string, _topic: string | null) {
+  void _topic; // Legacy callers retain their frozen package/topic argument.
   if (!["diagnostic", "mini", "guided", "practice", "tryout"].includes(kind))
     throw new Error("Jenis sesi tidak valid.");
   if (kind === "diagnostic") return 30 * 60000;
   if (kind === "mini") return 10 * 60000;
-  if (kind === "tryout") {
-    const pack = findTryoutPackage(topic);
-    if (!pack) throw new Error("Paket tidak tersedia.");
-    return pack.minutes * 60000;
-  }
+  if (kind === "tryout") return 20 * 60000; // Creation is catalog-gated by the assessment API.
   return null;
 }
 export function learningDay(now = Date.now()) {

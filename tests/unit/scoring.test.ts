@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bank, selectQuestions, publicQuestion } from "../../src/lib/content";
+import { bank, selectQuestions, publicQuestion } from "../fixtures/questions";
 import {
   grade,
   evidence,
@@ -63,7 +63,12 @@ describe("deterministic scoring and mastery", () => {
       a = Object.fromEntries(subset.map((q) => [q.id, q.correct]));
     const m = updateMastery(undefined, subset, a, "diagnostic");
     expect(m.value).toBe(100);
-    expect(m.confidence).toBe(subset.length / 20);
+    expect(m.confidence).toBe(
+      subset.reduce(
+        (n, q) => n + { Basic: 0.5, Medium: 1, Hard: 1.5 }[q.difficulty],
+        0,
+      ) / 20,
+    );
     expect(masteryLabel(m)).toBe("Perlu bukti tambahan");
   });
   it("discounts correct retries and applies source weight", () => {

@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from "vitest";
-import { selectQuestions } from "../../src/lib/content";
+import { selectQuestions } from "../fixtures/questions";
 import type { Attempt } from "../../src/lib/store-types";
 const rpc = vi.hoisted(() => vi.fn());
 vi.mock("@supabase/supabase-js", () => ({ createClient: () => ({ rpc }) }));

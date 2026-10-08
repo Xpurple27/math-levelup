@@ -5,9 +5,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 import { beforeAll, afterAll, describe, it, expect, vi } from "vitest";
-import { bank, selectQuestions, type Question } from "../../src/lib/content";
-import { tryoutPackages } from "../../src/lib/tryout-packages";
-import { tryoutQuestions } from "../../src/lib/tryout-content";
+import { bank, selectQuestions, type Question } from "../fixtures/questions";
+import { tryoutPackages } from "../fixtures/questions";
+import { tryoutQuestions } from "../fixtures/questions";
 import { grade, updateMastery, type Mastery } from "../../src/lib/scoring";
 import {
   learningDay,

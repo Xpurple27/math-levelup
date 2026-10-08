@@ -1,9 +1,9 @@
 "use client";
 import { ArrowRight, Sparkles, Zap } from "lucide-react";
-import { topics } from "@/lib/topics";
+import { useTopics, usePublishedCount } from "../content-context";
 import type { Mastery } from "@/lib/scoring";
 import { PageHeading } from "./view-ui";
-import { topicName } from "./labels";
+import { useTopicName } from "./labels";
 import type { Dispatch, SetStateAction } from "react";
 type Props = {
   section: string;
@@ -33,6 +33,16 @@ export function PracticeView({
   recommended,
   weakest,
 }: Props) {
+  const topicName = useTopicName();
+  const topics = useTopics(),
+    published = usePublishedCount();
+  if (!topics.length || !published)
+    return (
+      <section className="panel">
+        <h1>Soal belum diterbitkan</h1>
+        <p>Konten baru sedang dikurasi. Silakan kembali setelah soal siap.</p>
+      </section>
+    );
   return (
     <>
       <PageHeading
@@ -59,20 +69,17 @@ export function PracticeView({
                 setSection(v);
                 if (
                   v !== "All" &&
-                  topics.find((t) => t.id === topic)?.section !== v
+                  !topics.find((t) => t.id === topic)?.sections?.includes(v)
                 )
-                  setTopic(topics.find((t) => t.section === v)!.id);
+                  setTopic(
+                    topics.find((t) => t.sections?.includes(v))?.id || "",
+                  );
               }}
             >
               <option value="All">Semua bagian</option>
               <option value="PK">PK — Pengetahuan Kuantitatif</option>
               <option value="PM">PM — Penalaran Matematika</option>
-              <option
-                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
-                value="PU"
-              >
-                PU — Penalaran Umum
-              </option>
+              <option value="PU">PU — Penalaran Umum</option>
             </select>
           </label>
           <label className="field">
@@ -80,11 +87,8 @@ export function PracticeView({
             <select value={topic} onChange={(e) => setTopic(e.target.value)}>
               {topics
                 .filter(
-                  (t) =>
-                    process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE !== "1" ||
-                    ["rasio", "aljabar", "persen"].includes(t.id),
+                  (t) => section === "All" || t.sections?.includes(section),
                 )
-                .filter((t) => section === "All" || t.section === section)
                 .map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} · {t.section}
@@ -102,24 +106,9 @@ export function PracticeView({
               }}
             >
               <option value="Mixed">Campuran</option>
-              <option
-                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
-                value="Basic"
-              >
-                Basic — fondasi
-              </option>
-              <option
-                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
-                value="Medium"
-              >
-                Medium — penerapan
-              </option>
-              <option
-                disabled={process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"}
-                value="Hard"
-              >
-                Hard — lebih menantang
-              </option>
+              <option value="Basic">Basic — fondasi</option>
+              <option value="Medium">Medium — penerapan</option>
+              <option value="Hard">Hard — lebih menantang</option>
             </select>
           </label>
           <label className="field">
@@ -128,12 +117,7 @@ export function PracticeView({
               value={count}
               onChange={(e) => setCount(Number(e.target.value))}
             >
-              {(process.env.NEXT_PUBLIC_LEVELUP_PILOT_MODE === "1"
-                ? [5]
-                : difficulty === "Mixed"
-                  ? [5, 10, 15, 20]
-                  : [5, 10]
-              ).map((n) => (
+              {(difficulty === "Mixed" ? [5, 10, 15, 20] : [5, 10]).map((n) => (
                 <option key={n}>{n}</option>
               ))}
             </select>

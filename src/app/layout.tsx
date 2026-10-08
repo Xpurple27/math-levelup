@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "katex/dist/katex.min.css";
 export const metadata: Metadata = {
   title: "LevelUP Math — Langkah kecil. Kemajuan nyata.",
   description:
