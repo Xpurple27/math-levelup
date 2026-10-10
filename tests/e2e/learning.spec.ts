@@ -56,7 +56,9 @@ test("register, diagnostic autosave/resume, result and empty learning/packages",
     await page.evaluate(async () => (await fetch("/api/admin/content")).status),
   ).toBe(403);
   await page.goto("/admin");
-  await expect(page.getByRole("heading", { name: "404" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sepertinya kamu keluar jalur." }),
+  ).toBeVisible();
 });
 
 // API fixtures replay their own session cookie on loopback. Browser tests separately
@@ -315,7 +317,7 @@ test("pending Supabase signup explains confirmation and returns to login", async
     .fill("confirmation@example.com");
   await page.getByLabel("Kata sandi").fill("fixture-password-123");
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText(
+  await expect(page.locator(".auth-error")).toContainText(
     "Email belum dikonfirmasi",
   );
   await page.reload();
