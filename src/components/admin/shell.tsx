@@ -4,7 +4,7 @@ import Link from "next/link";
 import { createContext, useContext } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  FileSpreadsheet,
+  Files,
   Image as ImageIcon,
   LayoutDashboard,
   LibraryBig,
@@ -22,7 +22,7 @@ export function useAdminRole() {
 const nav = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/questions", label: "Question Bank", icon: LibraryBig },
-  { href: "/admin/imports", label: "Excel Imports", icon: FileSpreadsheet },
+  { href: "/admin/imports", label: "Imports", icon: Files },
   { href: "/admin/media", label: "Media", icon: ImageIcon },
   { href: "/admin/qa", label: "QA Queue", icon: ShieldCheck },
 ];
