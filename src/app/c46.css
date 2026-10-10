@@ -18,6 +18,14 @@
 .media-mode-tabs button.active { background: white; color: var(--lu-red); box-shadow: 0 5px 14px rgba(68,42,36,.08); }
 .media-drop { margin-bottom: 14px; }
 
+.bulk-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: -4px 0 16px; padding: 11px 13px; background: #292627; color: white; border-radius: 10px; box-shadow: 0 9px 24px rgba(33,31,32,.12); }
+.bulk-toolbar strong { margin-right: 4px; font-size: 11px; }
+.bulk-toolbar span { margin-right: auto; color: #cfc6c8; font-size: 9px; }
+.bulk-toolbar button { border: 1px solid #514a4c; background: #393536; color: white; border-radius: 7px; padding: 8px 10px; font-size: 9px; font-weight: 750; }
+.bulk-toolbar button:hover { background: var(--lu-red); border-color: var(--lu-red); }
+.select-column { width: 38px; text-align: center !important; }
+.select-column input { accent-color: var(--lu-red); }
+
 @media (max-width: 1100px) {
   .docx-defaults { grid-template-columns: 1fr 1fr; }
   .classification-summary { min-height: 64px; }
@@ -29,4 +37,6 @@
   .docx-defaults { grid-template-columns: 1fr; }
   .media-layout { grid-template-columns: 1fr; }
   .media-grid { grid-template-columns: 1fr; }
+  .bulk-toolbar { align-items: stretch; }
+  .bulk-toolbar span { flex-basis: 100%; }
 }
