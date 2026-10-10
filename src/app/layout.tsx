@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./c45.css";
 import "./c45-hotfix.css";
+import "./admin-content-polish.css";
 import "katex/dist/katex.min.css";
 
 export const metadata: Metadata = {
