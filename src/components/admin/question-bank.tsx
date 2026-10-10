@@ -1,188 +1,143 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { adminGet } from "./api";
 import { useAdminRole } from "./shell";
 import type { Catalog, BankRow } from "@/features/content/model";
 import { sourceTypes } from "@/features/content/model";
+
 export function QuestionBank() {
-  const role = useAdminRole(),
-    [catalog, setCatalog] = useState<Catalog | null>(null),
-    [rows, setRows] = useState<BankRow[]>([]),
-    [filters, setFilters] = useState<Record<string, string>>({}),
-    [error, setError] = useState(""),
-    [offset, setOffset] = useState(0);
+  const role = useAdminRole();
+  const [catalog, setCatalog] = useState<Catalog | null>(null);
+  const [rows, setRows] = useState<BankRow[]>([]);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const [error, setError] = useState("");
+  const [offset, setOffset] = useState(0);
+
   useEffect(() => {
-    adminGet<Catalog>("catalog")
-      .then(setCatalog)
-      .catch((e) => setError(e.message));
+    adminGet<Catalog>("catalog").then(setCatalog).catch((e) => setError(e.message));
   }, []);
+
   useEffect(() => {
     let active = true;
-    adminGet<{ rows: BankRow[] }>("list", {
-      ...filters,
-      offset: String(offset),
-    })
+    adminGet<{ rows: BankRow[] }>("list", { ...filters, offset: String(offset) })
       .then((d) => {
         if (active) {
           setRows(d.rows);
           setError("");
         }
       })
-      .catch((e) => {
-        if (active) setError(e.message);
-      });
+      .catch((e) => active && setError(e.message));
     return () => {
       active = false;
     };
   }, [filters, offset]);
+
   const filter = (key: string, value: string) => {
     setOffset(0);
     setFilters((f) => ({ ...f, [key]: value }));
   };
+
   return (
-    <>
-      <h1>Question Bank</h1>
-      {role === "ADMIN" && (
-        <Link className="button primary" href="/admin/questions/new">
-          New Question
-        </Link>
-      )}
-      <p>Hanya konten authoring. TEST_ONLY tidak ditampilkan.</p>
-      <label className="field">
-        Search code / stem
-        <input
-          value={filters.search || ""}
-          onChange={(e) => filter("search", e.target.value)}
-        />
-      </label>
-      <div className="admin-filters">
-        {catalog &&
-          (
-            ["exams", "sections", "domains", "topics", "subtopics"] as const
-          ).map((key, i) => (
-            <label key={key}>
-              {["Exam", "Section", "Domain", "Topic", "Subtopic"][i]}
-              <select
-                value={
-                  filters[
-                    [
-                      "exam_id",
-                      "section_id",
-                      "domain_id",
-                      "topic_id",
-                      "subtopic_id",
-                    ][i]
-                  ] || ""
-                }
-                onChange={(e) =>
-                  filter(
-                    [
-                      "exam_id",
-                      "section_id",
-                      "domain_id",
-                      "topic_id",
-                      "subtopic_id",
-                    ][i],
-                    e.target.value,
-                  )
-                }
-              >
-                <option value="">All</option>
-                {catalog[key].map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.code} — {t.name}
-                  </option>
-                ))}
+    <div className="ops-content-page question-bank-page">
+      <header className="ops-page-head">
+        <div>
+          <span className="ops-eyebrow">CONTENT LIBRARY</span>
+          <h1>Question Bank</h1>
+          <p>Kelola draft, soal review, dan soal yang sudah dipublikasikan dari satu tempat.</p>
+        </div>
+        {role === "ADMIN" && (
+          <Link className="ops-primary" href="/admin/questions/new">+ Buat soal</Link>
+        )}
+      </header>
+
+      <section className="filter-panel">
+        <div className="filter-search-row">
+          <label className="ops-field wide">
+            <span>Cari soal</span>
+            <input
+              value={filters.search || ""}
+              placeholder="Cari berdasarkan kode atau isi soal…"
+              onChange={(e) => filter("search", e.target.value)}
+            />
+          </label>
+          <div className="filter-summary">
+            <strong>{rows.length}</strong>
+            <span>hasil pada halaman ini</span>
+          </div>
+        </div>
+
+        <div className="admin-filters polished">
+          {catalog && (["exams", "sections", "domains", "topics", "subtopics"] as const).map((key, i) => {
+            const filterKey = ["exam_id", "section_id", "domain_id", "topic_id", "subtopic_id"][i];
+            const label = ["Exam", "Section", "Domain", "Topic", "Subtopic"][i];
+            return (
+              <label className="ops-field" key={key}>
+                <span>{label}</span>
+                <select value={filters[filterKey] || ""} onChange={(e) => filter(filterKey, e.target.value)}>
+                  <option value="">Semua</option>
+                  {catalog[key].map((t) => <option key={t.id} value={t.id}>{t.code} — {t.name}</option>)}
+                </select>
+              </label>
+            );
+          })}
+          {[
+            ["difficulty", "Difficulty", ["BASIC", "MEDIUM", "HARD"]],
+            ["status", "Status", ["DRAFT", "IN_REVIEW", "QA_PASSED", "PUBLISHED", "ARCHIVED"]],
+            ["source_type", "Source", [...sourceTypes]],
+          ].map(([key, label, values]) => (
+            <label className="ops-field" key={String(key)}>
+              <span>{String(label)}</span>
+              <select value={filters[String(key)] || ""} onChange={(e) => filter(String(key), e.target.value)}>
+                <option value="">Semua</option>
+                {(values as string[]).map((v) => <option key={v}>{v}</option>)}
               </select>
             </label>
           ))}
-        {[
-          ["difficulty", ["BASIC", "MEDIUM", "HARD"]],
-          [
-            "status",
-            ["DRAFT", "IN_REVIEW", "QA_PASSED", "PUBLISHED", "ARCHIVED"],
-          ],
-          ["source_type", [...sourceTypes]],
-        ].map(([key, values]) => (
-          <label key={String(key)}>
-            {String(key)}
-            <select
-              value={filters[String(key)] || ""}
-              onChange={(e) => filter(String(key), e.target.value)}
-            >
-              <option value="">All</option>
-              {(values as string[]).map((v) => (
-                <option key={v}>{v}</option>
-              ))}
-            </select>
-          </label>
-        ))}
-      </div>
-      <p role="alert">{error}</p>
-      <div className="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              {[
-                "Code",
-                "Section",
-                "Taxonomy",
-                "Difficulty",
-                "Status",
-                "Version",
-                "Source",
-                "Updated",
-                "Action",
-              ].map((h) => (
-                <th key={h}>{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((q) => (
-              <tr key={q.id}>
-                <td>{q.code}</td>
-                <td>
-                  {q.exam}/{q.section}
-                </td>
-                <td>
-                  {q.domain} / {q.topic} / {q.subtopic}
-                </td>
-                <td>{q.difficulty}</td>
-                <td>
-                  {q.logical_status === "ARCHIVED" ? "ARCHIVED" : q.status}
-                </td>
-                <td>{q.version_number}</td>
-                <td>
-                  {q.source_type}: {q.source_title || "—"}
-                </td>
-                <td>{new Date(q.updated_at).toLocaleDateString("id-ID")}</td>
-                <td>
-                  <Link href={`/admin/questions/${q.id}`}>Open / Preview</Link>
-                </td>
+        </div>
+      </section>
+
+      {error && <div className="ops-message error" role="alert">{error}</div>}
+
+      <section className="data-panel">
+        <div className="data-panel-head">
+          <div><h2>Daftar soal</h2><p>TEST_ONLY tidak ditampilkan di sini.</p></div>
+        </div>
+        <div className="table-scroll">
+          <table className="ops-table">
+            <thead>
+              <tr>
+                <th>Code</th><th>Section</th><th>Taxonomy</th><th>Difficulty</th><th>Status</th><th>Version</th><th>Source</th><th>Updated</th><th></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {rows.map((q) => (
+                <tr key={q.id}>
+                  <td><strong>{q.code}</strong></td>
+                  <td>{q.exam}/{q.section}</td>
+                  <td><span className="taxonomy-cell">{q.domain}<small>{q.topic} / {q.subtopic}</small></span></td>
+                  <td><span className={`status-chip difficulty-${q.difficulty.toLowerCase()}`}>{q.difficulty}</span></td>
+                  <td><span className="status-chip">{q.logical_status === "ARCHIVED" ? "ARCHIVED" : q.status}</span></td>
+                  <td>v{q.version_number}</td>
+                  <td>{q.source_type}<small className="table-subtext">{q.source_title || "—"}</small></td>
+                  <td>{new Date(q.updated_at).toLocaleDateString("id-ID")}</td>
+                  <td><Link className="table-action" href={`/admin/questions/${q.id}`}>Buka</Link></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        {!rows.length && !error && (
+          <div className="empty-state compact"><strong>Belum ada soal pada filter ini.</strong><p>Buat draft baru atau impor konten dari menu Imports.</p></div>
+        )}
+      </section>
+
+      <div className="pagination-row">
+        <button disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 100))}>← Sebelumnya</button>
+        <span>Offset {offset}</span>
+        <button disabled={rows.length < 100} onClick={() => setOffset(offset + 100)}>Berikutnya →</button>
       </div>
-      {!rows.length && !error && (
-        <p>Belum ada soal pada filter ini. Buat draft atau import Excel.</p>
-      )}
-      <div className="tag-row">
-        <button
-          disabled={!offset}
-          onClick={() => setOffset(Math.max(0, offset - 100))}
-        >
-          Previous
-        </button>
-        <button
-          disabled={rows.length < 100}
-          onClick={() => setOffset(offset + 100)}
-        >
-          Next
-        </button>
-      </div>
-    </>
+    </div>
   );
 }
