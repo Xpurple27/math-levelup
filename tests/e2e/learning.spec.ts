@@ -14,7 +14,9 @@ test("register, diagnostic autosave/resume, result and empty learning/packages",
   await expect(
     page.getByRole("heading", { name: "Halo, Siswa" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Mulai diagnostik", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Mulai diagnostik", exact: true })
+    .click();
   await expect(
     page.getByRole("heading", { name: "Satu soal, satu langkah." }),
   ).toBeVisible();
@@ -99,7 +101,10 @@ test("mobile student app fits viewport and bottom navigation opens learning", as
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
-  await page.getByRole("button", { name: "Belajar", exact: true }).last().click();
+  await page
+    .getByRole("button", { name: "Belajar", exact: true })
+    .last()
+    .click();
   await expect(
     page.getByRole("heading", { name: "Materi belajar belum diterbitkan" }),
   ).toBeVisible();
@@ -310,7 +315,9 @@ test("pending Supabase signup explains confirmation and returns to login", async
     .fill("confirmation@example.com");
   await page.getByLabel("Kata sandi").fill("fixture-password-123");
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
-  await expect(page.getByRole("alert")).toContainText("Email belum dikonfirmasi");
+  await expect(page.getByRole("alert")).toContainText(
+    "Email belum dikonfirmasi",
+  );
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Selamat datang kembali." }),

@@ -7,7 +7,8 @@ async function login(page: Page, email: string) {
   await page.getByLabel("Kata sandi").fill("Test-only-2026");
   await page.getByRole("button", { name: "Masuk", exact: true }).click();
   if (email.startsWith("admin")) await expect(page).toHaveURL(/\/admin$/);
-  else if (email.startsWith("reviewer")) await expect(page).toHaveURL(/\/reviewer$/);
+  else if (email.startsWith("reviewer"))
+    await expect(page).toHaveURL(/\/reviewer$/);
   else await expect(page).toHaveURL(/\/app$/);
 }
 
@@ -62,13 +63,17 @@ test("admin draft preview, independent QA, explicit publication and Excel drafts
     "Kualitas pengecoh",
   ])
     await r.getByText(name, { exact: true }).click();
-  await r.getByLabel("Catatan reviewer").fill("TEST_ONLY independently verified");
+  await r
+    .getByLabel("Catatan reviewer")
+    .fill("TEST_ONLY independently verified");
   await r.getByRole("button", { name: "Approve QA", exact: true }).click();
 
   await a.reload();
   await a.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(a.getByText(/Versi 1 · PUBLISHED/).first()).toBeVisible();
-  await a.getByRole("button", { name: "Buat revisi baru", exact: true }).click();
+  await a
+    .getByRole("button", { name: "Buat revisi baru", exact: true })
+    .click();
   await expect(a.getByText(/Versi 2 · DRAFT/).first()).toBeVisible();
 
   const w = new ExcelJS.Workbook();
@@ -86,7 +91,9 @@ test("admin draft preview, independent QA, explicit publication and Excel drafts
     buffer: bytes,
   });
   await a.getByRole("button", { name: "Upload & Preview" }).click();
-  await expect(a.getByRole("heading", { name: "test.xlsx", exact: true })).toBeVisible();
+  await expect(
+    a.getByRole("heading", { name: "test.xlsx", exact: true }),
+  ).toBeVisible();
   await expect(a.getByText(/READY_FOR_REVIEW/).first()).toBeVisible();
   a.once("dialog", (d) => d.accept());
   await a.getByRole("button", { name: "Import valid rows as DRAFT" }).click();
@@ -111,7 +118,9 @@ test("admin draft preview, independent QA, explicit publication and Excel drafts
     buffer: Buffer.from(await w.xlsx.writeBuffer()),
   });
   await a.getByRole("button", { name: "Upload & Preview" }).click();
-  await expect(a.getByRole("heading", { name: "invalid.xlsx", exact: true })).toBeVisible();
+  await expect(
+    a.getByRole("heading", { name: "invalid.xlsx", exact: true }),
+  ).toBeVisible();
   await expect(a.getByText(/VALIDATION_FAILED/).first()).toBeVisible();
   await expect(
     a.getByRole("button", { name: "Import valid rows as DRAFT" }),
