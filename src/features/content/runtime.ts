@@ -1,4 +1,5 @@
 import "server-only";
+import { createClient } from "@supabase/supabase-js";
 import { contentRPC, testContentAllowed } from "./db";
 import type { Catalog, Media, Option } from "./model";
 import type { Question } from "../../lib/content";
@@ -43,7 +44,7 @@ export async function publishedQuestions(): Promise<Question[]> {
       media: Media[];
     }[]
   >("levelup_published_questions", { p_test_only: testContentAllowed() });
-  return data.map((q) => ({
+  return Promise.all(data.map(async (q) => ({
     id: q.id,
     version: q.version,
     versionId: q.version_id,
@@ -69,23 +70,35 @@ export async function publishedQuestions(): Promise<Question[]> {
       optionAnalysis: q.explanation.option_analysis_md,
     },
     hint: q.explanation.first_step_md,
-    media: q.media.map((m) => ({
+    media: await Promise.all(q.media.map(async (m) => ({
       id: m.id,
       kind: m.kind,
       role: (m as Media & { role: string }).role,
       alt: m.alt_text || m.original_filename,
-      url: mediaUrl(m),
-    })),
-  }));
+      url: await mediaUrl(m),
+    }))),
+  })));
 }
-export function mediaUrl(m: Pick<Media, "storage_provider" | "storage_path">) {
+export async function mediaUrl(m: Pick<Media, "storage_provider" | "storage_path">) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (
     m.storage_provider !== "SUPABASE" ||
     !url ||
     m.storage_path.includes("..") ||
-    m.storage_path.includes("://")
+    m.storage_path.includes("://") ||
+    m.storage_path.startsWith("/")
   )
     return "";
-  return `${url}/storage/v1/object/public/${m.storage_path.split("/").map(encodeURIComponent).join("/")}`;
+  const [bucket, ...parts] = m.storage_path.split("/").filter(Boolean);
+  const path = parts.join("/");
+  if (!bucket || !path) return "";
+  if (key) {
+    const { data, error } = await createClient(url, key, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    }).storage.from(bucket).createSignedUrl(path, 60 * 60);
+    if (!error && data?.signedUrl) return data.signedUrl;
+  }
+  // Local/test fallback; hosted private buckets normally use the signed branch above.
+  return `${url}/storage/v1/object/public/${[bucket, ...parts].map(encodeURIComponent).join("/")}`;
 }
