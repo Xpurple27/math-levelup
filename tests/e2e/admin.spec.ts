@@ -68,7 +68,7 @@ test("admin draft preview, independent QA, explicit publication and Excel drafts
   await a.reload();
   await a.getByRole("button", { name: "Publish", exact: true }).click();
   await expect(a.getByText(/Versi 1 · PUBLISHED/).first()).toBeVisible();
-  await a.getByRole("button", { name: "Create Revision", exact: true }).click();
+  await a.getByRole("button", { name: "Buat revisi baru", exact: true }).click();
   await expect(a.getByText(/Versi 2 · DRAFT/).first()).toBeVisible();
 
   const w = new ExcelJS.Workbook();
