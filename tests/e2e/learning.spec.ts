@@ -1,19 +1,20 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
+
 test("register, diagnostic autosave/resume, result and empty learning/packages", async ({
   page,
 }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await page.goto("/register");
   await page.getByLabel("Nama lengkap").fill("Siswa Uji");
   await page
     .getByLabel("Email", { exact: true })
     .fill(`student-${Date.now()}@example.com`);
   await page.getByLabel("Kata sandi").fill("Test-only-2026");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  await expect(page).toHaveURL(/\/app$/);
   await expect(
     page.getByRole("heading", { name: "Halo, Siswa" }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+  await page.getByRole("button", { name: "Mulai diagnostik", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Satu soal, satu langkah." }),
   ).toBeVisible();
@@ -79,21 +80,31 @@ function localApi(raw: APIRequestContext) {
     },
   };
 }
-test("mobile home fits viewport and navigation opens", async ({ page }) => {
+
+test("mobile student app fits viewport and bottom navigation opens learning", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("/");
+  await page.goto("/register");
+  await page.getByLabel("Nama lengkap").fill("Siswa Mobile");
+  await page
+    .getByLabel("Email", { exact: true })
+    .fill(`mobile-${Date.now()}@example.com`);
+  await page.getByLabel("Kata sandi").fill("Test-only-2026");
+  await page.getByRole("button", { name: "Buat akun", exact: true }).click();
+  await expect(page).toHaveURL(/\/app$/);
   await expect(
-    page.getByRole("heading", { name: "Halo, Sobat LevelUP" }),
+    page.getByRole("heading", { name: "Halo, Siswa" }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
-  await page.getByRole("button", { name: "Buka menu" }).click();
-  await page.getByRole("button", { name: "Belajar", exact: true }).click();
+  await page.getByRole("button", { name: "Belajar", exact: true }).last().click();
   await expect(
     page.getByRole("heading", { name: "Materi belajar belum diterbitkan" }),
   ).toBeVisible();
 });
+
 test("assessment authority and ownership boundaries", async ({
   request: rawRequest,
   browser,
@@ -280,34 +291,31 @@ test("pending Supabase signup explains confirmation and returns to login", async
       });
     }
   });
-  await page.goto("/");
-  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
+
+  await page.goto("/register");
   await page.getByLabel("Nama lengkap").fill("Siswa Konfirmasi");
   await page
     .getByLabel("Email", { exact: true })
     .fill("confirmation@example.com");
   await page.getByLabel("Kata sandi").fill("fixture-password-123");
   await page.getByRole("button", { name: "Buat akun", exact: true }).click();
-  const dialog = page.getByRole("dialog");
   await expect(
-    dialog.getByRole("heading", { name: "Konfirmasi email terlebih dahulu" }),
+    page.getByRole("heading", { name: "Konfirmasi email terlebih dahulu." }),
   ).toBeVisible();
-  await expect(dialog.getByLabel("Kata sandi")).toHaveCount(0);
-  await dialog.getByRole("button", { name: "Sudah konfirmasi? Masuk" }).click();
-  await dialog
+  await expect(page.getByLabel("Kata sandi")).toHaveCount(0);
+  await page.getByRole("link", { name: /Ke halaman masuk/ }).click();
+  await expect(page).toHaveURL(/\/login$/);
+  await page
     .getByLabel("Email", { exact: true })
     .fill("confirmation@example.com");
-  await dialog.getByLabel("Kata sandi").fill("fixture-password-123");
-  await dialog.getByRole("button", { name: "Masuk", exact: true }).click();
-  await expect(dialog.getByRole("alert")).toContainText(
-    "Email belum dikonfirmasi",
-  );
+  await page.getByLabel("Kata sandi").fill("fixture-password-123");
+  await page.getByRole("button", { name: "Masuk", exact: true }).click();
+  await expect(page.getByRole("alert")).toContainText("Email belum dikonfirmasi");
   await page.reload();
-  await page.getByRole("button", { name: "Mulai diagnostik gratis" }).click();
   await expect(
-    dialog.getByRole("heading", { name: "Selamat datang kembali." }),
+    page.getByRole("heading", { name: "Selamat datang kembali." }),
   ).toBeVisible();
-  await expect(dialog.getByLabel("Nama lengkap")).toHaveCount(0);
+  await expect(page.getByLabel("Nama lengkap")).toHaveCount(0);
 });
 
 test("contextual reports persist trusted version metadata and do not change answers", async ({
