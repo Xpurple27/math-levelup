@@ -108,7 +108,7 @@ function parseQuestion(lines: string[], index: number, defaults: DocxDefaults): 
   draft.section_id = defaults.section_id;
   draft.subtopic_id = defaults.subtopic_id;
   draft.difficulty = defaults.difficulty;
-  draft.source_type = "OTHER";
+  draft.source_type = "DOCX";
   draft.source_title = defaults.source_title;
   draft.source_page = "";
   draft.code = "";
