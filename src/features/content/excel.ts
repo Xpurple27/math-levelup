@@ -54,6 +54,8 @@ export type ImportPreview = {
     invalid: number;
     skipped: number;
     duplicate_codes: string[];
+    warnings?: number;
+    source_format?: "XLSX" | "DOCX" | "PDF";
   };
 };
 // Bound expanded ZIP sizes before handing the workbook to ExcelJS; ZIP64/encrypted inputs are rejected.
@@ -285,6 +287,7 @@ export async function parseWorkbook(
       invalid: rows.filter((r) => r.status === "INVALID").length,
       skipped: rows.filter((r) => r.status === "SKIPPED").length,
       duplicate_codes: duplicates,
+      source_format: "XLSX",
     },
   };
 }

@@ -86,7 +86,8 @@ export default function Levelup() {
           setAttempt(d.attempt);
           setOffset(d.attempt.serverNow - Date.now());
           setView(d.attempt.status === "completed" ? "result" : "exam");
-          if (d.attempt.status === "completed") localStorage.removeItem("levelup-attempt");
+          if (d.attempt.status === "completed")
+            localStorage.removeItem("levelup-attempt");
         } else {
           localStorage.removeItem("levelup-attempt");
         }
@@ -215,46 +216,80 @@ export default function Levelup() {
     window.location.replace("/?signed_out=1");
   }
 
-  const weakest = [...mastery].sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
+  const weakest = [...mastery].sort(
+    (a, b) => a.value - b.value || a.confidence - b.confidence,
+  )[0];
   const recommended = weakest?.topic || topics[0]?.id || "";
-  const avg = mastery.length ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length) : null;
-  const solved = history.reduce((s, h) => s + h.result.total - h.result.unanswered, 0);
+  const avg = mastery.length
+    ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length)
+    : null;
+  const solved = history.reduce(
+    (s, h) => s + h.result.total - h.result.unanswered,
+    0,
+  );
   const q = attempt?.questions[index];
   const feedback = q && attempt?.feedback[q.id];
-  const selected = q ? (attempt?.answers[q.id] ?? feedback?.selected) : undefined;
+  const selected = q
+    ? (attempt?.answers[q.id] ?? feedback?.selected)
+    : undefined;
   const answered = attempt ? Object.keys(attempt.answers).length : 0;
   const time = attempt
     ? Math.max(
         0,
         Math.floor(
-          (attempt.deadline ? attempt.deadline - clock - offset : clock + offset - attempt.started) / 1000,
+          (attempt.deadline
+            ? attempt.deadline - clock - offset
+            : clock + offset - attempt.started) / 1000,
         ),
       )
     : 0;
-  const timeText = `${Math.floor(time / 60).toString().padStart(2, "0")}:${(time % 60).toString().padStart(2, "0")}`;
+  const timeText = `${Math.floor(time / 60)
+    .toString()
+    .padStart(2, "0")}:${(time % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className={`app-shell ${view === "exam" ? "student-exam-mode" : ""}`}>
       {view !== "exam" && (
         <header className="student-header">
           <div className="student-header-inner">
-            <Link className="public-brand" href="/app" aria-label="LevelUP Math ruang siswa">
+            <Link
+              className="public-brand"
+              href="/app"
+              aria-label="LevelUP Math ruang siswa"
+            >
               <span className="public-brand-mark">LU</span>
-              <span>LevelUP <small>Math</small></span>
+              <span>
+                LevelUP <small>Math</small>
+              </span>
             </Link>
             <nav className="student-nav" aria-label="Ruang siswa">
               {nav.map((item) => (
-                <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => go(item.id)}>
+                <button
+                  key={item.id}
+                  className={view === item.id ? "active" : ""}
+                  onClick={() => go(item.id)}
+                >
                   {item.label}
                 </button>
               ))}
             </nav>
             <div className="student-header-actions">
-              <span className="student-streak"><Flame size={15} /> {streak} hari</span>
-              <button className="student-avatar" onClick={() => go("progress")} aria-label="Buka progres">
+              <span className="student-streak">
+                <Flame size={15} /> {streak} hari
+              </span>
+              <button
+                className="student-avatar"
+                onClick={() => go("progress")}
+                aria-label="Buka progres"
+              >
                 {user?.name.slice(0, 1).toUpperCase() || "S"}
               </button>
-              <button className="student-logout" onClick={() => void logout()} aria-label="Keluar dari akun" disabled={busy}>
+              <button
+                className="student-logout"
+                onClick={() => void logout()}
+                aria-label="Keluar dari akun"
+                disabled={busy}
+              >
                 <LogOut size={17} />
               </button>
             </div>
@@ -266,7 +301,9 @@ export default function Levelup() {
         {error && (
           <div className="error" role="alert">
             {error}
-            <button onClick={() => setError("")} aria-label="Tutup pesan">×</button>
+            <button onClick={() => setError("")} aria-label="Tutup pesan">
+              ×
+            </button>
           </div>
         )}
 
@@ -353,21 +390,39 @@ export default function Levelup() {
             recommended={recommended}
           />
         )}
-        {!ready && <div className="loading-note" role="status">Memuat ruang belajarmu…</div>}
-        {user && ["dashboard", "learn", "progress", "result", "practice", "tryout"].includes(view) && (
-          <ReportIssue
-            key={`${view}-${topic}-${view === "result" ? attempt?.id : ""}`}
-            view={view}
-            attemptId={view === "result" ? attempt?.id : undefined}
-            topic={view === "learn" || view === "practice" ? topic : undefined}
-          />
+        {!ready && (
+          <div className="loading-note" role="status">
+            Memuat ruang belajarmu…
+          </div>
         )}
+        {user &&
+          [
+            "dashboard",
+            "learn",
+            "progress",
+            "result",
+            "practice",
+            "tryout",
+          ].includes(view) && (
+            <ReportIssue
+              key={`${view}-${topic}-${view === "result" ? attempt?.id : ""}`}
+              view={view}
+              attemptId={view === "result" ? attempt?.id : undefined}
+              topic={
+                view === "learn" || view === "practice" ? topic : undefined
+              }
+            />
+          )}
       </main>
 
       {view !== "exam" && (
         <nav className="student-mobile-nav" aria-label="Navigasi mobile siswa">
           {nav.map((item) => (
-            <button key={item.id} className={view === item.id ? "active" : ""} onClick={() => go(item.id)}>
+            <button
+              key={item.id}
+              className={view === item.id ? "active" : ""}
+              onClick={() => go(item.id)}
+            >
               <item.icon size={17} />
               {item.label}
             </button>

@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CheckCircle2, ClipboardCheck, LogOut, PanelTop, ShieldCheck } from "lucide-react";
+import {
+  CheckCircle2,
+  ClipboardCheck,
+  LogOut,
+  PanelTop,
+  ShieldCheck,
+} from "lucide-react";
 
 const items = [
   { href: "/reviewer", label: "Ringkasan", icon: PanelTop },
@@ -29,14 +35,26 @@ export function ReviewerShell({ children }: { children: React.ReactNode }) {
       <aside className="ops-sidebar">
         <Link href="/reviewer" className="ops-brand">
           <span className="ops-brand-mark">LU</span>
-          <span><strong>LevelUP</strong><small>Review workspace</small></span>
+          <span>
+            <strong>LevelUP</strong>
+            <small>Review workspace</small>
+          </span>
         </Link>
-        <div className="ops-role"><ShieldCheck size={15} /> REVIEWER</div>
+        <div className="ops-role">
+          <ShieldCheck size={15} /> REVIEWER
+        </div>
         <nav className="ops-nav" aria-label="Reviewer navigation">
           {items.map((item) => {
-            const active = item.href === "/reviewer" ? pathname === item.href : pathname.startsWith(item.href);
+            const active =
+              item.href === "/reviewer"
+                ? pathname === item.href
+                : pathname.startsWith(item.href);
             return (
-              <Link className={active ? "active" : ""} href={item.href} key={item.href}>
+              <Link
+                className={active ? "active" : ""}
+                href={item.href}
+                key={item.href}
+              >
                 <item.icon size={17} /> {item.label}
               </Link>
             );
@@ -44,13 +62,21 @@ export function ReviewerShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="ops-sidebar-note">
           <CheckCircle2 size={18} />
-          <p>Fokus reviewer: akurasi matematika, kejelasan bahasa, taxonomy, pembahasan, dan kualitas distraktor.</p>
+          <p>
+            Fokus reviewer: akurasi matematika, kejelasan bahasa, taxonomy,
+            pembahasan, dan kualitas distraktor.
+          </p>
         </div>
-        <button className="ops-logout" onClick={() => void logout()}><LogOut size={16} /> Keluar</button>
+        <button className="ops-logout" onClick={() => void logout()}>
+          <LogOut size={16} /> Keluar
+        </button>
       </aside>
       <section className="ops-workspace">
         <header className="ops-topbar">
-          <div><span>QUALITY CONTROL</span><strong>Reviewer workspace</strong></div>
+          <div>
+            <span>QUALITY CONTROL</span>
+            <strong>Reviewer workspace</strong>
+          </div>
           <Link href="/app">Lihat ruang siswa</Link>
         </header>
         <main className="ops-main">{children}</main>

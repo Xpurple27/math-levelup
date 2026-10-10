@@ -5,7 +5,11 @@ import { StorageError } from "@/lib/store-errors";
 
 export const dynamic = "force-dynamic";
 
-export default async function Layout({ children }: { children: React.ReactNode }) {
+export default async function Layout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   let identity;
   try {
     identity = await adminIdentity();
