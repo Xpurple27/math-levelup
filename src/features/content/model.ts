@@ -23,6 +23,7 @@ export const sourceTypes = [
   "ADAPTED",
   "PDF",
   "EXCEL",
+  "DOCX",
   "AI_ASSISTED",
   "OTHER",
 ] as const;
