@@ -1,0 +1,32 @@
+/* C4.6 Content Operations V2 */
+.import-format-card[type="button"] { text-align: left; cursor: pointer; color: inherit; }
+.import-format-card[type="button"]:hover { transform: translateY(-2px); border-color: #d7b9b4; box-shadow: 0 12px 30px rgba(80,45,36,.07); }
+.format-link { display: inline-block; margin-top: 14px; color: var(--lu-red); font-weight: 750; font-size: 11px; }
+.docx-format-note { margin: 0 20px 2px; padding: 16px; border: 1px solid #eadfda; background: #fffaf6; border-radius: 10px; }
+.docx-format-note strong { display: block; margin-bottom: 10px; font-size: 12px; }
+.docx-format-note code { display: block; white-space: pre-wrap; padding: 12px; background: #272324; color: #fff8ef; border-radius: 8px; font: 11px/1.65 ui-monospace,SFMono-Regular,Consolas,monospace; }
+.docx-format-note p { margin-top: 10px; color: var(--lu-muted); font-size: 10px; line-height: 1.65; }
+.ingestion-form { grid-template-columns: 1fr auto; }
+.docx-defaults { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.3fr .65fr 1.2fr; gap: 12px; align-items: end; padding-bottom: 4px; }
+.classification-summary { min-height: 69px; padding: 10px 12px; border-left: 3px solid var(--lu-gold); background: var(--lu-gold-soft); display: grid; align-content: center; gap: 2px; }
+.classification-summary span { color: #87610e; font-size: 8px; letter-spacing: .1em; text-transform: uppercase; font-weight: 800; }
+.classification-summary strong { font-size: 10px; }
+.classification-summary small { color: var(--lu-muted); font-size: 9px; }
+
+.media-mode-tabs { display: inline-flex; gap: 4px; padding: 4px; margin-bottom: 14px; background: #eee6e2; border-radius: 10px; }
+.media-mode-tabs button { border: 0; background: transparent; padding: 9px 13px; border-radius: 7px; color: var(--lu-muted); font-weight: 750; font-size: 10px; }
+.media-mode-tabs button.active { background: white; color: var(--lu-red); box-shadow: 0 5px 14px rgba(68,42,36,.08); }
+.media-drop { margin-bottom: 14px; }
+
+@media (max-width: 1100px) {
+  .docx-defaults { grid-template-columns: 1fr 1fr; }
+  .classification-summary { min-height: 64px; }
+}
+@media (max-width: 760px) {
+  .import-format-grid { grid-template-columns: 1fr; }
+  .import-format-card { min-height: 0; }
+  .ingestion-form { grid-template-columns: 1fr; }
+  .docx-defaults { grid-template-columns: 1fr; }
+  .media-layout { grid-template-columns: 1fr; }
+  .media-grid { grid-template-columns: 1fr; }
+}
