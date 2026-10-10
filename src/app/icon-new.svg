@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="LevelUP Math">
+  <rect width="64" height="64" rx="16" fill="#c5262f"/>
+  <path d="M18 43V21h7v16h12v6H18Z" fill="#fffdf8"/>
+  <path d="M34 35 46 23v7h5V17H38v5h7L33 34l1 1Z" fill="#f0b429"/>
+</svg>
