@@ -90,7 +90,10 @@ function storedZip(name: string, text: string) {
 
 function docx(lines: string[]) {
   const xml = `<?xml version="1.0"?><w:document xmlns:w="urn:test"><w:body>${lines
-    .map((line) => `<w:p><w:r><w:t>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</w:t></w:r></w:p>`)
+    .map(
+      (line) =>
+        `<w:p><w:r><w:t>${line.replace(/&/g, "&amp;").replace(/</g, "&lt;")}</w:t></w:r></w:p>`,
+    )
     .join("")}</w:body></w:document>`;
   return storedZip("word/document.xml", xml);
 }
@@ -153,7 +156,12 @@ describe("bounded Excel import", () => {
 });
 
 describe("bounded DOCX ingestion", () => {
-  const defaults = { section_id: "s", subtopic_id: "st", difficulty: "HARD", source_title: "paket-pm.docx" };
+  const defaults = {
+    section_id: "s",
+    subtopic_id: "st",
+    difficulty: "HARD",
+    source_title: "paket-pm.docx",
+  };
 
   it("extracts Word paragraphs and turns a numbered question into a draft", async () => {
     const bytes = docx([
@@ -173,19 +181,19 @@ describe("bounded DOCX ingestion", () => {
     expect(preview.summary.source_format).toBe("DOCX");
     expect(preview.summary.warnings).toBeGreaterThan(0);
     expect(preview.rows[0].parsed?.difficulty).toBe("HARD");
-    expect(preview.rows[0].parsed?.options.find((o) => o.is_correct)?.option_key).toBe("C");
+    expect(
+      preview.rows[0].parsed?.options.find((o) => o.is_correct)?.option_key,
+    ).toBe("C");
     expect(preview.rows[0].parsed?.explanation.solution_md).toContain("x = 3");
     expect(preview.rows[0].raw.warnings).toMatch(/dilengkapi/i);
   });
 
   it("rejects a structurally ambiguous Word question without an answer key", async () => {
-    const preview = await parseDocx(docx([
-      "1. Pilih hasil yang benar.",
-      "A. 1",
-      "B. 2",
-      "C. 3",
-      "D. 4",
-    ]), c, defaults);
+    const preview = await parseDocx(
+      docx(["1. Pilih hasil yang benar.", "A. 1", "B. 2", "C. 3", "D. 4"]),
+      c,
+      defaults,
+    );
     expect(preview.summary.invalid).toBe(1);
     expect(preview.rows[0].error_message).toMatch(/kunci/i);
   });

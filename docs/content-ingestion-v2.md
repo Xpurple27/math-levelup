@@ -1,17 +1,20 @@
 # C4.6 — Content Operations V2
 
 ## Goal
+
 Turn existing LevelUP source files into reviewable content drafts without bypassing human QA.
 
 ## Supported now
 
 ### XLSX
+
 Use the official LevelUP import template. XLSX remains the most deterministic bulk format.
 
 Flow:
 `XLSX → parse → validate → preview → confirm → DRAFT → QA → publish`
 
 ### DOCX (beta)
+
 DOCX is intended for existing authored question packages. The parser reads WordprocessingML directly without introducing a new runtime dependency.
 
 Recommended structure:
@@ -30,6 +33,7 @@ Kesalahan Umum: ...
 ```
 
 Supported explanation markers:
+
 - Understanding / Pemahaman / Apa yang ditanyakan
 - Diketahui
 - Ditanyakan
@@ -48,6 +52,7 @@ A DOCX question may enter as DRAFT when its answer/options are structurally vali
 The parser currently expects selectable Word text. Image-only/scanned DOCX is not supported.
 
 ## PDF
+
 PDF ingestion is the next format. Text PDFs and scanned PDFs have different extraction requirements, so PDF is deliberately not routed through the DOCX parser. Future flow:
 
 `PDF → text/image detection → extraction/OCR when needed → parse → DRAFT → human review`
@@ -55,11 +60,13 @@ PDF ingestion is the next format. Text PDFs and scanned PDFs have different extr
 No PDF or AI-assisted parser may publish automatically.
 
 ## Media upload
+
 Admin Media now supports direct upload to Supabase Storage.
 
 Default bucket: `levelup-content` (private)
 
 Allowed media:
+
 - PNG
 - JPEG
 - WebP
@@ -74,10 +81,13 @@ The server uploads with the Supabase service role and registers metadata through
 Advanced manual registration remains available for objects already present in storage.
 
 ## Provenance
+
 Question source types now include `DOCX`. Import jobs infer source format from file extension. Imported content remains a draft and preserves its source filename/title for later audit.
 
 ## Explanation standard
+
 LevelUP questions are not considered publish-ready with answer key alone. Required structured explanation fields remain:
+
 - Understanding
 - Concept
 - First step
@@ -85,6 +95,7 @@ LevelUP questions are not considered publish-ready with answer key alone. Requir
 - Final answer
 
 Recommended enrichment:
+
 - Known
 - Asked
 - Shortcut / cara cepat
@@ -92,6 +103,7 @@ Recommended enrichment:
 - Option analysis
 
 ## Safety boundaries
+
 - No auto-publish from XLSX/DOCX/PDF.
 - Answer keys remain server-only in assessment runtime.
 - Published versions stay immutable.
@@ -100,6 +112,7 @@ Recommended enrichment:
 - Missing rich explanation in DOCX is warning-at-import, but publish guards still require required explanation fields.
 
 ## Next increments
+
 1. Validate DOCX parser against real user-owned Word packages.
 2. Extract/associate embedded DOCX images.
 3. Add PDF text ingestion.

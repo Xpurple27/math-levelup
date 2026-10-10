@@ -12,11 +12,17 @@ export const metadata: Metadata = {
     "Platform matematika UTBK untuk mengenali kelemahan, belajar terarah, berlatih, dan mengukur progres.",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="id">
       <body>
-        <a className="skip-link" href="#content">Lewati ke konten</a>
+        <a className="skip-link" href="#content">
+          Lewati ke konten
+        </a>
         {children}
       </body>
     </html>

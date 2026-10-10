@@ -5,7 +5,11 @@ import { StorageError } from "@/lib/store-errors";
 
 export const dynamic = "force-dynamic";
 
-export default async function ReviewerLayout({ children }: { children: React.ReactNode }) {
+export default async function ReviewerLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   try {
     const identity = await adminIdentity();
     if (identity.role === "ADMIN") redirect("/admin");

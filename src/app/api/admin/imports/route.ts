@@ -33,13 +33,20 @@ export async function POST(request: Request) {
         body: bytes as unknown as BodyInit,
       }).formData(),
       file = form.get("file");
-    if (!(file instanceof File)) throw new StorageError("Pilih file .xlsx atau .docx.", 400);
+    if (!(file instanceof File))
+      throw new StorageError("Pilih file .xlsx atau .docx.", 400);
     const name = file.name.toLowerCase();
     const isXlsx = name.endsWith(".xlsx");
     const isDocx = name.endsWith(".docx");
-    if (!isXlsx && !isDocx) throw new StorageError("Format yang didukung saat ini: .xlsx dan .docx.", 400);
-    if (isXlsx && file.size > 2_200_000) throw new StorageError("XLSX maksimal 2 MB.", 400);
-    if (isDocx && file.size > 8_000_000) throw new StorageError("DOCX maksimal 8 MB.", 400);
+    if (!isXlsx && !isDocx)
+      throw new StorageError(
+        "Format yang didukung saat ini: .xlsx dan .docx.",
+        400,
+      );
+    if (isXlsx && file.size > 2_200_000)
+      throw new StorageError("XLSX maksimal 2 MB.", 400);
+    if (isDocx && file.size > 8_000_000)
+      throw new StorageError("DOCX maksimal 8 MB.", 400);
 
     const job = await adminContent<{ id: string }>(user.id, "import_begin", {
       file_name: file.name.slice(0, 200),
@@ -50,17 +57,27 @@ export async function POST(request: Request) {
       let preview;
       if (isXlsx) {
         const codes = await adminContent<string[]>(user.id, "codes");
-        preview = await parseWorkbook(new Uint8Array(await file.arrayBuffer()), catalog, codes);
+        preview = await parseWorkbook(
+          new Uint8Array(await file.arrayBuffer()),
+          catalog,
+          codes,
+        );
       } else {
         const section_id = String(form.get("section_id") || "");
         const subtopic_id = String(form.get("subtopic_id") || "");
-        const difficulty = String(form.get("difficulty") || "MEDIUM").toUpperCase();
-        preview = await parseDocx(new Uint8Array(await file.arrayBuffer()), catalog, {
-          section_id,
-          subtopic_id,
-          difficulty,
-          source_title: file.name.slice(0, 200),
-        });
+        const difficulty = String(
+          form.get("difficulty") || "MEDIUM",
+        ).toUpperCase();
+        preview = await parseDocx(
+          new Uint8Array(await file.arrayBuffer()),
+          catalog,
+          {
+            section_id,
+            subtopic_id,
+            difficulty,
+            source_title: file.name.slice(0, 200),
+          },
+        );
       }
       const data = await adminContent(user.id, "import_preview", {
         id: job.id,

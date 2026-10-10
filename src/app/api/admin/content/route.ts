@@ -35,7 +35,12 @@ export async function GET(request: Request) {
     );
     return reply(
       action === "media_list"
-        ? await Promise.all((data as Media[]).map(async (m) => ({ ...m, url: await mediaUrl(m) })))
+        ? await Promise.all(
+            (data as Media[]).map(async (m) => ({
+              ...m,
+              url: await mediaUrl(m),
+            })),
+          )
         : data,
     );
   } catch (e) {
