@@ -54,7 +54,7 @@ SELECT
 FROM public.exam_sections s
 JOIN public.exams e ON e.id=s.exam_id
 CROSS JOIN public.subtopics st
-WHERE e.code='SNBT' AND s.code='PK' AND st.code='ALG-PLSV'
+WHERE e.code='SNBT' AND s.code='PK' AND st.code='EQ'
 ON CONFLICT(code) DO NOTHING;
 
 INSERT INTO public.practice_package_questions(practice_package_id, question_version_id, sort_order)
