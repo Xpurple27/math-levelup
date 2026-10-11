@@ -175,17 +175,87 @@ export function PublicHome() {
         </section>
       </main>
 
-      <footer className="public-footer">
-        <Link className="public-brand" href="/">
-          <span className="public-brand-mark">LU</span>
-          <span>
-            LevelUP <small>Math</small>
-          </span>
-        </Link>
-        <p>Belajar terarah. Penilaian transparan. Progres yang berarti.</p>
-        <div>
-          <Link href="/login">Masuk</Link>
-          <Link href="/register">Daftar</Link>
+      <footer className="mt-20 bg-[#7f1519] text-white">
+        <div className="mx-auto grid max-w-[1390px] gap-12 px-6 py-14 md:grid-cols-[1.7fr_1fr_1fr] md:px-10 lg:px-14">
+          <div className="max-w-xl">
+            <Link
+              className="inline-flex items-center gap-3 text-xl font-extrabold tracking-[-0.04em]"
+              href="/"
+              aria-label="LevelUP Math"
+            >
+              <span className="grid h-11 w-11 place-items-center rounded-xl bg-[#f5b82e] text-sm font-black text-[#7f1519]">
+                LU
+              </span>
+              <span>
+                LevelUP <span className="text-[#f5cf63]">Math</span>
+              </span>
+            </Link>
+            <p className="mt-5 max-w-md text-sm leading-7 text-white/75">
+              Platform belajar, latihan, dan tryout matematika untuk membantu
+              siswa mengenali kemampuan, memperbaiki kelemahan, dan membangun
+              progres yang terukur.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-2 text-xs font-semibold text-white/80">
+              {[
+                "Diagnostic",
+                "Learning",
+                "Practice",
+                "Tryout",
+                "Progress",
+              ].map((item) => (
+                <span
+                  className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5"
+                  key={item}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#f5cf63]">
+              Jelajahi
+            </p>
+            <nav className="mt-5 flex flex-col gap-3 text-sm text-white/75" aria-label="Navigasi footer">
+              <a className="transition hover:text-white" href="#cara-kerja">
+                Cara belajar
+              </a>
+              <a className="transition hover:text-white" href="#produk">
+                Program
+              </a>
+              <a className="transition hover:text-white" href="#tentang">
+                Tentang LevelUP
+              </a>
+            </nav>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#f5cf63]">
+              Mulai belajar
+            </p>
+            <div className="mt-5 flex flex-col gap-3 text-sm text-white/75">
+              <Link className="transition hover:text-white" href="/register">
+                Daftar gratis
+              </Link>
+              <Link className="transition hover:text-white" href="/login">
+                Masuk ke akun
+              </Link>
+              <Link
+                className="mt-2 inline-flex w-fit items-center gap-2 rounded-lg bg-[#f5b82e] px-4 py-2.5 font-bold text-[#6f1015] transition hover:brightness-105"
+                href="/register"
+              >
+                Mulai LevelUP <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-white/10">
+          <div className="mx-auto flex max-w-[1390px] flex-col gap-2 px-6 py-5 text-xs text-white/55 md:flex-row md:items-center md:justify-between md:px-10 lg:px-14">
+            <span>© 2026 LevelUP Math.</span>
+            <span>Belajar dengan arah. Naik level dengan bukti.</span>
+          </div>
         </div>
       </footer>
     </div>
