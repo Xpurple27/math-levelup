@@ -11,7 +11,6 @@ import {
   Target,
   Zap,
 } from "lucide-react";
-import { ReportIssue } from "./levelup/report-issue";
 import { useTopics } from "./content-context";
 import type { Mastery } from "@/lib/scoring";
 import type { View, User, Attempt, History } from "./levelup/types";
@@ -38,6 +37,7 @@ export default function Levelup() {
   const [user, setUser] = useState<User | null>(null);
   const [ready, setReady] = useState(false);
   const [view, setView] = useState<View>("dashboard");
+  const [pendingView, setPendingView] = useState<View | null>(null);
   const [mastery, setMastery] = useState<Mastery[]>([]);
   const [history, setHistory] = useState<History[]>([]);
   const [streak, setStreak] = useState(0);
@@ -184,8 +184,13 @@ export default function Levelup() {
   }, [clock, offset, view, attempt, busy, submit]);
 
   const go = (v: View) => {
-    setView(v);
+    if (v === view) return;
+    setPendingView(v);
     setError("");
+    window.setTimeout(() => {
+      setView(v);
+      setPendingView(null);
+    }, 90);
   };
 
   const start = async (kind: string, t = topic) => {
@@ -250,6 +255,8 @@ export default function Levelup() {
 
   return (
     <div className={`app-shell ${view === "exam" ? "student-exam-mode" : ""}`}>
+      {(pendingView || busy) && <div className="app-nav-progress" aria-hidden="true" />}
+
       {view !== "exam" && (
         <header className="student-header">
           <div className="student-header-inner">
@@ -264,15 +271,18 @@ export default function Levelup() {
               </span>
             </Link>
             <nav className="student-nav" aria-label="Ruang siswa">
-              {nav.map((item) => (
-                <button
-                  key={item.id}
-                  className={view === item.id ? "active" : ""}
-                  onClick={() => go(item.id)}
-                >
-                  {item.label}
-                </button>
-              ))}
+              {nav.map((item) => {
+                const selectedNav = pendingView ? pendingView === item.id : view === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    className={selectedNav ? (pendingView === item.id ? "pending active" : "active") : ""}
+                    onClick={() => go(item.id)}
+                  >
+                    {item.label}
+                  </button>
+                );
+              })}
             </nav>
             <div className="student-header-actions">
               <span className="student-streak">
@@ -308,129 +318,133 @@ export default function Levelup() {
           </div>
         )}
 
-        {view === "dashboard" && (
-          <DashboardView
-            user={user}
-            busy={busy}
-            start={start}
-            history={history}
-            avg={avg}
-            solved={solved}
-            streak={streak}
-            weakest={weakest}
-            recommended={recommended}
-            setTopic={setTopic}
-            go={go}
-          />
-        )}
-        {view === "learn" && <LearnView />}
-        {view === "practice" && (
-          <PracticeView
-            section={section}
-            setSection={setSection}
-            topic={topic}
-            setTopic={setTopic}
-            difficulty={difficulty}
-            setDifficulty={setDifficulty}
-            count={count}
-            setCount={setCount}
-            busy={busy}
-            start={start}
-            recommended={recommended}
-            weakest={weakest}
-          />
-        )}
-        {view === "tryout" && (
-          <TryoutView
-            history={history}
-            busy={busy}
-            start={start}
-            syncAttempt={syncAttempt}
-            setView={setView}
-            setError={setError}
-          />
-        )}
-        {view === "profile" && user && (
-          <ProfileView user={user} onUpdated={setUser} />
-        )}
-        {view === "progress" && (
-          <ProgressView
-            avg={avg}
-            solved={solved}
-            streak={streak}
-            days={days}
-            history={history}
-            mastery={mastery}
-            start={start}
-            syncAttempt={syncAttempt}
-            setView={setView}
-          />
-        )}
-        {view === "exam" && attempt && q && (
-          <ExamView
-            attempt={attempt}
-            time={time}
-            timeText={timeText}
-            index={index}
-            q={q}
-            selected={selected}
-            busy={busy}
-            feedback={feedback}
-            call={call}
-            syncAttempt={syncAttempt}
-            setIndex={setIndex}
-            setConfirm={setConfirm}
-            answered={answered}
-            go={go}
-          />
-        )}
-        {view === "result" && attempt?.result && (
-          <ResultView
-            attempt={attempt}
-            resultTab={resultTab}
-            setResultTab={setResultTab}
-            setTopic={setTopic}
-            go={go}
-            recommended={recommended}
-          />
-        )}
-        {!ready && (
-          <div className="loading-note" role="status">
-            Memuat ruang belajarmu…
+        {!ready ? (
+          <div className="student-skeleton" role="status" aria-label="Memuat ruang belajar">
+            <span />
+            <span />
+            <span />
+          </div>
+        ) : (
+          <div className="student-view-transition" key={view}>
+            {view === "dashboard" && (
+              <DashboardView
+                user={user}
+                busy={busy}
+                start={start}
+                history={history}
+                avg={avg}
+                solved={solved}
+                streak={streak}
+                weakest={weakest}
+                recommended={recommended}
+                setTopic={setTopic}
+                go={go}
+              />
+            )}
+            {view === "learn" && <LearnView />}
+            {view === "practice" && (
+              <PracticeView
+                section={section}
+                setSection={setSection}
+                topic={topic}
+                setTopic={setTopic}
+                difficulty={difficulty}
+                setDifficulty={setDifficulty}
+                count={count}
+                setCount={setCount}
+                busy={busy}
+                start={start}
+                recommended={recommended}
+                weakest={weakest}
+              />
+            )}
+            {view === "tryout" && (
+              <TryoutView
+                history={history}
+                busy={busy}
+                start={start}
+                syncAttempt={syncAttempt}
+                setView={setView}
+                setError={setError}
+              />
+            )}
+            {view === "profile" && user && (
+              <ProfileView user={user} onUpdated={setUser} />
+            )}
+            {view === "progress" && (
+              <ProgressView
+                avg={avg}
+                solved={solved}
+                streak={streak}
+                days={days}
+                history={history}
+                mastery={mastery}
+                start={start}
+                syncAttempt={syncAttempt}
+                setView={setView}
+              />
+            )}
+            {view === "exam" && attempt && q && (
+              <ExamView
+                attempt={attempt}
+                time={time}
+                timeText={timeText}
+                index={index}
+                q={q}
+                selected={selected}
+                busy={busy}
+                feedback={feedback}
+                call={call}
+                syncAttempt={syncAttempt}
+                setIndex={setIndex}
+                setConfirm={setConfirm}
+                answered={answered}
+                go={go}
+              />
+            )}
+            {view === "result" && attempt?.result && (
+              <ResultView
+                attempt={attempt}
+                resultTab={resultTab}
+                setResultTab={setResultTab}
+                setTopic={setTopic}
+                go={go}
+                recommended={recommended}
+              />
+            )}
           </div>
         )}
-        {user &&
-          [
-            "dashboard",
-            "learn",
-            "progress",
-            "result",
-            "practice",
-            "tryout",
-          ].includes(view) && (
-            <ReportIssue
-              key={`${view}-${topic}-${view === "result" ? attempt?.id : ""}`}
-              view={view}
-              attemptId={view === "result" ? attempt?.id : undefined}
-              topic={
-                view === "learn" || view === "practice" ? topic : undefined
-              }
-            />
-          )}
+
+        {view !== "exam" && ready && (
+          <footer className="student-app-footer">
+            <div>
+              <strong>LevelUP Math</strong>
+              <div>Belajar · Latihan · Tryout · Progres</div>
+            </div>
+            <nav aria-label="Informasi LevelUP">
+              <Link href="/">Tentang</Link>
+              <Link href="/">Ketentuan</Link>
+              <Link href="/">Privasi</Link>
+            </nav>
+          </footer>
+        )}
       </main>
 
       {view !== "exam" && (
         <nav className="student-mobile-nav" aria-label="Navigasi mobile siswa">
-          {nav.map((item) => (
-            <button
-              key={item.id}
-              className={view === item.id ? "active" : ""}
-              onClick={() => go(item.id)}
-            >
-              <item.icon size={17} />
-              {item.label}
-            </button>
-          ))}
+          {nav.map((item) => {
+            const selectedNav = pendingView ? pendingView === item.id : view === item.id;
+            return (
+              <button
+                key={item.id}
+                className={selectedNav ? (pendingView === item.id ? "pending active" : "active") : ""}
+                onClick={() => go(item.id)}
+              >
+                <item.icon size={17} />
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
       )}
 

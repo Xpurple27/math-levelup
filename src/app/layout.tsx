@@ -4,6 +4,8 @@ import "./c45.css";
 import "./c45-hotfix.css";
 import "./admin-content-polish.css";
 import "./c46.css";
+import "./c5-learning.css";
+import "./c5-workflow.css";
 import "katex/dist/katex.min.css";
 
 export const metadata: Metadata = {
