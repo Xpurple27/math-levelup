@@ -30,11 +30,7 @@ type PracticePackage = {
   access: "FREE" | "PREMIUM";
   estimatedMinutes: number;
   section: { id: string; code: string; name: string };
-  subtopic: {
-    id: string;
-    name: string;
-    topic: { id: string; name: string; domain: { id: string; name: string } | null } | null;
-  };
+  domain: { id: string; name: string; description: string };
   questionCount: number;
   difficulty: { basic: number; medium: number; hard: number };
 };
@@ -55,7 +51,7 @@ function mixLabel(item: PracticePackage) {
 export function PracticeView({ busy, start }: Props) {
   const [packages, setPackages] = useState<PracticePackage[]>([]);
   const [activeSection, setActiveSection] = useState("PK");
-  const [activeSubtopic, setActiveSubtopic] = useState("");
+  const [activeDomain, setActiveDomain] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -71,7 +67,7 @@ export function PracticeView({ busy, start }: Props) {
         const firstSection = sections.find((item) => items.some((pkg) => pkg.section.code === item.code))?.code || "PK";
         const firstPackage = items.find((pkg) => pkg.section.code === firstSection);
         setActiveSection(firstSection);
-        setActiveSubtopic(firstPackage?.subtopic.id || "");
+        setActiveDomain(firstPackage?.domain.id || "");
       })
       .catch((reason: Error) => alive && setError(reason.message))
       .finally(() => alive && setLoading(false));
@@ -84,34 +80,40 @@ export function PracticeView({ busy, start }: Props) {
     () => packages.filter((item) => item.section.code === activeSection),
     [packages, activeSection],
   );
-  const subtopics = useMemo(() => {
-    const map = new Map<string, { id: string; name: string; topic: string; domain: string }>();
+  const domains = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; description: string; packages: number; questions: number }>();
     for (const item of sectionPackages) {
-      if (!map.has(item.subtopic.id)) {
-        map.set(item.subtopic.id, {
-          id: item.subtopic.id,
-          name: item.subtopic.name,
-          topic: item.subtopic.topic?.name || "Matematika",
-          domain: item.subtopic.topic?.domain?.name || "Matematika",
+      const current = map.get(item.domain.id);
+      if (current) {
+        current.packages += 1;
+        current.questions += item.questionCount;
+      } else {
+        map.set(item.domain.id, {
+          id: item.domain.id,
+          name: item.domain.name,
+          description: item.domain.description,
+          packages: 1,
+          questions: item.questionCount,
         });
       }
     }
     return [...map.values()];
   }, [sectionPackages]);
-  const visiblePackages = sectionPackages.filter((item) => !activeSubtopic || item.subtopic.id === activeSubtopic);
+  const visiblePackages = sectionPackages.filter((item) => !activeDomain || item.domain.id === activeDomain);
+  const selectedDomain = domains.find((item) => item.id === activeDomain);
 
   function chooseSection(code: string) {
     setActiveSection(code);
     const first = packages.find((item) => item.section.code === code);
-    setActiveSubtopic(first?.subtopic.id || "");
+    setActiveDomain(first?.domain.id || "");
   }
 
   return (
     <>
       <PageHeading
         eyebrow="LATIHAN TERARAH"
-        title="Pilih materi. Pilih paket. Mulai latihan."
-        subtitle="Setiap paket sudah disusun dari Question Bank. Isi paket tetap, sehingga progresmu bisa dibandingkan dari percobaan ke percobaan."
+        title="Masuk lewat satu pintu. Latih banyak bentuk soal."
+        subtitle="Setiap pintu mewakili domain besar UTBK. Di dalam paket, submateri dan arketipe soal dicampur agar latihan tidak terasa seperti mengulang satu template."
       />
 
       <section className="rounded-2xl border border-[#eadfe0] bg-white p-4 shadow-sm md:p-5">
@@ -135,64 +137,67 @@ export function PracticeView({ busy, start }: Props) {
 
         {loading ? (
           <div className="grid gap-3 py-5 md:grid-cols-3">
-            {[0, 1, 2].map((item) => <div key={item} className="h-20 animate-pulse rounded-xl bg-[#f5efef]" />)}
+            {[0, 1, 2].map((item) => <div key={item} className="h-28 animate-pulse rounded-xl bg-[#f5efef]" />)}
           </div>
         ) : error ? (
           <div className="py-8 text-sm text-[#8f1d24]">{error}</div>
-        ) : sectionPackages.length ? (
+        ) : domains.length ? (
           <div className="pt-5">
             <div className="mb-3 flex items-center gap-2 text-xs font-black uppercase tracking-[0.14em] text-[#92787a]">
-              <BookOpen size={15} /> Pilih materi
+              <BookOpen size={15} /> Pilih pintu latihan
             </div>
-            <div className="flex flex-wrap gap-2">
-              {subtopics.map((item) => (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {domains.map((item) => (
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setActiveSubtopic(item.id)}
-                  className={`rounded-xl border px-4 py-3 text-left transition ${
-                    activeSubtopic === item.id
-                      ? "border-[#d95d63] bg-[#fff0ee] text-[#7f1519]"
-                      : "border-[#eadfe0] bg-white text-[#49383a] hover:border-[#d8b9bc]"
+                  onClick={() => setActiveDomain(item.id)}
+                  className={`rounded-2xl border p-4 text-left transition ${
+                    activeDomain === item.id
+                      ? "border-[#d95d63] bg-[#fff0ee] shadow-sm"
+                      : "border-[#eadfe0] bg-white hover:-translate-y-0.5 hover:border-[#d8b9bc]"
                   }`}
                 >
-                  <span className="block text-xs text-[#947d7f]">{item.domain} · {item.topic}</span>
-                  <strong className="mt-1 block text-sm">{item.name}</strong>
+                  <span className="text-[11px] font-black uppercase tracking-[0.12em] text-[#a52b31]">{activeSection} · Pintu</span>
+                  <strong className="mt-1 block text-base text-[#302426]">{item.name}</strong>
+                  <span className="mt-2 line-clamp-2 block text-xs leading-5 text-[#806d6f]">{item.description}</span>
+                  <span className="mt-3 block text-xs font-bold text-[#8b7476]">{item.packages} paket · {item.questions} soal</span>
                 </button>
               ))}
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-3 py-8 text-sm text-[#816b6d]">
-            <Layers3 size={20} /> Paket {activeSection} belum tersedia. Konten akan muncul setelah dipublikasikan.
+            <Layers3 size={20} /> Paket {activeSection} belum tersedia.
           </div>
         )}
       </section>
 
       {!loading && !error && visiblePackages.length > 0 && (
         <section className="mt-7">
-          <div className="mb-4 flex items-end justify-between gap-4">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-4">
             <div>
               <div className="text-xs font-black uppercase tracking-[0.14em] text-[#a52b31]">Paket latihan</div>
-              <h2 className="mt-1 text-xl font-extrabold text-[#302426]">{visiblePackages[0]?.subtopic.name}</h2>
+              <h2 className="mt-1 text-xl font-extrabold text-[#302426]">{selectedDomain?.name}</h2>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-[#806d6f]">10 soal per paket · Basic, Medium, dan Hard · pembahasan terbuka setelah tiap soal selesai.</p>
             </div>
-            <span className="text-xs font-semibold text-[#8a7375]">{visiblePackages.length} paket tersedia</span>
+            <span className="rounded-full bg-[#fff4df] px-3 py-1.5 text-xs font-extrabold text-[#8c641d]">{visiblePackages.length} paket tersedia</span>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {visiblePackages.map((item) => (
-              <article key={item.id} className="group flex min-h-[250px] flex-col rounded-2xl border border-[#e7dcdd] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#d9b8bb] hover:shadow-md">
+              <article key={item.id} className="group flex min-h-[270px] flex-col rounded-2xl border border-[#e7dcdd] bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#d9b8bb] hover:shadow-md">
                 <div className="flex items-center justify-between gap-3">
                   <span className="rounded-full bg-[#fff0ee] px-2.5 py-1 text-[11px] font-black text-[#a52b31]">{mixLabel(item)}</span>
                   {item.access === "PREMIUM" ? (
                     <span className="flex items-center gap-1 text-[11px] font-bold text-[#8f1d24]"><LockKeyhole size={12} /> Premium</span>
                   ) : (
-                    <span className="text-[11px] font-bold text-[#6f826d]">Gratis</span>
+                    <span className="text-[11px] font-bold text-[#5f765c]">Gratis</span>
                   )}
                 </div>
 
                 <div className="mt-4">
-                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8587]">{item.section.code} · {item.code}</span>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9a8587]">{item.section.code} · {item.domain.name}</span>
                   <h3 className="mt-2 text-lg font-extrabold leading-snug text-[#302426]">{item.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-[#806d6f]">{item.description}</p>
                 </div>
@@ -213,7 +218,7 @@ export function PracticeView({ busy, start }: Props) {
                   disabled={busy || item.access !== "FREE" || item.questionCount === 0}
                   onClick={() => void start("practice", item.slug)}
                 >
-                  {item.access === "FREE" ? "Mulai paket" : "Paket premium"}
+                  {item.access === "FREE" ? "Mulai latihan" : "Paket premium"}
                   <ArrowRight size={17} />
                 </button>
               </article>
