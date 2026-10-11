@@ -89,9 +89,15 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         400,
       );
 
+    const requestedPracticeSlug =
+      typeof b.practicePackageSlug === "string"
+        ? b.practicePackageSlug
+        : typeof b.topic === "string"
+          ? b.topic
+          : "";
     const practicePack =
-      b.kind === "practice" && typeof b.practicePackageSlug === "string"
-        ? await loadPracticePackage(b.practicePackageSlug)
+      b.kind === "practice" && requestedPracticeSlug
+        ? await loadPracticePackage(requestedPracticeSlug)
         : null;
     if (b.kind === "practice" && !practicePack)
       return response(
