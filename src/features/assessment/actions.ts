@@ -7,6 +7,7 @@ import {
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
 import { findTryoutPackage, tryoutPackages } from "@/lib/tryout-packages";
+import { loadPracticePackage } from "../practice/packages";
 import { publicTopics } from "../content/runtime";
 import { response, type ActionBody } from "../http";
 import { applyPracticeAnswer } from "../practice/answer";
@@ -70,6 +71,7 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
       !["diagnostic", "guided", "mini", "practice", "tryout"].includes(b.kind)
     )
       return response({ error: "Jenis sesi tidak valid." }, 400);
+
     const pack =
       b.kind === "tryout"
         ? findTryoutPackage(
@@ -86,13 +88,32 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         { error: "Paket tidak tersedia atau belum dapat diakses." },
         400,
       );
-    const topic = b.kind === "diagnostic" ? null : pack ? pack.slug : b.topic;
+
+    const practicePack =
+      b.kind === "practice" && typeof b.practicePackageSlug === "string"
+        ? await loadPracticePackage(b.practicePackageSlug)
+        : null;
+    if (b.kind === "practice" && !practicePack)
+      return response(
+        { error: "Pilih paket latihan yang tersedia terlebih dahulu." },
+        400,
+      );
+
+    const topic =
+      b.kind === "diagnostic"
+        ? null
+        : practicePack
+          ? `practice:${practicePack.card.slug}`
+          : pack
+            ? pack.slug
+            : b.topic;
     if (
       topic !== null &&
       (typeof topic !== "string" ||
-        (!pack && !(await publicTopics()).some((t) => t.id === topic)))
+        (!pack && !practicePack && !(await publicTopics()).some((t) => t.id === topic)))
     )
       return response({ error: "Topik tidak valid." }, 400);
+
     const count =
       typeof b.count === "number" && [5, 10, 15, 20].includes(b.count)
         ? b.count
@@ -103,25 +124,19 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
       !["Basic", "Medium", "Hard", "Mixed"].includes(difficulty)
     )
       return response({ error: "Tingkat kesulitan tidak valid." }, 400);
-    if (b.kind === "practice" && difficulty !== "Mixed" && count > 10)
-      return response(
-        { error: "Untuk satu tingkat kesulitan, pilih 5 atau 10 soal." },
-        400,
-      );
+
     let a = await store.activeAttempt(user.id, b.kind, topic);
     if (a) a = await expire(a);
     if (!a || a.status === "completed") {
-      const excludedIds = pack ? [] : await store.seenQuestionIds(user.id);
-      a = await store.createAttempt(
-        user.id,
-        b.kind,
-        topic,
-        await selectQuestions(b.kind, topic ?? undefined, count, {
-          difficulty: difficulty as Difficulty | "Mixed",
-          excludedIds,
-          section: typeof b.section === "string" ? b.section : undefined,
-        }),
-      );
+      const excludedIds = pack || practicePack ? [] : await store.seenQuestionIds(user.id);
+      const questions = practicePack
+        ? practicePack.questions
+        : await selectQuestions(b.kind, topic ?? undefined, count, {
+            difficulty: difficulty as Difficulty | "Mixed",
+            excludedIds,
+            section: typeof b.section === "string" ? b.section : undefined,
+          });
+      a = await store.createAttempt(user.id, b.kind, topic, questions);
     }
     return response({ attempt: safe(a) });
   }
