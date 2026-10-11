@@ -57,9 +57,12 @@ BEGIN
     ON CONFLICT(code) DO UPDATE SET status='ACTIVE',updated_at=now()
     RETURNING id INTO v_question;
 
-    UPDATE public.question_versions SET status='DRAFT',published_at=NULL,updated_at=now()
-    WHERE question_id=v_question AND status<>'DRAFT';
-    DELETE FROM public.question_versions WHERE question_id=v_question AND version_number=1;
+    DELETE FROM public.question_versions
+    WHERE question_id=v_question AND version_number=1 AND status='DRAFT';
+    IF EXISTS(
+      SELECT 1 FROM public.question_versions
+      WHERE question_id=v_question AND version_number=1
+    ) THEN RAISE EXCEPTION 'question code already has a non-draft version: %',v_q->>'code'; END IF;
 
     INSERT INTO public.question_versions(question_id,version_number,question_type,section_id,subtopic_id,difficulty,instruction_md,stimulus_md,stem_md,primary_skill,status,metadata,created_by,updated_by)
     VALUES(v_question,1,'SINGLE_CHOICE',v_section,v_subtopic,upper(v_q->>'difficulty'),nullif(v_q->>'instruction',''),nullif(v_q->>'stimulus',''),v_q->>'stem',nullif(v_q->>'primary_skill',''),'DRAFT',coalesce(v_q->'metadata','{}'::jsonb),v_admin,v_admin)
