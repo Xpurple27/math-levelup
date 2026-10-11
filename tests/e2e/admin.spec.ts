@@ -66,7 +66,7 @@ test("admin draft preview, independent QA, explicit publication and Excel drafts
   await r
     .getByLabel("Catatan reviewer")
     .fill("TEST_ONLY independently verified");
-  await r.getByRole("button", { name: "Approve QA", exact: true }).click();
+  await r.getByRole("button", { name: "Approve", exact: true }).click();
 
   await a.reload();
   await a.getByRole("button", { name: "Publish", exact: true }).click();

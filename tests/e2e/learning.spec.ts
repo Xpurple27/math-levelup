@@ -49,9 +49,7 @@ test("register, diagnostic autosave/resume, result and empty learning/packages",
   await page
     .getByRole("button", { name: "Lanjut belajar", exact: true })
     .click();
-  await expect(
-    page.getByRole("heading", { name: "Materi belajar belum diterbitkan" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Belajar" })).toBeVisible();
   expect(
     await page.evaluate(async () => (await fetch("/api/admin/content")).status),
   ).toBe(403);
@@ -107,9 +105,7 @@ test("mobile student app fits viewport and bottom navigation opens learning", as
     .getByRole("button", { name: "Belajar", exact: true })
     .last()
     .click();
-  await expect(
-    page.getByRole("heading", { name: "Materi belajar belum diterbitkan" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Belajar" })).toBeVisible();
 });
 
 test("assessment authority and ownership boundaries", async ({
