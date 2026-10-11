@@ -94,9 +94,13 @@ export async function listPracticePackages(): Promise<PracticePackageCard[]> {
   });
 }
 
-export async function loadPracticePackage(slug: string): Promise<{ card: PracticePackageCard; questions: Question[] } | null> {
+export async function loadPracticePackage(target: string): Promise<{ card: PracticePackageCard; questions: Question[] } | null> {
   const cards = await listPracticePackages();
-  const card = cards.find((item) => item.slug === slug && item.access === "FREE");
+  const card = cards.find(
+    (item) =>
+      item.access === "FREE" &&
+      (item.slug === target || item.subtopic.id === target),
+  );
   if (!card) return null;
 
   const client = db();
