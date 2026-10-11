@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BookOpenCheck,
   CheckCircle2,
   ClipboardCheck,
   LogOut,
@@ -13,7 +14,8 @@ import {
 
 const items = [
   { href: "/reviewer", label: "Ringkasan", icon: PanelTop },
-  { href: "/reviewer/queue", label: "Review queue", icon: ClipboardCheck },
+  { href: "/reviewer/queue", label: "Review soal", icon: ClipboardCheck },
+  { href: "/reviewer/learning", label: "Review learning", icon: BookOpenCheck },
 ];
 
 export function ReviewerShell({ children }: { children: React.ReactNode }) {
@@ -68,8 +70,8 @@ export function ReviewerShell({ children }: { children: React.ReactNode }) {
         <div className="ops-sidebar-note">
           <CheckCircle2 size={18} />
           <p>
-            Fokus reviewer: akurasi matematika, kejelasan bahasa, taxonomy,
-            pembahasan, dan kualitas distraktor.
+            Periksa akurasi, kejelasan, struktur belajar, pembahasan, taxonomy,
+            dan kualitas soal sebelum konten diterbitkan.
           </p>
         </div>
         <button className="ops-logout" onClick={() => void logout()}>
@@ -88,7 +90,7 @@ export function ReviewerShell({ children }: { children: React.ReactNode }) {
           <div className="ops-view-transition" key={pathname}>{children}</div>
           <footer className="ops-app-footer">
             <strong>LevelUP Math · Reviewer</strong>
-            <span>Quality control untuk soal, kunci, dan pembahasan.</span>
+            <span>Quality control untuk soal dan pengalaman belajar.</span>
           </footer>
         </main>
       </section>
