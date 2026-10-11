@@ -51,6 +51,7 @@ export function DashboardView({
   const topicName = useTopicName();
   const published = usePublishedCount();
   const hasDiagnostic = history.some((h) => h.kind === "diagnostic");
+  const diagnosticReady = published > 0;
 
   return (
     <>
@@ -99,7 +100,9 @@ export function DashboardView({
                 </button>
                 <button
                   className="diagnostic-retake"
-                  disabled={busy || !published}
+                  disabled={busy || !diagnosticReady}
+                  style={{ cursor: !diagnosticReady ? "not-allowed" : undefined }}
+                  title={!diagnosticReady ? "Diagnostik akan aktif setelah soal dipublikasikan." : undefined}
                   onClick={() => start("diagnostic")}
                 >
                   Ulangi diagnostik
@@ -119,19 +122,26 @@ export function DashboardView({
               </p>
               <button
                 className="button yellow"
-                disabled={busy || !published}
+                disabled={busy || !diagnosticReady}
+                style={{ cursor: !diagnosticReady ? "not-allowed" : undefined }}
+                title={!diagnosticReady ? "Diagnostik akan aktif setelah soal dipublikasikan." : undefined}
                 onClick={() => start("diagnostic")}
               >
                 Mulai diagnostik <ArrowRight size={18} />
               </button>
+              {!diagnosticReady && (
+                <p style={{ marginTop: 10, marginBottom: 0, color: "#dfd08b" }}>
+                  Diagnostik belum tersedia karena belum ada soal yang dipublikasikan.
+                </p>
+              )}
               <div className="hero-meta">
                 <span>
                   <Clock size={14} />
-                  30 menit
+                  ± 10 menit
                 </span>
                 <span>
                   <BookOpen size={14} />
-                  15 soal
+                  {published || 0} soal tersedia
                 </span>
                 <span>
                   <ShieldCheck size={14} />
