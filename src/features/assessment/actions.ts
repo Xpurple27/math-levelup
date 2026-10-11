@@ -6,11 +6,12 @@ import {
 } from "@/lib/content";
 import { grade, updateMastery } from "@/lib/scoring";
 import * as store from "@/lib/store";
-import { findTryoutPackage, tryoutPackages } from "@/lib/tryout-packages";
 import { loadPracticePackage } from "../practice/packages";
+import { loadTryoutPackage } from "../tryout/packages";
 import { publicTopics } from "../content/runtime";
 import { response, type ActionBody } from "../http";
 import { applyPracticeAnswer } from "../practice/answer";
+
 export async function finish(a: store.Attempt) {
   if (a.status === "completed") return a;
   const old = await store.getMastery(a.user_id);
@@ -33,6 +34,7 @@ export async function finish(a: store.Attempt) {
   await store.finalize(a, grade(a.snapshot, a.answers), masteries, old);
   return (await store.getAttempt(a.id, a.user_id))!;
 }
+
 export function safe(a: store.Attempt) {
   return {
     id: a.id,
@@ -58,6 +60,7 @@ export function safe(a: store.Attempt) {
     })),
   };
 }
+
 export async function expire(a: store.Attempt) {
   return a.status === "active" && a.deadline && Date.now() >= a.deadline
     ? finish(a)
@@ -72,20 +75,14 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
     )
       return response({ error: "Jenis sesi tidak valid." }, 400);
 
-    const pack =
-      b.kind === "tryout"
-        ? findTryoutPackage(
-            typeof b.packageSlug === "string" ? b.packageSlug : null,
-          )
-        : undefined;
-    if (
-      b.kind === "tryout" &&
-      (!pack ||
-        pack.access !== "FREE" ||
-        !tryoutPackages.some((p) => p.slug === pack.slug))
-    )
+    const requestedTryoutSlug = typeof b.packageSlug === "string" ? b.packageSlug : "";
+    const tryoutPack =
+      b.kind === "tryout" && requestedTryoutSlug
+        ? await loadTryoutPackage(requestedTryoutSlug)
+        : null;
+    if (b.kind === "tryout" && !tryoutPack)
       return response(
-        { error: "Paket tidak tersedia atau belum dapat diakses." },
+        { error: "Paket tryout tidak tersedia atau belum dapat diakses." },
         400,
       );
 
@@ -110,13 +107,15 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
         ? null
         : practicePack
           ? `practice:${practicePack.card.slug}`
-          : pack
-            ? pack.slug
+          : tryoutPack
+            ? tryoutPack.card.slug
             : b.topic;
     if (
       topic !== null &&
       (typeof topic !== "string" ||
-        (!pack && !practicePack && !(await publicTopics()).some((t) => t.id === topic)))
+        (!tryoutPack &&
+          !practicePack &&
+          !(await publicTopics()).some((t) => t.id === topic)))
     )
       return response({ error: "Topik tidak valid." }, 400);
 
@@ -134,18 +133,21 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
     let a = await store.activeAttempt(user.id, b.kind, topic);
     if (a) a = await expire(a);
     if (!a || a.status === "completed") {
-      const excludedIds = pack || practicePack ? [] : await store.seenQuestionIds(user.id);
-      const questions = practicePack
-        ? practicePack.questions
-        : await selectQuestions(b.kind, topic ?? undefined, count, {
-            difficulty: difficulty as Difficulty | "Mixed",
-            excludedIds,
-            section: typeof b.section === "string" ? b.section : undefined,
-          });
+      const excludedIds = tryoutPack || practicePack ? [] : await store.seenQuestionIds(user.id);
+      const questions = tryoutPack
+        ? tryoutPack.questions
+        : practicePack
+          ? practicePack.questions
+          : await selectQuestions(b.kind, topic ?? undefined, count, {
+              difficulty: difficulty as Difficulty | "Mixed",
+              excludedIds,
+              section: typeof b.section === "string" ? b.section : undefined,
+            });
       a = await store.createAttempt(user.id, b.kind, topic, questions);
     }
     return response({ attempt: safe(a) });
   }
+
   let a =
     typeof b.id === "string" ? await store.getAttempt(b.id, user.id) : null;
   if (!a) return response({ error: "Sesi tidak ditemukan." }, 404);
