@@ -59,6 +59,19 @@ export async function getUser(_token?: string) {
   if (error || !data.user) return null;
   return profile(data.user);
 }
+export async function updateProfile(userId: string, name: string) {
+  const client = await createSupabaseServerClient();
+  const current = await client.auth.getUser();
+  if (current.error || !current.data.user || current.data.user.id !== userId)
+    throw new StorageError("Sesi tidak valid.", 401);
+  const { data, error } = await client.auth.updateUser({
+    data: { display_name: name },
+  });
+  if (error || !data.user)
+    throw new StorageError("Nama tidak dapat diperbarui.", 400);
+  return profile(data.user);
+}
+
 export async function register(
   email: string,
   name: string,

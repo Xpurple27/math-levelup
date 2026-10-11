@@ -83,8 +83,8 @@ export function AdminShell({
           <div className="ops-sidebar-note">
             <span className="ops-note-kicker">WORKFLOW</span>
             <p>
-              Draft → Review → QA Passed → Publish. Konten production dimulai
-              dari nol dan hanya diisi hasil kurasi.
+              Draft → Review → QA Passed → Publish. Konten baru mengikuti dari
+              nol dan hanya diisi hasil kurasi.
             </p>
           </div>
           <button className="ops-logout" onClick={() => void logout()}>

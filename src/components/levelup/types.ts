@@ -4,6 +4,7 @@ export type View =
   | "practice"
   | "tryout"
   | "progress"
+  | "profile"
   | "exam"
   | "result";
 export type User = {

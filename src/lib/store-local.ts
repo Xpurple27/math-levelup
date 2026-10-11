@@ -70,6 +70,14 @@ export function createUser(
   ).run(id, email, name, passwordHash(password), grade, goal);
   return { id, email, name, grade, goal };
 }
+export function updateProfile(userId: string, name: string): User {
+  db.prepare("UPDATE users SET name=? WHERE id=?").run(name, userId);
+  const row = db
+    .prepare("SELECT id,email,name,grade,goal FROM users WHERE id=?")
+    .get(userId) as User | undefined;
+  if (!row) throw new Error("User tidak ditemukan.");
+  return row;
+}
 export function authenticate(email: string, password: string): User | null {
   const row = db.prepare("SELECT * FROM users WHERE email=?").get(email) as
     (User & { password: string }) | undefined;

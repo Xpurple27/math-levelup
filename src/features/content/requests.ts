@@ -1,6 +1,6 @@
 import "server-only";
 import { StorageError } from "../../lib/store-errors";
-import { sourceTypes } from "./model";
+import { questionTypes, sourceTypes } from "./model";
 export async function limitedBody(request: Request, max = 1024 * 1024) {
   const reader = request.body?.getReader();
   if (!reader) return new Uint8Array();
@@ -27,6 +27,9 @@ export async function limitedBody(request: Request, max = 1024 * 1024) {
 export function validateDraft(p: Record<string, unknown>) {
   if (
     !["BASIC", "MEDIUM", "HARD"].includes(String(p.difficulty)) ||
+    !questionTypes.includes(
+      p.question_type as (typeof questionTypes)[number],
+    ) ||
     typeof p.section_id !== "string" ||
     typeof p.subtopic_id !== "string" ||
     !sourceTypes.includes(p.source_type as (typeof sourceTypes)[number]) ||

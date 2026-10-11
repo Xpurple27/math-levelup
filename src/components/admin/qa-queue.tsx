@@ -1,10 +1,13 @@
 "use client";
-
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { adminGet, adminPost } from "./api";
-import { qaFields, type BankRow } from "@/features/content/model";
-
+import { QuestionPreview } from "./question-preview";
+import {
+  qaFields,
+  type BankRow,
+  type QuestionDetail,
+  type Version,
+} from "@/features/content/model";
 const qaLabels: Record<string, string> = {
   math: "Kebenaran matematika",
   key: "Kunci jawaban",
@@ -14,16 +17,14 @@ const qaLabels: Record<string, string> = {
   explanation: "Kualitas pembahasan",
   distractors: "Kualitas pengecoh",
 };
-
 export function QAQueue() {
-  const [rows, setRows] = useState<BankRow[]>([]);
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [checks, setChecks] = useState<Record<string, Record<string, boolean>>>(
-    {},
-  );
-  const [error, setError] = useState("");
-  const [active, setActive] = useState<string | null>(null);
-
+  const [rows, setRows] = useState<BankRow[]>([]),
+    [detail, setDetail] = useState<QuestionDetail | null>(null),
+    [notes, setNotes] = useState<Record<string, string>>({}),
+    [checks, setChecks] = useState<Record<string, Record<string, boolean>>>({}),
+    [error, setError] = useState(""),
+    [active, setActive] = useState<string | null>(null),
+    [busy, setBusy] = useState(false);
   const load = () =>
     adminGet<BankRow[]>("qa_list")
       .then((data) => {
@@ -35,12 +36,17 @@ export function QAQueue() {
         );
       })
       .catch((e) => setError(e.message));
-
   useEffect(() => {
     void load();
   }, []);
-
+  useEffect(() => {
+    if (!active) return;
+    adminGet<QuestionDetail>("detail", { id: active })
+      .then(setDetail)
+      .catch((e) => setError(e.message));
+  }, [active]);
   const review = async (q: BankRow, outcome: string) => {
+    setBusy(true);
     try {
       await adminPost("review", {
         version_id: q.version_id,
@@ -52,15 +58,17 @@ export function QAQueue() {
       await load();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Review gagal.");
+    } finally {
+      setBusy(false);
     }
   };
-
-  const current = rows.find((q) => q.id === active) || null;
-  const currentChecks = current ? checks[current.id] || {} : {};
-  const completed = current
-    ? qaFields.filter((key) => currentChecks[key]).length
-    : 0;
-
+  const current = rows.find((q) => q.id === active) || null,
+    currentChecks = current ? checks[current.id] || {} : {},
+    completed = current ? qaFields.filter((k) => currentChecks[k]).length : 0,
+    reviewed = current
+      ? (detail?.versions.find((v) => v.id === current.version_id) as
+          Version | undefined)
+      : undefined;
   return (
     <div className="ops-content-page qa-page">
       <header className="ops-page-head">
@@ -68,159 +76,139 @@ export function QAQueue() {
           <span className="ops-eyebrow">QUALITY CONTROL</span>
           <h1>QA Queue</h1>
           <p>
-            Reviewer memeriksa kualitas soal sebelum admin dapat
-            mempublikasikannya.
+            Nilai soal dari konten yang sebenarnya: stem, opsi, kunci, media,
+            dan pembahasan.
           </p>
         </div>
-        <div className="queue-counter">
+        <div className="filter-summary">
           <strong>{rows.length}</strong>
           <span>menunggu review</span>
         </div>
       </header>
-
       {error && (
-        <div className="ops-message error" role="alert">
+        <p className="ops-message error" role="alert">
           {error}
-        </div>
+        </p>
       )}
-
-      {!rows.length && !error ? (
+      {!rows.length ? (
         <div className="empty-state">
-          <strong>Queue kosong.</strong>
-          <p>Belum ada versi soal berstatus IN_REVIEW.</p>
+          <strong>Antrean review kosong.</strong>
+          <p>Soal yang dikirim ke QA akan muncul di sini.</p>
         </div>
       ) : (
         <div className="qa-workspace">
-          <aside className="qa-list-panel">
-            <div className="qa-list-head">
-              <strong>Menunggu review</strong>
-              <span>{rows.length} item</span>
-            </div>
-            <div className="qa-list">
-              {rows.map((q) => (
-                <button
-                  key={q.id}
-                  className={q.id === current?.id ? "active" : ""}
-                  onClick={() => setActive(q.id)}
-                >
-                  <span>
-                    <strong>{q.code}</strong>
-                    <small>
-                      v{q.version_number} · {q.exam}/{q.section}
-                    </small>
-                  </span>
-                  <span className="status-chip">{q.difficulty}</span>
-                </button>
-              ))}
-            </div>
-          </aside>
-
-          {current && (
-            <section className="qa-review-panel">
-              <div className="qa-review-head">
-                <div>
-                  <span className="ops-eyebrow">
-                    {current.exam}/{current.section} · {current.domain}
-                  </span>
-                  <h2>
-                    {current.code} <small>v{current.version_number}</small>
-                  </h2>
-                  <p>
-                    {current.topic} / {current.subtopic} · {current.difficulty}
-                  </p>
-                </div>
-                <Link
-                  className="ops-secondary"
-                  href={`/admin/questions/${current.id}`}
-                >
-                  Buka preview lengkap
-                </Link>
-              </div>
-
-              <div className="qa-progress">
+          <aside className="qa-queue-list">
+            {rows.map((q) => (
+              <button
+                type="button"
+                key={q.id}
+                className={q.id === active ? "active" : ""}
+                onClick={() => setActive(q.id)}
+              >
+                <strong>{q.code}</strong>
                 <span>
-                  <strong>
-                    {completed}/{qaFields.length}
-                  </strong>{" "}
-                  pemeriksaan selesai
+                  {q.section} · {q.difficulty}
                 </span>
-                <div>
-                  <i
+                <small>
+                  {q.domain} / {q.topic} / {q.subtopic}
+                </small>
+              </button>
+            ))}
+          </aside>
+          {current && (
+            <section className="qa-review-desk">
+              <div className="qa-content-preview">
+                <div className="data-panel-head">
+                  <div>
+                    <h2>{current.code}</h2>
+                    <p>
+                      {current.section} · {current.difficulty} ·{" "}
+                      {current.subtopic}
+                    </p>
+                  </div>
+                  {reviewed && (
+                    <span className="status-chip">
+                      {reviewed.question_type.replaceAll("_", " ")}
+                    </span>
+                  )}
+                </div>
+                {reviewed ? (
+                  <QuestionPreview draft={reviewed} media={reviewed.media} />
+                ) : (
+                  <p role="status">Memuat isi soal…</p>
+                )}
+              </div>
+              <div className="qa-check-panel">
+                <div className="qa-progress-head">
+                  <strong>Checklist QA</strong>
+                  <span>
+                    {completed}/{qaFields.length}
+                  </span>
+                </div>
+                <div className="qa-progress-track">
+                  <span
                     style={{ width: `${(completed / qaFields.length) * 100}%` }}
                   />
                 </div>
-              </div>
-
-              <div className="qa-check-grid">
-                {qaFields.map((key) => (
-                  <label
-                    className={currentChecks[key] ? "checked" : ""}
-                    key={key}
+                <div className="qa-checklist">
+                  {qaFields.map((key) => (
+                    <label key={key}>
+                      <input
+                        type="checkbox"
+                        checked={!!currentChecks[key]}
+                        onChange={(e) =>
+                          setChecks((all) => ({
+                            ...all,
+                            [current.id]: {
+                              ...(all[current.id] || {}),
+                              [key]: e.target.checked,
+                            },
+                          }))
+                        }
+                      />
+                      {qaLabels[key]}
+                    </label>
+                  ))}
+                </div>
+                <label className="ops-field">
+                  Catatan reviewer <b>wajib</b>
+                  <textarea
+                    rows={6}
+                    value={notes[current.id] || ""}
+                    onChange={(e) =>
+                      setNotes((all) => ({
+                        ...all,
+                        [current.id]: e.target.value,
+                      }))
+                    }
+                  />
+                </label>
+                <div className="qa-actions">
+                  <button
+                    disabled={busy}
+                    onClick={() => void review(current, "REJECTED")}
                   >
-                    <input
-                      type="checkbox"
-                      checked={currentChecks[key] || false}
-                      onChange={(e) =>
-                        setChecks((c) => ({
-                          ...c,
-                          [current.id]: {
-                            ...c[current.id],
-                            [key]: e.target.checked,
-                          },
-                        }))
-                      }
-                    />
-                    <span>
-                      <strong>{qaLabels[key]}</strong>
-                      <small>
-                        {key === "explanation"
-                          ? "Pembahasan mengajar, bukan hanya menyebut kunci."
-                          : key === "distractors"
-                            ? "Opsi salah masuk akal dan tidak menyesatkan secara buruk."
-                            : "Periksa dan centang jika sudah sesuai."}
-                      </small>
-                    </span>
-                  </label>
-                ))}
+                    Reject
+                  </button>
+                  <button
+                    disabled={busy}
+                    onClick={() => void review(current, "CHANGES_REQUESTED")}
+                  >
+                    Request changes
+                  </button>
+                  <button
+                    className="ops-primary"
+                    disabled={
+                      busy ||
+                      completed !== qaFields.length ||
+                      !(notes[current.id] || "").trim()
+                    }
+                    onClick={() => void review(current, "APPROVED")}
+                  >
+                    Approve
+                  </button>
+                </div>
               </div>
-
-              <label className="ops-field qa-notes">
-                <span>Catatan reviewer</span>
-                <textarea
-                  rows={6}
-                  value={notes[current.id] || ""}
-                  placeholder="Tuliskan koreksi konkret bila perlu…"
-                  onChange={(e) =>
-                    setNotes((n) => ({ ...n, [current.id]: e.target.value }))
-                  }
-                />
-              </label>
-
-              <div className="qa-actions">
-                <button
-                  className="qa-reject"
-                  onClick={() => review(current, "REJECTED")}
-                >
-                  Reject
-                </button>
-                <button
-                  className="qa-change"
-                  onClick={() => review(current, "CHANGES_REQUESTED")}
-                >
-                  Request changes
-                </button>
-                <button
-                  className="qa-approve"
-                  disabled={completed < qaFields.length}
-                  onClick={() => review(current, "APPROVED")}
-                >
-                  Approve QA
-                </button>
-              </div>
-              <p className="qa-policy">
-                Approve tidak otomatis publish. Admin tetap melakukan publish
-                setelah QA passed.
-              </p>
             </section>
           )}
         </div>

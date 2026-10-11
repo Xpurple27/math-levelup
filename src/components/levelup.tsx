@@ -23,6 +23,7 @@ import { TryoutView } from "./levelup/tryout-view";
 import { PracticeView } from "./levelup/practice-view";
 import { LearnView } from "./levelup/learn-view";
 import { DashboardView } from "./levelup/dashboard-view";
+import { ProfileView } from "./levelup/profile-view";
 
 const nav = [
   { id: "dashboard", label: "Beranda", icon: Home },
@@ -279,8 +280,8 @@ export default function Levelup() {
               </span>
               <button
                 className="student-avatar"
-                onClick={() => go("progress")}
-                aria-label="Buka progres"
+                onClick={() => go("profile")}
+                aria-label="Buka profil"
               >
                 {user?.name.slice(0, 1).toUpperCase() || "S"}
               </button>
@@ -348,6 +349,9 @@ export default function Levelup() {
             setView={setView}
             setError={setError}
           />
+        )}
+        {view === "profile" && user && (
+          <ProfileView user={user} onUpdated={setUser} />
         )}
         {view === "progress" && (
           <ProgressView

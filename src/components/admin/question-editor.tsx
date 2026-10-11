@@ -61,6 +61,12 @@ export function QuestionEditor({ id }: { id?: string }) {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
+  const [taxonomy, setTaxonomy] = useState({
+    kind: "SUBTOPIC",
+    parent_id: "",
+    name: "",
+    code: "",
+  });
 
   const apply = (d: QuestionDetail) => {
     setDetail(d);
@@ -101,6 +107,32 @@ export function QuestionEditor({ id }: { id?: string }) {
       })
       .catch((e) => setError(e.message));
   }, [id]);
+
+  const reloadCatalog = async () => {
+    const c = await adminGet<Catalog>("catalog");
+    setCatalog(c);
+    return c;
+  };
+  const createTaxonomy = async () => {
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const created = await adminPost<{ id: string }>(
+        "taxonomy_create",
+        taxonomy,
+      );
+      await reloadCatalog();
+      if (taxonomy.kind === "SUBTOPIC")
+        setDraft((d) => ({ ...d, subtopic_id: created.id }));
+      setTaxonomy({ kind: "SUBTOPIC", parent_id: "", name: "", code: "" });
+      setNotice("Taxonomy baru ditambahkan.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Gagal menambah taxonomy.");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   const version = detail?.versions[0];
   const editable = role === "ADMIN" && (!version || version.status === "DRAFT");
@@ -274,6 +306,23 @@ export function QuestionEditor({ id }: { id?: string }) {
                   </select>
                 </label>
                 <label className="ops-field">
+                  Jenis soal
+                  <select
+                    value={draft.question_type}
+                    onChange={(e) => field("question_type", e.target.value)}
+                  >
+                    <option value="SINGLE_CHOICE">
+                      Pilihan ganda — satu jawaban
+                    </option>
+                    <option value="MULTIPLE_CHOICE">
+                      Pilihan ganda kompleks
+                    </option>
+                    <option value="TRUE_FALSE">
+                      Benar / Salah per pernyataan
+                    </option>
+                  </select>
+                </label>
+                <label className="ops-field">
                   Difficulty
                   <select
                     value={draft.difficulty}
@@ -293,6 +342,92 @@ export function QuestionEditor({ id }: { id?: string }) {
                   />
                 </label>
               </div>
+              <details className="taxonomy-manager">
+                <summary>
+                  Taxonomy belum tersedia? Tambahkan domain, topik, atau
+                  subtopik
+                </summary>
+                <div className="taxonomy-create-grid">
+                  <label className="ops-field">
+                    Jenis
+                    <select
+                      value={taxonomy.kind}
+                      onChange={(e) =>
+                        setTaxonomy((t) => ({
+                          ...t,
+                          kind: e.target.value,
+                          parent_id: "",
+                        }))
+                      }
+                    >
+                      <option value="DOMAIN">Domain</option>
+                      <option value="TOPIC">Topik</option>
+                      <option value="SUBTOPIC">Subtopik</option>
+                    </select>
+                  </label>
+                  {taxonomy.kind !== "DOMAIN" && (
+                    <label className="ops-field">
+                      {taxonomy.kind === "TOPIC"
+                        ? "Domain induk"
+                        : "Topik induk"}
+                      <select
+                        value={taxonomy.parent_id}
+                        onChange={(e) =>
+                          setTaxonomy((t) => ({
+                            ...t,
+                            parent_id: e.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Pilih induk…</option>
+                        {(taxonomy.kind === "TOPIC"
+                          ? catalog.domains
+                          : catalog.topics
+                        ).map((x) => (
+                          <option key={x.id} value={x.id}>
+                            {x.code} — {x.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                  <label className="ops-field">
+                    Nama
+                    <input
+                      value={taxonomy.name}
+                      onChange={(e) =>
+                        setTaxonomy((t) => ({ ...t, name: e.target.value }))
+                      }
+                      placeholder="Nama taxonomy"
+                    />
+                  </label>
+                  <label className="ops-field">
+                    Kode
+                    <input
+                      value={taxonomy.code}
+                      onChange={(e) =>
+                        setTaxonomy((t) => ({
+                          ...t,
+                          code: e.target.value.toUpperCase(),
+                        }))
+                      }
+                      placeholder="Contoh: GEO"
+                    />
+                  </label>
+                  <button
+                    className="ops-secondary"
+                    type="button"
+                    onClick={() => void createTaxonomy()}
+                    disabled={
+                      !taxonomy.name ||
+                      !taxonomy.code ||
+                      (taxonomy.kind !== "DOMAIN" && !taxonomy.parent_id)
+                    }
+                  >
+                    Tambah taxonomy
+                  </button>
+                </div>
+              </details>
             </section>
 
             <section className="authoring-card question-compose-card">
@@ -345,7 +480,13 @@ export function QuestionEditor({ id }: { id?: string }) {
                 <span>03</span>
                 <div>
                   <h2>Opsi & kunci jawaban</h2>
-                  <p>Isi opsi A–E lalu pilih satu jawaban benar.</p>
+                  <p>
+                    {draft.question_type === "SINGLE_CHOICE"
+                      ? "Isi 4–5 opsi lalu pilih satu jawaban benar."
+                      : draft.question_type === "MULTIPLE_CHOICE"
+                        ? "Isi 4–5 opsi dan tandai semua jawaban yang benar."
+                        : "Isi 2–5 pernyataan lalu tentukan Benar atau Salah untuk masing-masing."}
+                  </p>
                 </div>
               </div>
               <div className="option-editor-list">
@@ -359,7 +500,11 @@ export function QuestionEditor({ id }: { id?: string }) {
                       aria-label={`Option ${o.option_key}`}
                       rows={3}
                       value={o.content_md}
-                      placeholder={`Isi opsi ${o.option_key}`}
+                      placeholder={
+                        draft.question_type === "TRUE_FALSE"
+                          ? `Pernyataan ${i + 1}`
+                          : `Isi opsi ${o.option_key}`
+                      }
                       onChange={(e) =>
                         setDraft((d) => ({
                           ...d,
@@ -371,24 +516,63 @@ export function QuestionEditor({ id }: { id?: string }) {
                         }))
                       }
                     />
-                    <label className="correct-choice">
-                      <input
-                        aria-label={`Correct ${o.option_key}`}
-                        type="radio"
-                        name="correct"
-                        checked={o.is_correct}
-                        onChange={() =>
-                          setDraft((d) => ({
-                            ...d,
-                            options: d.options.map((item, index) => ({
-                              ...item,
-                              is_correct: index === i,
-                            })),
-                          }))
-                        }
-                      />{" "}
-                      Jawaban benar
-                    </label>
+                    {draft.question_type === "TRUE_FALSE" ? (
+                      <label className="correct-choice">
+                        Nilai
+                        <select
+                          aria-label={`Nilai pernyataan ${i + 1}`}
+                          value={o.is_correct ? "BENAR" : "SALAH"}
+                          onChange={(e) =>
+                            setDraft((d) => ({
+                              ...d,
+                              options: d.options.map((item, index) =>
+                                index === i
+                                  ? {
+                                      ...item,
+                                      is_correct: e.target.value === "BENAR",
+                                    }
+                                  : item,
+                              ),
+                            }))
+                          }
+                        >
+                          <option value="BENAR">Benar</option>
+                          <option value="SALAH">Salah</option>
+                        </select>
+                      </label>
+                    ) : (
+                      <label className="correct-choice">
+                        <input
+                          aria-label={`Correct ${o.option_key}`}
+                          type={
+                            draft.question_type === "MULTIPLE_CHOICE"
+                              ? "checkbox"
+                              : "radio"
+                          }
+                          name={
+                            draft.question_type === "MULTIPLE_CHOICE"
+                              ? undefined
+                              : "correct"
+                          }
+                          checked={o.is_correct}
+                          onChange={() =>
+                            setDraft((d) => ({
+                              ...d,
+                              options: d.options.map((item, index) => ({
+                                ...item,
+                                is_correct:
+                                  d.question_type === "MULTIPLE_CHOICE"
+                                    ? index === i
+                                      ? !item.is_correct
+                                      : item.is_correct
+                                    : index === i,
+                              })),
+                            }))
+                          }
+                        />{" "}
+                        Jawaban benar
+                      </label>
+                    )}
                   </div>
                 ))}
               </div>

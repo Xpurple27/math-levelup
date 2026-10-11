@@ -58,7 +58,7 @@ export function DashboardView({
         <div>
           <div className="eyebrow">FOKUSMU HARI INI</div>
           <h1>
-            {user ? `Halo, ${user.name.split(" ")[0]}` : "Halo, Sobat LevelUP"}{" "}
+            {user ? `Halo, ${user.name}` : "Halo, Sobat LevelUP"}{" "}
             <span className="wave">✦</span>
           </h1>
           <p>
@@ -71,16 +71,6 @@ export function DashboardView({
           <GraduationCap size={17} /> Persiapan UTBK 2027
         </span>
       </div>
-
-      {!published && (
-        <div className="content-waiting-state" role="status">
-          <strong>Konten baru sedang dikurasi.</strong>
-          <span>
-            Mesin belajar tetap aktif, tetapi sesi baru menunggu soal production
-            diterbitkan.
-          </span>
-        </div>
-      )}
 
       <section className={`hero ${hasDiagnostic ? "hero-complete" : ""}`}>
         <div className="hero-copy">
@@ -285,7 +275,7 @@ export function DashboardView({
                 <Target size={21} />
               </span>
               <strong>Ukur kesiapanmu</strong>
-              <p>Gunakan paket asesmen setelah kontennya siap diterbitkan.</p>
+              <p>Ukur kesiapanmu dalam kondisi ujian.</p>
               <span className="quick-link">
                 Lihat tryout <ArrowRight size={15} />
               </span>

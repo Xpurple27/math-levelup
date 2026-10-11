@@ -3,7 +3,7 @@ import {
   assertOrigin,
   adminError,
 } from "@/features/content/auth";
-import { adminContent } from "@/features/content/db";
+import { adminContent, contentRPC } from "@/features/content/db";
 import { limitedBody } from "@/features/content/requests";
 import { parseWorkbook } from "@/features/content/excel";
 import { parseDocx } from "@/features/content/docx";
@@ -21,8 +21,43 @@ export async function POST(request: Request) {
       );
       if (b.action !== "confirm" || typeof b.id !== "string")
         throw new StorageError("Konfirmasi import tidak valid.", 400);
+      const before = (await adminContent(user.id, "import_detail", {
+        id: b.id,
+      })) as {
+        rows?: Array<{
+          row_number: number;
+          parsed_json?: { question_type?: string } | null;
+        }>;
+      };
+      const data = await adminContent(user.id, "import_confirm", { id: b.id });
+      const after = (await adminContent(user.id, "import_detail", {
+        id: b.id,
+      })) as {
+        rows?: Array<{ row_number: number; question_id?: string | null }>;
+      };
+      for (const imported of after.rows || []) {
+        const parsed = before.rows?.find(
+          (r) => r.row_number === imported.row_number,
+        )?.parsed_json;
+        if (
+          !imported.question_id ||
+          !parsed?.question_type ||
+          parsed.question_type === "SINGLE_CHOICE"
+        )
+          continue;
+        const detail = (await adminContent(user.id, "detail", {
+          id: imported.question_id,
+        })) as { versions?: Array<{ id: string }> };
+        const versionId = detail.versions?.[0]?.id;
+        if (versionId)
+          await contentRPC("levelup_question_set_type", {
+            p_actor: user.id,
+            p_version: versionId,
+            p_type: parsed.question_type,
+          });
+      }
       return Response.json(
-        { data: await adminContent(user.id, "import_confirm", { id: b.id }) },
+        { data },
         { headers: { "Cache-Control": "no-store" } },
       );
     }
