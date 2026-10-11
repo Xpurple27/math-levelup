@@ -414,21 +414,29 @@ export default function Levelup() {
             )}
           </div>
         )}
-
-        {view !== "exam" && ready && (
-          <footer className="student-app-footer">
-            <div>
-              <strong>LevelUP Math</strong>
-              <div>Belajar · Latihan · Tryout · Progres</div>
-            </div>
-            <nav aria-label="Informasi LevelUP">
-              <Link href="/">Tentang</Link>
-              <Link href="/">Ketentuan</Link>
-              <Link href="/">Privasi</Link>
-            </nav>
-          </footer>
-        )}
       </main>
+
+      {view !== "exam" && ready && (
+        <footer className="mt-14 border-t border-[#ead9db] bg-[#fffaf6] px-6 py-8 md:px-10 lg:px-14">
+          <div className="mx-auto flex max-w-[1390px] flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-[#8f1d24] text-xs font-black text-white">LU</span>
+              <div>
+                <strong className="block text-sm font-extrabold text-[#3b2527]">LevelUP Math</strong>
+                <span className="mt-1 block text-xs text-[#816b6d]">Belajar · Latihan · Tryout · Progres</span>
+              </div>
+            </div>
+            <div className="text-xs text-[#816b6d] md:text-center">
+              Belajar dengan arah. Naik level dengan bukti.
+            </div>
+            <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[#6f4d50]" aria-label="Informasi LevelUP">
+              <Link className="hover:text-[#8f1d24]" href="/">Tentang</Link>
+              <Link className="hover:text-[#8f1d24]" href="/">Ketentuan</Link>
+              <Link className="hover:text-[#8f1d24]" href="/">Privasi</Link>
+            </nav>
+          </div>
+        </footer>
+      )}
 
       {view !== "exam" && (
         <nav className="student-mobile-nav" aria-label="Navigasi mobile siswa">
