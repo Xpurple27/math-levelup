@@ -1,4 +1,10 @@
 export type Role = "STUDENT" | "ADMIN" | "REVIEWER";
+export const questionTypes = [
+  "SINGLE_CHOICE",
+  "MULTIPLE_CHOICE",
+  "TRUE_FALSE",
+] as const;
+export type QuestionType = (typeof questionTypes)[number];
 export type Taxon = {
   id: string;
   code: string;
@@ -46,6 +52,7 @@ export type Option = {
 };
 export type Draft = {
   code: string;
+  question_type: QuestionType;
   section_id: string;
   subtopic_id: string;
   difficulty: string;
@@ -125,6 +132,7 @@ export const qaFields = [
 export function blankDraft(c?: Catalog): Draft {
   return {
     code: "",
+    question_type: "SINGLE_CHOICE",
     section_id: c?.sections[0]?.id || "",
     subtopic_id: c?.subtopics[0]?.id || "",
     difficulty: "BASIC",

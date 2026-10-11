@@ -2,11 +2,8 @@
 export function LearnView() {
   return (
     <section className="panel">
-      <h1>Materi belajar belum diterbitkan</h1>
-      <p>
-        Konten lama sudah dibersihkan. Materi baru sedang dikurasi; modul akan
-        tersedia setelah review dan publikasi.
-      </p>
+      <h1>Belajar</h1>
+      <p>Belum ada materi yang tersedia.</p>
     </section>
   );
 }

@@ -43,6 +43,14 @@ export async function contentRPC<T>(
       levelup_admin_content: ["p_actor", "p_action", "p"],
       levelup_content_catalog: [],
       levelup_published_questions: ["p_test_only"],
+      levelup_question_set_type: ["p_actor", "p_version", "p_type"],
+      levelup_taxonomy_create: [
+        "p_actor",
+        "p_kind",
+        "p_parent",
+        "p_name",
+        "p_code",
+      ],
     };
     const keys = ordered[name];
     if (!keys) throw new Error("Unknown RPC");

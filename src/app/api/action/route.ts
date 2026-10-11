@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   } catch {
     return response({
       user: null,
-      notice: "Akun online belum tersedia. Materi tetap bisa dijelajahi.",
+      notice: "Tidak dapat memuat akun. Silakan coba lagi.",
     });
   }
 }
@@ -48,6 +48,12 @@ export async function POST(req: NextRequest) {
     if (!user)
       return response({ error: "Silakan masuk terlebih dahulu." }, 401);
     if (b.action === "logout") return await logoutAction(token || "");
+    if (b.action === "updateProfile") {
+      const name = typeof b.name === "string" ? b.name.trim() : "";
+      if (name.length < 2 || name.length > 80)
+        return response({ error: "Nama harus 2–80 karakter." }, 400);
+      return response({ user: await store.updateProfile(user.id, name) });
+    }
     if (b.action === "reportIssue") return await reportIssue(b, user);
     return await assessmentAction(b, user);
   } catch (error) {

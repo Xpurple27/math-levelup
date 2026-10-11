@@ -36,7 +36,7 @@ export function Imports() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [preview, setPreview] = useState<Draft | null>(null);
-  const [format, setFormat] = useState<"xlsx" | "docx">("xlsx");
+  const [format, setFormat] = useState<"xlsx" | "docx" | "pdf">("xlsx");
   const [sectionId, setSectionId] = useState("");
   const [subtopicId, setSubtopicId] = useState("");
   const [difficulty, setDifficulty] = useState("MEDIUM");
@@ -161,28 +161,41 @@ export function Imports() {
           <h2>Word / DOCX</h2>
           <p>
             Untuk paket soal Word yang sudah kamu miliki. Parser membaca soal
-            bernomor, opsi A–E, kunci, dan pembahasan.
+            bernomor, PG tunggal, PG kompleks, Benar/Salah, kunci, dan
+            pembahasan.
           </p>
           <span className="format-link">Pilih format Word</span>
         </button>
-        <article className="import-format-card planned">
-          <span className="format-badge">NEXT</span>
+        <button
+          className={`import-format-card ${format === "pdf" ? "active" : ""}`}
+          onClick={() => setFormat("pdf")}
+          type="button"
+        >
+          <span className="format-badge">INFO</span>
           <h2>PDF</h2>
           <p>
-            PDF teks akan masuk setelah DOCX stabil; PDF scan akan memakai
-            OCR-assisted draft review.
+            Pilih untuk melihat perbedaan PDF berbasis teks dan PDF hasil scan.
           </p>
-        </article>
+          <span className="format-link">Lihat dukungan PDF</span>
+        </button>
       </section>
 
       <section className="data-panel import-uploader">
         <div className="data-panel-head">
           <div>
-            <h2>{format === "xlsx" ? "Import Excel" : "Import Word"}</h2>
+            <h2>
+              {format === "xlsx"
+                ? "Import Excel"
+                : format === "docx"
+                  ? "Import Word"
+                  : "Dukungan PDF"}
+            </h2>
             <p>
               {format === "xlsx"
                 ? "Upload → validasi → preview → DRAFT."
-                : "DOCX → deteksi struktur → preview → DRAFT → lengkapi pembahasan → QA."}
+                : format === "docx"
+                  ? "DOCX → deteksi jenis soal → preview → DRAFT → lengkapi pembahasan → QA."
+                  : "PDF text-based dapat diekstrak tanpa AI; PDF scan memerlukan OCR/vision dan review ketat."}
             </p>
           </div>
           {format === "xlsx" && (
@@ -195,6 +208,30 @@ export function Imports() {
             </a>
           )}
         </div>
+
+        {format === "pdf" && (
+          <div className="pdf-support-note">
+            <div>
+              <strong>PDF berbasis teks</strong>
+              <p>
+                Teks dapat diekstrak langsung seperti converter dokumen. Tidak
+                membutuhkan AI atau token model.
+              </p>
+            </div>
+            <div>
+              <strong>PDF hasil scan / foto</strong>
+              <p>
+                Halaman berupa gambar sehingga perlu OCR atau vision. Notasi
+                matematika, tabel, dan diagram membuat hasilnya harus diperiksa
+                manusia.
+              </p>
+            </div>
+            <p className="pdf-policy">
+              Semua hasil PDF nantinya hanya menjadi DRAFT. Tidak ada import
+              yang auto-publish.
+            </p>
+          </div>
+        )}
 
         {format === "docx" && (
           <div className="docx-format-note">
@@ -212,7 +249,11 @@ export function Imports() {
           </div>
         )}
 
-        <form onSubmit={upload} className="upload-box ingestion-form">
+        <form
+          onSubmit={upload}
+          className="upload-box ingestion-form"
+          hidden={format === "pdf"}
+        >
           {format === "docx" && catalog && (
             <div className="docx-defaults">
               <label className="ops-field">

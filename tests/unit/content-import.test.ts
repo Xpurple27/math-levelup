@@ -188,6 +188,50 @@ describe("bounded DOCX ingestion", () => {
     expect(preview.rows[0].raw.warnings).toMatch(/dilengkapi/i);
   });
 
+  it("detects multiple-choice complex answer keys", async () => {
+    const preview = await parseDocx(
+      docx([
+        "1. Pilih semua pernyataan yang benar.",
+        "Instruksi: Pilih semua jawaban yang benar.",
+        "A. Pernyataan satu",
+        "B. Pernyataan dua",
+        "C. Pernyataan tiga",
+        "D. Pernyataan empat",
+        "Kunci Jawaban: A, C",
+        "Pembahasan: A dan C memenuhi syarat.",
+      ]),
+      c,
+      defaults,
+    );
+    expect(preview.rows[0].status).toBe("VALID");
+    expect(preview.rows[0].parsed?.question_type).toBe("MULTIPLE_CHOICE");
+    expect(
+      preview.rows[0].parsed?.options
+        .filter((option) => option.is_correct)
+        .map((option) => option.option_key),
+    ).toEqual(["A", "C"]);
+  });
+
+  it("detects true-false statement questions", async () => {
+    const preview = await parseDocx(
+      docx([
+        "1. Tentukan nilai kebenaran setiap pernyataan berikut.",
+        "(1) Pernyataan pertama",
+        "(2) Pernyataan kedua",
+        "(3) Pernyataan ketiga",
+        "Kunci: Benar, Salah, Benar",
+        "Pembahasan: Evaluasi tiap pernyataan secara terpisah.",
+      ]),
+      c,
+      defaults,
+    );
+    expect(preview.rows[0].status).toBe("VALID");
+    expect(preview.rows[0].parsed?.question_type).toBe("TRUE_FALSE");
+    expect(
+      preview.rows[0].parsed?.options.map((option) => option.is_correct),
+    ).toEqual([true, false, true]);
+  });
+
   it("rejects a structurally ambiguous Word question without an answer key", async () => {
     const preview = await parseDocx(
       docx(["1. Pilih hasil yang benar.", "A. 1", "B. 2", "C. 3", "D. 4"]),

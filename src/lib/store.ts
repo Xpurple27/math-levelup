@@ -33,6 +33,9 @@ export async function register(
     confirmationRequired: false,
   };
 }
+export async function updateProfile(userId: string, name: string) {
+  return (await adapter()).updateProfile(userId, name);
+}
 export async function authenticate(email: string, password: string) {
   return (await adapter()).authenticate(email, password);
 }

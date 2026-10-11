@@ -165,13 +165,34 @@ function splitQuestions(text: string) {
   );
 }
 
+function parseAnswerTokens(value: string) {
+  const upper = value.toUpperCase();
+  const truth = [
+    ...upper.matchAll(/\b(BENAR|SALAH|TRUE|FALSE|B|S|T|F)\b/g),
+  ].map((m) => m[1]);
+  if (
+    truth.length >= 2 &&
+    truth.some((x) =>
+      ["BENAR", "SALAH", "TRUE", "FALSE", "S", "T", "F"].includes(x),
+    )
+  )
+    return { kind: "TRUE_FALSE" as const, tokens: truth };
+  const keys = [...upper.matchAll(/\b([A-E])\b/g)].map((m) => m[1]);
+  return {
+    kind:
+      keys.length > 1
+        ? ("MULTIPLE_CHOICE" as const)
+        : ("SINGLE_CHOICE" as const),
+    tokens: [...new Set(keys)],
+  };
+}
 function parseQuestion(
   lines: string[],
   index: number,
   defaults: DocxDefaults,
 ): { row: ImportRow; warnings: string[] } {
-  const raw: Record<string, string> = { source_format: "DOCX" };
-  const draft = blankDraft();
+  const raw: Record<string, string> = { source_format: "DOCX" },
+    draft = blankDraft();
   draft.section_id = defaults.section_id;
   draft.subtopic_id = defaults.subtopic_id;
   draft.difficulty = defaults.difficulty;
@@ -179,30 +200,39 @@ function parseQuestion(
   draft.source_title = defaults.source_title;
   draft.source_page = "";
   draft.code = "";
-  const warnings: string[] = [];
-  const errors: string[] = [];
-  const first = lines[0]?.replace(/^(?:soal\s*)?\d{1,3}[.)]\s*/i, "") || "";
-  const stem: string[] = first ? [first] : [];
-  let explanationKey: keyof Draft["explanation"] | null = null;
-  let currentOption: number | null = null;
-
+  const warnings: string[] = [],
+    errors: string[] = [],
+    first = lines[0]?.replace(/^(?:soal\s*)?\d{1,3}[.)]\s*/i, "") || "",
+    stem: string[] = first ? [first] : [],
+    statements: string[] = [];
+  let explanationKey: keyof Draft["explanation"] | null = null,
+    currentOption: number | null = null,
+    answerRaw = "";
   for (const original of lines.slice(1)) {
     const line = original.trim();
     const answer = line.match(
-      /^(?:kunci(?:\s+jawaban)?|answer|jawaban)\s*:\s*([A-E])\b/i,
+      /^(?:kunci(?:\s+jawaban)?|jawaban(?:\s+benar)?|answer(?:\s+key)?)\s*[:=\-]?\s*(.+)$/i,
     );
     if (answer) {
-      raw.answer = answer[1].toUpperCase();
+      answerRaw = answer[1].trim();
+      raw.answer = answerRaw;
       explanationKey = null;
       currentOption = null;
       continue;
     }
-    const option = line.match(/^([A-E])[.)]\s*(.+)$/i);
+    const option = line.match(/^(?:\(([A-E])\)|([A-E]))[.)\-:]?\s+(.+)$/i);
     if (option) {
-      const key = option[1].toUpperCase();
-      const position = draft.options.findIndex((o) => o.option_key === key);
-      if (position >= 0) draft.options[position].content_md = option[2].trim();
-      currentOption = position;
+      const key = (option[1] || option[2]).toUpperCase(),
+        pos = draft.options.findIndex((o) => o.option_key === key);
+      if (pos >= 0) draft.options[pos].content_md = option[3].trim();
+      currentOption = pos;
+      explanationKey = null;
+      continue;
+    }
+    const statement = line.match(/^\((\d{1,2})\)\s*(.+)$/);
+    if (statement) {
+      statements.push(statement[2].trim());
+      currentOption = null;
       explanationKey = null;
       continue;
     }
@@ -229,77 +259,115 @@ function parseQuestion(
     }
     let matched = false;
     for (const [pattern, key] of sectionMarkers) {
-      const match = line.match(pattern);
-      if (match) {
+      const m = line.match(pattern);
+      if (m) {
         explanationKey = key;
-        draft.explanation[key] = match[1]?.trim() || "";
+        draft.explanation[key] = m[1]?.trim() || "";
         currentOption = null;
         matched = true;
         break;
       }
     }
     if (matched) continue;
-    if (explanationKey) {
+    if (explanationKey)
       draft.explanation[explanationKey] = [
         draft.explanation[explanationKey],
         line,
       ]
         .filter(Boolean)
         .join("\n");
-    } else if (currentOption !== null && currentOption >= 0) {
+    else if (currentOption !== null && currentOption >= 0)
       draft.options[currentOption].content_md = [
         draft.options[currentOption].content_md,
         line,
       ]
         .filter(Boolean)
         .join("\n");
-    } else {
-      stem.push(line);
-    }
+    else stem.push(line);
   }
-
   draft.stem_md = stem.join("\n").trim();
-  draft.options = draft.options.filter((o) => o.content_md.trim());
-  const answer = raw.answer || "";
-  draft.options = draft.options.map((o) => ({
-    ...o,
-    is_correct: o.option_key === answer,
-  }));
+  const parsed = parseAnswerTokens(answerRaw),
+    hasChoice = draft.options.some((o) => o.content_md.trim());
+  if (!hasChoice && statements.length >= 2 && statements.length <= 5) {
+    draft.question_type = "TRUE_FALSE";
+    draft.options = statements.map((content_md, i) => ({
+      option_key: String.fromCharCode(65 + i),
+      content_md,
+      is_correct: false,
+    }));
+    if (parsed.tokens.length === statements.length)
+      draft.options = draft.options.map((o, i) => ({
+        ...o,
+        is_correct: ["BENAR", "TRUE", "B", "T"].includes(parsed.tokens[i]),
+      }));
+    else warnings.push("Kunci Benar/Salah belum dapat dipetakan otomatis.");
+  } else {
+    draft.options = draft.options.filter((o) => o.content_md.trim());
+    draft.question_type =
+      parsed.kind === "TRUE_FALSE" ? "SINGLE_CHOICE" : parsed.kind;
+    const keys = parsed.kind === "TRUE_FALSE" ? [] : parsed.tokens;
+    draft.options = draft.options.map((o) => ({
+      ...o,
+      is_correct: keys.includes(o.option_key),
+    }));
+    if (
+      /pilih semua|lebih dari satu jawaban|pilihan ganda kompleks/i.test(
+        draft.instruction_md || "",
+      )
+    )
+      draft.question_type = "MULTIPLE_CHOICE";
+  }
   if (!draft.stem_md) errors.push("Pertanyaan utama tidak terdeteksi");
-  if (draft.options.length < 4 || draft.options.length > 5)
-    errors.push("Harus ada 4–5 opsi A–E");
-  if (
-    new Set(draft.options.map((o) => o.content_md.toLowerCase().trim()))
-      .size !== draft.options.length
-  )
-    errors.push("Opsi jawaban duplikat");
-  if (
-    !/[A-E]/.test(answer) ||
-    draft.options.filter((o) => o.is_correct).length !== 1
-  )
-    errors.push("Kunci jawaban A–E tidak ditemukan/invalid");
   if (!defaults.section_id || !defaults.subtopic_id)
     errors.push("Klasifikasi section/subtopic wajib dipilih sebelum import");
   if (!["BASIC", "MEDIUM", "HARD"].includes(defaults.difficulty))
     errors.push("Difficulty tidak valid");
-
-  const missingExplanation = explanationFields
+  if (draft.question_type === "TRUE_FALSE") {
+    if (draft.options.length < 2 || draft.options.length > 5)
+      errors.push("Benar/Salah membutuhkan 2–5 pernyataan");
+  } else {
+    if (draft.options.length < 4 || draft.options.length > 5)
+      errors.push("Pilihan ganda membutuhkan 4–5 opsi");
+    const correct = draft.options.filter((o) => o.is_correct).length;
+    if (draft.question_type === "SINGLE_CHOICE" && correct !== 1)
+      warnings.push("Kunci PG tunggal belum dapat dipetakan otomatis.");
+    if (draft.question_type === "MULTIPLE_CHOICE" && correct < 1)
+      warnings.push(
+        "Kunci pilihan ganda kompleks belum dapat dipetakan otomatis.",
+      );
+  }
+  if (
+    new Set(draft.options.map((o) => o.content_md.toLowerCase().trim()))
+      .size !== draft.options.length
+  )
+    errors.push("Opsi/pernyataan duplikat");
+  const missing = explanationFields
     .filter(([key, , required]) => required && !draft.explanation[key])
     .map(([, label]) => label);
-  if (missingExplanation.length)
-    warnings.push(
-      `Pembahasan perlu dilengkapi: ${missingExplanation.join(", ")}`,
-    );
+  if (missing.length)
+    warnings.push(`Pembahasan perlu dilengkapi: \${missing.join(", ")}`);
   raw.stem = draft.stem_md;
-  raw.answer = answer;
+  raw.answer = answerRaw;
+  raw.question_type = draft.question_type;
   raw.warnings = warnings.join("; ");
+  const needsMapping =
+    !errors.length &&
+    warnings.some((w) => /Kunci .*belum dapat dipetakan/.test(w));
   return {
     row: {
       row_number: index + 1,
       raw,
       parsed: errors.length ? null : draft,
-      status: errors.length ? "INVALID" : "VALID",
-      error_message: errors.length ? errors.join("; ") : null,
+      status: errors.length
+        ? "INVALID"
+        : needsMapping
+          ? "NEEDS_MAPPING"
+          : "VALID",
+      error_message: errors.length
+        ? errors.join("; ")
+        : needsMapping
+          ? warnings.join("; ")
+          : null,
     },
     warnings,
   };
@@ -318,11 +386,15 @@ export async function parseDocx(
   if (!text.trim())
     throw new Error("DOCX tidak memiliki teks yang dapat dibaca.");
   const blocks = splitQuestions(text).filter((block) =>
-    block.some((line) => /^[A-E][.)]\s+/i.test(line)),
+    block.some(
+      (line) =>
+        /^(?:\([A-E]\)|[A-E])[.)\-:]?\s+/i.test(line) ||
+        /^\(\d{1,2}\)\s+/.test(line),
+    ),
   );
   if (!blocks.length)
     throw new Error(
-      "Tidak menemukan pola soal bernomor dengan opsi A–E. Gunakan format 1. Soal, A. opsi, ..., Kunci: A.",
+      "Tidak menemukan struktur soal yang dapat dipetakan. Parser mendukung PG tunggal, PG kompleks, dan Benar/Salah; periksa nomor soal, opsi/pernyataan, serta baris kunci.",
     );
   if (blocks.length > 200) throw new Error("Maksimal 200 soal per import.");
   const parsed = blocks.map((block, i) => parseQuestion(block, i, defaults));
@@ -332,7 +404,9 @@ export async function parseDocx(
     summary: {
       total: rows.length,
       valid: rows.filter((r) => r.status === "VALID").length,
-      invalid: rows.filter((r) => r.status === "INVALID").length,
+      invalid: rows.filter(
+        (r) => r.status === "INVALID" || r.status === "NEEDS_MAPPING",
+      ).length,
       skipped: 0,
       duplicate_codes: [],
       warnings: parsed.reduce((sum, x) => sum + x.warnings.length, 0),

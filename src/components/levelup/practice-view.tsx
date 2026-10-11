@@ -39,8 +39,8 @@ export function PracticeView({
   if (!topics.length || !published)
     return (
       <section className="panel">
-        <h1>Soal belum diterbitkan</h1>
-        <p>Konten baru sedang dikurasi. Silakan kembali setelah soal siap.</p>
+        <h1>Latihan</h1>
+        <p>Belum ada soal latihan yang tersedia.</p>
       </section>
     );
   return (

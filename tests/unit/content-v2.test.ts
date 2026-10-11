@@ -143,7 +143,10 @@ describe("normalized content lifecycle and database boundary", () => {
   it("rejects two keys, broken taxonomy, missing explanations and stale saves", async () => {
     const p = draft("TEST-TWO-KEYS");
     p.options[0].is_correct = true;
-    await expect(rpc(admin, "create", p)).rejects.toThrow();
+    const twoKeys = await rpc(admin, "create", p);
+    await expect(
+      rpc(admin, "send_qa", { version_id: twoKeys.versions[0].id }),
+    ).rejects.toThrow();
     await expect(
       rpc(admin, "create", {
         ...draft("TEST-FK"),

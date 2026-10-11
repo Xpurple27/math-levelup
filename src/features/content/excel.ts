@@ -43,7 +43,7 @@ export type ImportRow = {
   row_number: number;
   raw: Record<string, string>;
   parsed: Draft | null;
-  status: "VALID" | "INVALID" | "SKIPPED";
+  status: "VALID" | "NEEDS_MAPPING" | "INVALID" | "SKIPPED";
   error_message: string | null;
 };
 export type ImportPreview = {

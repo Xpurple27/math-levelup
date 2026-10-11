@@ -5,16 +5,17 @@ import {
   assertOrigin,
   adminError,
 } from "@/features/content/auth";
-import { adminContent } from "@/features/content/db";
+import { adminContent, contentRPC } from "@/features/content/db";
 import { limitedBody, validateDraft } from "@/features/content/requests";
 import { StorageError } from "@/lib/store-errors";
 export const runtime = "nodejs";
 const reply = (data: unknown) =>
   Response.json({ data }, { headers: { "Cache-Control": "no-store" } });
+type Detail = { versions?: Array<{ id: string }> };
 export async function GET(request: Request) {
   try {
-    const { user } = await adminIdentity(),
-      url = new URL(request.url),
+    const { user } = await adminIdentity();
+    const url = new URL(request.url),
       action = url.searchParams.get("action") || "list";
     if (
       ![
@@ -54,6 +55,21 @@ export async function POST(request: Request) {
     const b = JSON.parse(
       new TextDecoder().decode(await limitedBody(request)),
     ) as { action: string; payload: Record<string, unknown> };
+    if (!b.payload || typeof b.payload !== "object")
+      throw new StorageError("Action tidak valid.", 400);
+    if (b.action === "taxonomy_create")
+      return reply(
+        await contentRPC("levelup_taxonomy_create", {
+          p_actor: user.id,
+          p_kind: String(b.payload.kind || ""),
+          p_parent:
+            typeof b.payload.parent_id === "string" && b.payload.parent_id
+              ? b.payload.parent_id
+              : null,
+          p_name: String(b.payload.name || ""),
+          p_code: String(b.payload.code || ""),
+        }),
+      );
     if (
       ![
         "create",
@@ -65,13 +81,25 @@ export async function POST(request: Request) {
         "archive",
         "review",
         "media_create",
-      ].includes(b.action) ||
-      !b.payload ||
-      typeof b.payload !== "object"
+      ].includes(b.action)
     )
       throw new StorageError("Action tidak valid.", 400);
     if (b.action === "create" || b.action === "save") validateDraft(b.payload);
-    return reply(await adminContent(user.id, b.action, b.payload));
+    let data = await adminContent(user.id, b.action, b.payload);
+    if (
+      (b.action === "create" || b.action === "save") &&
+      typeof b.payload.question_type === "string"
+    ) {
+      const versionId = (data as Detail).versions?.[0]?.id;
+      if (!versionId)
+        throw new StorageError("Versi draft tidak ditemukan.", 500);
+      data = await contentRPC("levelup_question_set_type", {
+        p_actor: user.id,
+        p_version: versionId,
+        p_type: b.payload.question_type,
+      });
+    }
+    return reply(data);
   } catch (e) {
     return adminError(e);
   }
