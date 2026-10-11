@@ -5,6 +5,7 @@ import { createContext, useContext, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BookOpenText,
+  Boxes,
   Files,
   Image as ImageIcon,
   LayoutDashboard,
@@ -33,6 +34,12 @@ const sections = [
   {
     label: "LEARNING",
     items: [{ href: "/admin/learning", label: "Learning Builder", icon: BookOpenText }],
+  },
+  {
+    label: "ASSESSMENT",
+    items: [
+      { href: "/admin/practice-packages", label: "Practice Packages", icon: Boxes },
+    ],
   },
   {
     label: "QUALITY",
@@ -104,7 +111,7 @@ export function AdminShell({
           ))}
           <div className="ops-sidebar-note">
             <span className="ops-note-kicker">WORKFLOW</span>
-            <p>Question Bank menyimpan soal. Learning Builder menyusun materi. Paket assessment akan merakit soal yang sudah siap digunakan.</p>
+            <p>Question Bank menyimpan soal. Learning Builder menyusun materi. Practice Packages merakit soal published menjadi produk latihan siswa.</p>
           </div>
           <button className="ops-logout" onClick={() => void logout()}>
             <LogOut size={16} /> Keluar
