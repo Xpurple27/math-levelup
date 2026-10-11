@@ -80,6 +80,141 @@
   font-size: 15px;
 }
 
+/* C5 interaction polish */
+.app-nav-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+  height: 3px;
+  width: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+.app-nav-progress::before {
+  content: "";
+  display: block;
+  width: 42%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--lu-red), var(--lu-gold));
+  box-shadow: 0 0 12px rgba(197, 38, 47, 0.35);
+  animation: levelup-progress 520ms cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+@keyframes levelup-progress {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(270%); }
+}
+
+.student-view-transition,
+.ops-view-transition {
+  animation: levelup-view-in 180ms ease-out both;
+}
+@keyframes levelup-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.student-nav button,
+.student-mobile-nav button,
+.ops-nav a {
+  position: relative;
+}
+.student-nav button:hover,
+.student-mobile-nav button:hover,
+.ops-nav a:hover {
+  background: rgba(197, 38, 47, 0.065);
+  color: var(--lu-red-deep);
+}
+.student-nav button.active,
+.student-mobile-nav button.active,
+.ops-nav a.active,
+.ops-nav a.pending {
+  color: var(--lu-red);
+  font-weight: 800;
+}
+.student-nav button.active::after,
+.student-nav button.pending::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: -10px;
+  height: 2px;
+  border-radius: 99px;
+  background: var(--lu-red);
+}
+
+.student-app-footer,
+.ops-app-footer {
+  border-top: 1px solid var(--lu-line);
+  color: var(--lu-muted);
+  font-size: 11px;
+}
+.student-app-footer {
+  max-width: 1180px;
+  margin: 48px auto 90px;
+  padding: 22px 6px 0;
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.student-app-footer strong,
+.ops-app-footer strong {
+  color: var(--lu-ink);
+}
+.student-app-footer nav {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.student-app-footer a:hover {
+  color: var(--lu-red);
+}
+.ops-app-footer {
+  margin-top: 34px;
+  padding-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.student-skeleton {
+  display: grid;
+  gap: 14px;
+}
+.student-skeleton span {
+  display: block;
+  height: 18px;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #eee7e3 25%, #f8f3ef 50%, #eee7e3 75%);
+  background-size: 200% 100%;
+  animation: levelup-skeleton 1.15s ease-in-out infinite;
+}
+.student-skeleton span:nth-child(1) { width: 38%; height: 30px; }
+.student-skeleton span:nth-child(2) { width: 72%; }
+.student-skeleton span:nth-child(3) { width: 62%; }
+@keyframes levelup-skeleton {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-nav-progress::before,
+  .student-view-transition,
+  .ops-view-transition,
+  .student-skeleton span {
+    animation: none;
+  }
+}
+
 @media (max-width: 700px) {
   .signed-out-notice {
     top: 10px;
@@ -90,5 +225,9 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 3px;
+  }
+  .student-app-footer {
+    margin: 34px 18px 92px;
+    padding-top: 18px;
   }
 }
