@@ -4,6 +4,7 @@ import Link from "next/link";
 import { createContext, useContext, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BookOpenText,
   Files,
   Image as ImageIcon,
   LayoutDashboard,
@@ -19,13 +20,25 @@ export function useAdminRole() {
   return useContext(AdminRole);
 }
 
-const nav = [
-  { href: "/admin", label: "Overview", icon: LayoutDashboard },
-  { href: "/admin/questions", label: "Question Bank", icon: LibraryBig },
-  { href: "/admin/imports", label: "Imports", icon: Files },
-  { href: "/admin/media", label: "Media", icon: ImageIcon },
-  { href: "/admin/qa", label: "QA Queue", icon: ShieldCheck },
-];
+const sections = [
+  {
+    label: "CONTENT",
+    items: [
+      { href: "/admin", label: "Overview", icon: LayoutDashboard },
+      { href: "/admin/questions", label: "Question Bank", icon: LibraryBig },
+      { href: "/admin/imports", label: "Imports", icon: Files },
+      { href: "/admin/media", label: "Media", icon: ImageIcon },
+    ],
+  },
+  {
+    label: "LEARNING",
+    items: [{ href: "/admin/learning", label: "Learning Builder", icon: BookOpenText }],
+  },
+  {
+    label: "QUALITY",
+    items: [{ href: "/admin/qa", label: "QA Queue", icon: ShieldCheck }],
+  },
+] as const;
 
 export function AdminShell({
   role,
@@ -49,6 +62,11 @@ export function AdminShell({
     router.refresh();
   }
 
+  function activeFor(href: string) {
+    const target = pendingHref || pathname;
+    return href === "/admin" ? target === href : target.startsWith(href);
+  }
+
   return (
     <AdminRole.Provider value={role}>
       <div className="ops-shell admin-studio-shell">
@@ -64,29 +82,29 @@ export function AdminShell({
           <div className="ops-role">
             <ShieldCheck size={15} /> ADMIN
           </div>
-          <div className="ops-nav-label">CONTENT</div>
-          <nav className="ops-nav" aria-label="Admin navigation">
-            {nav.map((item) => {
-              const active = pendingHref
-                ? pendingHref === item.href || (item.href !== "/admin" && pendingHref.startsWith(item.href))
-                : item.href === "/admin"
-                  ? pathname === item.href
-                  : pathname.startsWith(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setPendingHref(item.href)}
-                  className={active ? (pendingHref ? "active pending" : "active") : ""}
-                >
-                  <item.icon size={17} /> {item.label}
-                </Link>
-              );
-            })}
-          </nav>
+          {sections.map((section) => (
+            <div className="ops-nav-section" key={section.label}>
+              <div className="ops-nav-label">{section.label}</div>
+              <nav className="ops-nav" aria-label={`${section.label} navigation`}>
+                {section.items.map((item) => {
+                  const active = activeFor(item.href);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setPendingHref(item.href)}
+                      className={active ? (pendingHref ? "active pending" : "active") : ""}
+                    >
+                      <item.icon size={17} /> {item.label}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          ))}
           <div className="ops-sidebar-note">
             <span className="ops-note-kicker">WORKFLOW</span>
-            <p>Question Bank menyimpan soal. Learning dan paket assessment merakit soal yang sudah siap digunakan.</p>
+            <p>Question Bank menyimpan soal. Learning Builder menyusun materi. Paket assessment akan merakit soal yang sudah siap digunakan.</p>
           </div>
           <button className="ops-logout" onClick={() => void logout()}>
             <LogOut size={16} /> Keluar
@@ -100,7 +118,7 @@ export function AdminShell({
             </div>
             <Link href="/app" onClick={() => setPendingHref("/app")}>Lihat ruang siswa</Link>
           </header>
-          <main className="ops-main">
+          <main className="ops-main" id="content">
             <div className="ops-view-transition" key={pathname}>{children}</div>
             <footer className="ops-app-footer">
               <strong>LevelUP Math · Admin</strong>
