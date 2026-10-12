@@ -22,11 +22,7 @@ export type PracticePackageCard = {
   access: "FREE" | "PREMIUM";
   estimatedMinutes: number;
   section: { id: string; code: string; name: string };
-  subtopic: {
-    id: string;
-    name: string;
-    topic: { id: string; name: string; domain: { id: string; name: string } | null } | null;
-  };
+  domain: { id: string; name: string; description: string };
   questionCount: number;
   difficulty: { basic: number; medium: number; hard: number };
 };
@@ -42,20 +38,18 @@ export async function listPracticePackages(): Promise<PracticePackageCard[]> {
   const { data, error } = await client
     .from("practice_packages")
     .select(
-      "id,code,slug,title,description,access,estimated_minutes,sort_order,section_id,subtopic_id,exam_sections(id,code,name),subtopics(id,name,topic_id,topics(id,name,domain_id,domains(id,name))),practice_package_questions(sort_order,question_version_id,question_versions(difficulty,status))",
+      "id,code,slug,title,description,access,estimated_minutes,sort_order,section_id,domain_id,exam_sections(id,code,name),domains(id,name,description),practice_package_questions(sort_order,question_version_id,question_versions(difficulty,status))",
     )
     .eq("status", "PUBLISHED")
     .order("sort_order")
     .order("title");
   if (error) throw error;
 
-  return (data || []).map((row) => {
+  return (data || []).flatMap((row) => {
     const section = row.exam_sections as unknown as { id: string; code: string; name: string } | null;
-    const subtopic = row.subtopics as unknown as {
-      id: string;
-      name: string;
-      topics?: { id: string; name: string; domains?: { id: string; name: string } | null } | null;
-    } | null;
+    const domain = row.domains as unknown as { id: string; name: string; description?: string | null } | null;
+    if (!domain) return [];
+
     const questions = ((row.practice_package_questions || []) as unknown as PackageQuestionRow[])
       .filter((item) => item.question_versions?.status === "PUBLISHED")
       .sort((a, b) => a.sort_order - b.sort_order);
@@ -66,7 +60,8 @@ export async function listPracticePackages(): Promise<PracticePackageCard[]> {
       if (value === "MEDIUM") difficulty.medium += 1;
       if (value === "HARD") difficulty.hard += 1;
     }
-    return {
+
+    return [{
       id: row.id,
       code: row.code,
       slug: row.slug,
@@ -75,32 +70,35 @@ export async function listPracticePackages(): Promise<PracticePackageCard[]> {
       access: row.access,
       estimatedMinutes: row.estimated_minutes,
       section: section || { id: row.section_id, code: "", name: "" },
-      subtopic: {
-        id: subtopic?.id || row.subtopic_id,
-        name: subtopic?.name || "",
-        topic: subtopic?.topics
-          ? {
-              id: subtopic.topics.id,
-              name: subtopic.topics.name,
-              domain: subtopic.topics.domains
-                ? { id: subtopic.topics.domains.id, name: subtopic.topics.domains.name }
-                : null,
-            }
-          : null,
+      domain: {
+        id: domain.id || row.domain_id,
+        name: domain.name || "Materi",
+        description: domain.description || "",
       },
       questionCount: questions.length,
       difficulty,
-    } satisfies PracticePackageCard;
+    } satisfies PracticePackageCard];
   });
+}
+
+async function domainForSubtopic(target: string): Promise<string | null> {
+  const client = db();
+  const { data } = await client
+    .from("subtopics")
+    .select("topics(domain_id)")
+    .eq("id", target)
+    .maybeSingle();
+  const topic = data?.topics as unknown as { domain_id?: string } | null;
+  return topic?.domain_id || null;
 }
 
 export async function loadPracticePackage(target: string): Promise<{ card: PracticePackageCard; questions: Question[] } | null> {
   const cards = await listPracticePackages();
-  const card = cards.find(
-    (item) =>
-      item.access === "FREE" &&
-      (item.slug === target || item.subtopic.id === target),
-  );
+  let card = cards.find((item) => item.access === "FREE" && (item.slug === target || item.domain.id === target));
+  if (!card) {
+    const domainId = await domainForSubtopic(target);
+    if (domainId) card = cards.find((item) => item.access === "FREE" && item.domain.id === domainId);
+  }
   if (!card) return null;
 
   const client = db();

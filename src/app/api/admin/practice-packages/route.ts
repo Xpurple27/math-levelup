@@ -19,17 +19,18 @@ async function requireAdmin() {
 
 async function packagePayload() {
   const client = db();
-  const [packagesResult, subtopicsResult, sectionsResult, questionsResult] = await Promise.all([
+  const [packagesResult, domainsResult, sectionsResult, questionsResult] = await Promise.all([
     client
       .from("practice_packages")
-      .select("id,section_id,subtopic_id,code,slug,title,description,access,status,estimated_minutes,sort_order,published_at,practice_package_questions(id,question_version_id,sort_order)")
+      .select("id,section_id,domain_id,subtopic_id,code,slug,title,description,access,status,estimated_minutes,sort_order,published_at,practice_package_questions(id,question_version_id,sort_order)")
       .order("sort_order")
       .order("title"),
     client
-      .from("subtopics")
-      .select("id,name,topic_id,topics(id,name,domain_id,domains(id,name))")
+      .from("domains")
+      .select("id,code,name,description,sort_order")
       .eq("status", "ACTIVE")
-      .order("name"),
+      .in("code", ["PK_NUM", "PK_ALG", "PK_GEO", "PK_DATA", "PK_PROB", "PM_QTY", "PM_CHANGE", "PM_GEO", "PM_DATA", "PU_IND", "PU_DED", "PU_QUANT"])
+      .order("sort_order"),
     client
       .from("exam_sections")
       .select("id,code,name,exam_id,exams(code,name)")
@@ -37,16 +38,16 @@ async function packagePayload() {
       .order("sort_order"),
     client
       .from("levelup_question_bank")
-      .select("id,code,version_id,status,stem_md,difficulty,section_id,section,subtopic_id,subtopic,topic,domain")
+      .select("id,code,version_id,status,stem_md,difficulty,section_id,section,subtopic_id,subtopic,topic_id,topic,domain_id,domain")
       .eq("status", "PUBLISHED")
       .order("code")
-      .limit(1000),
+      .limit(2000),
   ]);
-  const error = packagesResult.error || subtopicsResult.error || sectionsResult.error || questionsResult.error;
+  const error = packagesResult.error || domainsResult.error || sectionsResult.error || questionsResult.error;
   if (error) throw error;
   return {
     packages: packagesResult.data || [],
-    subtopics: subtopicsResult.data || [],
+    domains: domainsResult.data || [],
     sections: (sectionsResult.data || []).filter((row) => ["PK", "PM", "PU"].includes(row.code)),
     questions: questionsResult.data || [],
   };
@@ -75,9 +76,9 @@ export async function POST(request: Request) {
     if (action === "create_package") {
       const title = String(payload.title || "").trim();
       const sectionId = String(payload.section_id || "");
-      const subtopicId = String(payload.subtopic_id || "");
-      if (!title || !sectionId || !subtopicId)
-        throw new StorageError("Judul, bagian UTBK, dan subtopik wajib diisi.", 400);
+      const domainId = String(payload.domain_id || "");
+      if (!title || !sectionId || !domainId)
+        throw new StorageError("Judul, bagian UTBK, dan pintu/domain wajib diisi.", 400);
       const slugBase = String(payload.slug || title)
         .toLowerCase()
         .trim()
@@ -90,7 +91,8 @@ export async function POST(request: Request) {
         .from("practice_packages")
         .insert({
           section_id: sectionId,
-          subtopic_id: subtopicId,
+          domain_id: domainId,
+          subtopic_id: null,
           code,
           slug,
           title,
@@ -108,7 +110,9 @@ export async function POST(request: Request) {
 
     if (action === "update_package") {
       const id = String(payload.id || "");
-      if (!id) throw new StorageError("Paket tidak valid.", 400);
+      const sectionId = String(payload.section_id || "");
+      const domainId = String(payload.domain_id || "");
+      if (!id || !sectionId || !domainId) throw new StorageError("Paket, bagian, atau pintu tidak valid.", 400);
       const { data, error } = await client
         .from("practice_packages")
         .update({
@@ -116,8 +120,9 @@ export async function POST(request: Request) {
           description: String(payload.description || ""),
           access: String(payload.access || "FREE"),
           estimated_minutes: Number(payload.estimated_minutes || 15),
-          section_id: String(payload.section_id || ""),
-          subtopic_id: String(payload.subtopic_id || ""),
+          section_id: sectionId,
+          domain_id: domainId,
+          subtopic_id: null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
@@ -140,25 +145,26 @@ export async function POST(request: Request) {
 
       const { data: pack, error: packError } = await client
         .from("practice_packages")
-        .select("id,section_id,subtopic_id,status")
+        .select("id,section_id,domain_id,status")
         .eq("id", packageId)
         .single();
       if (packError) throw packError;
       if (pack.status === "ARCHIVED") throw new StorageError("Paket sudah diarsipkan.", 400);
+      if (!pack.domain_id) throw new StorageError("Paket belum memiliki pintu/domain.", 400);
 
       if (versionIds.length) {
         const { data: versions, error: versionsError } = await client
-          .from("question_versions")
-          .select("id,section_id,subtopic_id,status")
-          .in("id", versionIds);
+          .from("levelup_question_bank")
+          .select("version_id,section_id,domain_id,status")
+          .in("version_id", versionIds);
         if (versionsError) throw versionsError;
         if ((versions || []).length !== versionIds.length)
           throw new StorageError("Sebagian soal tidak ditemukan.", 400);
         const invalid = (versions || []).find(
-          (row) => row.status !== "PUBLISHED" || row.section_id !== pack.section_id || row.subtopic_id !== pack.subtopic_id,
+          (row) => row.status !== "PUBLISHED" || row.section_id !== pack.section_id || row.domain_id !== pack.domain_id,
         );
         if (invalid)
-          throw new StorageError("Semua soal paket harus PUBLISHED dan sesuai bagian serta subtopik paket.", 400);
+          throw new StorageError("Semua soal paket harus PUBLISHED dan berada pada section serta pintu/domain yang sama.", 400);
       }
 
       const { error: deleteError } = await client
@@ -187,8 +193,8 @@ export async function POST(request: Request) {
         .select("id", { count: "exact", head: true })
         .eq("practice_package_id", id);
       if (countError) throw countError;
-      if ((count || 0) < 5 || (count || 0) > 10)
-        throw new StorageError("Paket latihan harus berisi 5–10 soal sebelum dipublish.", 400);
+      if ((count || 0) !== 10)
+        throw new StorageError("Paket latihan V2 harus berisi tepat 10 soal sebelum dipublish.", 400);
       const { data, error } = await client
         .from("practice_packages")
         .update({ status: "PUBLISHED", published_at: new Date().toISOString(), updated_at: new Date().toISOString() })
