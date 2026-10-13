@@ -15,8 +15,20 @@ const schema = {
   },
 };
 
+function polishProse(input: string) {
+  let text = input.replace(/paling analog dengan/gi, "memiliki pola hubungan yang paling serupa dengan");
+
+  if (/\(1\)/.test(text) && /\(2\)/.test(text)) {
+    text = text
+      .replace(/\s*\(1\)\s*/g, "\n\n**(1)** ")
+      .replace(/\s*\(2\)\s*/g, "\n\n**(2)** ");
+  }
+
+  return text;
+}
+
 function normalizePlainMath(input: string) {
-  const chunks = input.split(/(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g);
+  const chunks = polishProse(input).split(/(\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g);
   return chunks
     .map((chunk, index) => {
       if (index % 2 === 1) return chunk;
@@ -29,6 +41,18 @@ function normalizePlainMath(input: string) {
       };
 
       let text = chunk;
+
+      text = text.replace(/\b([A-Za-z])\s*:\s*([A-Za-z])\s*=\s*(-?\d+(?:[.,]\d+)?)\s*:\s*(-?\d+(?:[.,]\d+)?)\b/g, (_, left: string, right: string, a: string, b: string) =>
+        hold(`$${left}:${right}=${a}:${b}$`),
+      );
+
+      text = text.replace(/\b([A-Za-z])\^([0-9]+)\s*([=<>])\s*(-?\d+(?:[.,]\d+)?)\b/g, (_, base: string, power: string, operator: string, value: string) =>
+        hold(`$${base}^{${power}}${operator}${value}$`),
+      );
+
+      text = text.replace(/\b([A-Za-z])\s*([+\-])\s*([A-Za-z])\b/g, (_, left: string, operator: string, right: string) =>
+        hold(`$${left}${operator}${right}$`),
+      );
 
       text = text.replace(/\bsqrt\(([^()\n]+)\)/g, (_, value: string) => hold(`$\\sqrt{${value}}$`));
 
