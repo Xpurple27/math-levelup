@@ -118,16 +118,16 @@ export function PracticeView({ busy, start }: Props) {
           <p className="mt-1 text-sm text-[#806d6f]">Setiap paket berisi 10 soal campuran dari materi pada kategori yang dipilih, lengkap dengan pembahasan.</p>
         </div>
 
-        <div className="flex gap-1 overflow-x-auto">
+        <div className="flex gap-2 overflow-x-auto pb-4">
           {sections.map((item) => (
             <button
               key={item.code}
               type="button"
               onClick={() => chooseSection(item.code)}
-              className={`min-w-max border-b-2 px-4 py-3 text-sm font-extrabold transition ${
+              className={`min-w-max rounded-xl border px-4 py-3 text-sm font-extrabold transition ${
                 activeSection === item.code
-                  ? "border-[#a52b31] text-[#8f1d24]"
-                  : "border-transparent text-[#776669] hover:text-[#8f1d24]"
+                  ? "border-[#a52b31] bg-[#fff0ee] text-[#8f1d24] shadow-sm"
+                  : "border-[#eadfe0] bg-white text-[#776669] hover:border-[#d8b9bc] hover:bg-[#fff9f7] hover:text-[#8f1d24]"
               }`}
             >
               <span className="mr-1.5">{item.code}</span>
