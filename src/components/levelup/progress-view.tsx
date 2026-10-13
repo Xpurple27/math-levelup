@@ -6,6 +6,7 @@ import {
   TrendingUp,
   CheckCircle2,
 } from "lucide-react";
+import { useMemo } from "react";
 import { useTopics } from "../content-context";
 import type { Mastery } from "@/lib/scoring";
 import { masteryLabel } from "@/lib/scoring";
@@ -13,6 +14,7 @@ import { Stat, PageHeading } from "./view-ui";
 import { kindLabel, useTopicName } from "./labels";
 import type { View, Attempt, History } from "./types";
 import type { Dispatch, SetStateAction } from "react";
+
 type Props = {
   avg: number | null;
   solved: number;
@@ -24,6 +26,15 @@ type Props = {
   syncAttempt: (a: Attempt) => void;
   setView: Dispatch<SetStateAction<View>>;
 };
+
+type DomainMastery = {
+  key: string;
+  section: string;
+  domain: string;
+  measured: Mastery | undefined;
+  subtopics: number;
+};
+
 export function ProgressView({
   avg,
   solved,
@@ -37,6 +48,43 @@ export function ProgressView({
 }: Props) {
   const topicName = useTopicName();
   const topics = useTopics();
+
+  const domainMastery = useMemo<DomainMastery[]>(() => {
+    const groups = new Map<string, { section: string; domain: string; topicIds: string[] }>();
+    for (const topic of topics) {
+      const section = topic.section || topic.sections?.[0] || "UTBK";
+      const domain = topic.domain || "Lainnya";
+      const key = `${section}::${domain}`;
+      const group = groups.get(key);
+      if (group) group.topicIds.push(topic.id);
+      else groups.set(key, { section, domain, topicIds: [topic.id] });
+    }
+
+    const order = { PK: 0, PM: 1, PU: 2 } as Record<string, number>;
+    return [...groups.entries()]
+      .map(([key, group]) => {
+        const evidence = group.topicIds
+          .map((id) => mastery.find((item) => item.topic === id))
+          .filter((item): item is Mastery => Boolean(item));
+        const totalCount = evidence.reduce((sum, item) => sum + item.count, 0);
+        const measured = evidence.length
+          ? {
+              topic: key,
+              value: totalCount
+                ? Math.round(evidence.reduce((sum, item) => sum + item.value * item.count, 0) / totalCount)
+                : Math.round(evidence.reduce((sum, item) => sum + item.value, 0) / evidence.length),
+              count: totalCount,
+              advanced: evidence.reduce((sum, item) => sum + item.advanced, 0),
+              confidence: totalCount
+                ? evidence.reduce((sum, item) => sum + item.confidence * item.count, 0) / totalCount
+                : evidence.reduce((sum, item) => sum + item.confidence, 0) / evidence.length,
+            }
+          : undefined;
+        return { key, section: group.section, domain: group.domain, measured, subtopics: group.topicIds.length };
+      })
+      .sort((a, b) => (order[a.section] ?? 9) - (order[b.section] ?? 9) || a.domain.localeCompare(b.domain, "id"));
+  }, [topics, mastery]);
+
   return (
     <>
       <PageHeading
@@ -49,7 +97,7 @@ export function ProgressView({
           icon={<TrendingUp size={21} />}
           label="Math mastery"
           value={avg === null ? "Belum diukur" : `${avg}%`}
-          foot="Rata-rata subtopik yang diukur"
+          foot="Rata-rata kemampuan yang sudah diukur"
           color="purple"
         />
         <Stat
@@ -77,20 +125,19 @@ export function ProgressView({
       <section className="panel">
         <h2>Peta kemampuanmu</h2>
         <p className="muted">
-          Belum diukur berbeda dari nol. Mastered perlu mastery ≥80 serta bukti
-          dan confidence yang cukup.
+          Peta diringkas per materi utama PK, PM, dan PU. Subtopik yang sejenis digabung agar progres lebih mudah dibaca.
         </p>
         <div className="skill-list">
-          {topics.map((t) => {
-            const m = mastery.find((m) => m.topic === t.id);
+          {domainMastery.map((item) => {
+            const m = item.measured;
             return (
-              <div className="skill-row" key={t.id}>
+              <div className="skill-row" key={item.key}>
                 <div>
-                  <strong>{t.name}</strong>
+                  <strong>{item.section} · {item.domain}</strong>
                   <small>
                     {m
-                      ? `${m.count} soal unik terjawab · confidence ${Math.round(m.confidence * 100)}%`
-                      : "Mulai diagnostik untuk mengenali kemampuan"}
+                      ? `${m.count} soal unik terjawab · ${item.subtopics} subtopik tergabung`
+                      : `${item.subtopics} subtopik · belum diukur`}
                   </small>
                 </div>
                 <div className="skill-track">
