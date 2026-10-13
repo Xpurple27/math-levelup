@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { appOrigin } from "@/lib/site-url";
 
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code");
-  const success = new URL("/app", request.url);
-  const failure = new URL("/login", request.url);
+  const requestedNext = request.nextUrl.searchParams.get("next") || "/app";
+  const next = requestedNext.startsWith("/") ? requestedNext : "/app";
+  const origin = appOrigin(request);
+  const success = new URL(next, origin);
+  const failure = new URL("/login", origin);
 
   if (code) {
     try {
