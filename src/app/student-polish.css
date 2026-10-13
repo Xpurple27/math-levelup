@@ -1,0 +1,37 @@
+/* Student-facing polish: keep KaTeX visually aligned with surrounding prose. */
+.question-panel .content-markdown .katex,
+.answer-options .content-markdown .katex,
+.explanation .content-markdown .katex {
+  font-size: 1em;
+}
+
+.question-panel > .content-markdown {
+  font-size: 15px;
+  line-height: 1.75;
+  color: #4f4547;
+}
+
+.question-stem,
+.question-stem .content-markdown {
+  font-size: 16px;
+  line-height: 1.75;
+  font-weight: 600;
+  color: #302426;
+}
+
+.question-stem .content-markdown p {
+  margin: 7px 0;
+}
+
+.answer-options .content-markdown {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 760px) {
+  .question-panel > .content-markdown,
+  .question-stem,
+  .question-stem .content-markdown {
+    font-size: 15px;
+  }
+}
