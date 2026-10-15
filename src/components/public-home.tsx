@@ -168,9 +168,9 @@ export function PublicHome() {
             <div className="preview-bar">
               <span />
             </div>
-            <button type="button">
-              Lanjutkan belajar <ArrowRight size={16} />
-            </button>
+            <Link className="preview-action" href="/register">
+              Mulai diagnostik <ArrowRight size={16} />
+            </Link>
           </div>
         </section>
       </main>
