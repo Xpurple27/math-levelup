@@ -80,6 +80,23 @@
   font-size: 15px;
 }
 
+/* Public preview CTA is a real link, not a decorative button. */
+.product-preview-card .preview-action {
+  width: 100%;
+  background: var(--lu-red);
+  color: white;
+  padding: 13px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 8px 8px 3px 8px;
+  font-weight: 700;
+}
+.product-preview-card .preview-action:hover {
+  background: var(--lu-red-deep);
+  transform: translateY(-1px);
+}
+
 /* C5 interaction polish */
 .app-nav-progress {
   position: fixed;
