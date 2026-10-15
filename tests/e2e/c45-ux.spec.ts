@@ -25,3 +25,28 @@ test("login and registration use dedicated pages", async ({ page }) => {
   ).toBeVisible();
   await expect(page.getByLabel("Nama lengkap")).toBeVisible();
 });
+
+test("mobile landing keeps login and registration visible and tappable", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+
+  const login = page.getByRole("link", { name: "Masuk", exact: true }).first();
+  const register = page.getByRole("link", { name: "Daftar gratis", exact: true }).first();
+  await expect(login).toBeVisible();
+  await expect(register).toBeVisible();
+
+  await login.click();
+  await expect(page).toHaveURL(/\/login$/);
+
+  await page.goto("/");
+  await page.getByRole("link", { name: "Daftar gratis", exact: true }).first().click();
+  await expect(page).toHaveURL(/\/register$/);
+});
+
+test("public diagnostic preview is an actionable registration link", async ({ page }) => {
+  await page.goto("/");
+  const previewCta = page.getByRole("link", { name: "Mulai diagnostik" });
+  await expect(previewCta).toBeVisible();
+  await previewCta.click();
+  await expect(page).toHaveURL(/\/register$/);
+});
