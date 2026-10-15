@@ -230,4 +230,51 @@
     margin: 34px 18px 92px;
     padding-top: 18px;
   }
+
+  /* Public conversion actions must remain available on phones. */
+  .public-nav-actions {
+    gap: 10px;
+  }
+  .public-nav-actions .text-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 2px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .public-nav-actions .public-cta.compact {
+    min-height: 40px;
+    padding-inline: 12px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 420px) {
+  .public-nav {
+    width: calc(100% - 20px);
+    gap: 10px;
+  }
+  .public-brand {
+    gap: 7px;
+    font-size: 17px;
+  }
+  .public-brand-mark {
+    width: 34px;
+    height: 34px;
+    font-size: 11px;
+  }
+  .public-brand small {
+    font-size: 8px;
+  }
+  .public-nav-actions {
+    gap: 7px;
+  }
+  .public-nav-actions .text-link {
+    font-size: 11px;
+  }
+  .public-nav-actions .public-cta.compact {
+    padding-inline: 9px;
+    font-size: 11px;
+  }
 }
