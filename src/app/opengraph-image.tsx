@@ -29,7 +29,7 @@ export default function Image() {
           backgroundSize: "48px 48px",
         }}
       />
-      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", zIndex: 2, width: "100%" }}>
+      <div style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", width: "100%" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
           <div style={{ display: "flex", width: 92, height: 92, borderRadius: 24, background: "#111A31", alignItems: "center", justifyContent: "center", fontSize: 54, fontWeight: 900, color: "#B7FF3C" }}>V↗</div>
           <div style={{ display: "flex", flexDirection: "column" }}>
