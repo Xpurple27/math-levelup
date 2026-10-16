@@ -10,7 +10,8 @@ import "./student-polish.css";
 import "./vectra.css";
 import "katex/dist/katex.min.css";
 
-const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
+const appUrl = process.env.NEXT_PUBLIC_APP_URL || (deploymentHost ? `https://${deploymentHost}` : "http://localhost:3000");
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -28,11 +29,13 @@ export const metadata: Metadata = {
     title: "VECTRA — Know Your Direction",
     description: "Know where you are. Know where to go next.",
     url: "/",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "VECTRA — Know Your Direction" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "VECTRA — Know Your Direction",
     description: "Know where you are. Know where to go next.",
+    images: ["/opengraph-image"],
   },
 };
 
