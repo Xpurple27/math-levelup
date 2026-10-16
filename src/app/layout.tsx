@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./c45.css";
 import "./c45-hotfix.css";
@@ -8,10 +8,18 @@ import "./c5-learning.css";
 import "./c5-workflow.css";
 import "./student-polish.css";
 import "./vectra.css";
+import "./vectra-hardening.css";
 import "katex/dist/katex.min.css";
 
 const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || (deploymentHost ? `https://${deploymentHost}` : "http://localhost:3000");
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  themeColor: "#0B1020",
+  colorScheme: "light",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(appUrl),
@@ -23,6 +31,7 @@ export const metadata: Metadata = {
     "Understand your ability, find your learning gaps, and know what to learn next with VECTRA Math.",
   applicationName: "VECTRA Math",
   keywords: ["VECTRA", "VECTRA Math", "UTBK", "SNBT", "matematika", "learning assessment", "diagnostic"],
+  alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "VECTRA",

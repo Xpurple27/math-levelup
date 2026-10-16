@@ -13,19 +13,26 @@ export function VectraMark({ size = 38 }: { size?: number }) {
       aria-hidden="true"
       width={size}
       height={size}
-      viewBox="0 0 64 64"
+      viewBox="0 0 72 72"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
       <defs>
-        <linearGradient id="vectra-mark-gradient" x1="10" y1="48" x2="54" y2="10" gradientUnits="userSpaceOnUse">
+        <linearGradient id="vectra-left" x1="8" y1="12" x2="34" y2="58" gradientUnits="userSpaceOnUse">
           <stop stopColor="#5C7CFA" />
-          <stop offset="0.52" stopColor="#00D1B2" />
+          <stop offset="0.55" stopColor="#3F8EFA" />
+          <stop offset="1" stopColor="#39C6EE" />
+        </linearGradient>
+        <linearGradient id="vectra-up" x1="30" y1="57" x2="61" y2="9" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#39C6EE" />
+          <stop offset="0.48" stopColor="#00D1B2" />
           <stop offset="1" stopColor="#B7FF3C" />
         </linearGradient>
       </defs>
-      <path d="M9 15h12l12 23 9-15 7 4-17 29L9 15Z" fill="url(#vectra-mark-gradient)" />
-      <path d="M33 35 51 9l-1 12 10-2-27 27V35Z" fill="url(#vectra-mark-gradient)" />
+      <path d="M8 14H22.5L36.7 41.6 29.1 56.8 8 14Z" fill="url(#vectra-left)" />
+      <path d="M21.5 31.4 27.2 42.4 36.7 41.6 31.2 30.8 21.5 31.4Z" fill="#42B7ED" fillOpacity="0.92" />
+      <path d="M28.9 56.7 47.8 24.8 42.4 22.6 61.6 9.4 58.3 31.6 53 27.4 37.2 55.3 28.9 56.7Z" fill="url(#vectra-up)" />
+      <path d="M30.8 53.5 37.2 55.3 44.7 41.8 39.1 39.5 30.8 53.5Z" fill="#00CDB7" fillOpacity="0.9" />
     </svg>
   );
 }
