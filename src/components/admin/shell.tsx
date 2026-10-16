@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { BookOpenText, Boxes, Files, Image as ImageIcon, LayoutDashboard, LibraryBig, LogOut, ShieldCheck } from "lucide-react";
 import type { Role } from "@/features/content/model";
@@ -26,6 +26,20 @@ export function AdminShell({ role, children }: { role: Role; children: React.Rea
   const pathname = usePathname();
   const router = useRouter();
   const [pendingHref, setPendingHref] = useState<string | null>(null);
+
+  useEffect(() => {
+    // The existing binary template is kept at its legacy static path for compatibility.
+    // Present it to admins with VECTRA naming until the asset itself is regenerated.
+    if (pathname !== "/admin/imports") return;
+    const frame = window.requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLElement>(".import-format-card p").forEach((node) => {
+        if (node.textContent?.includes("LevelUP")) node.textContent = node.textContent.replaceAll("LevelUP", "VECTRA");
+      });
+      const template = document.querySelector<HTMLAnchorElement>('a[href="/templates/levelup-question-import.xlsx"]');
+      if (template) template.download = "vectra-question-import.xlsx";
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   async function logout() {
     await fetch("/api/action", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "logout" }) });
