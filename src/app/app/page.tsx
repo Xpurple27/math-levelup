@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Levelup from "@/components/levelup";
 import { ContentProvider } from "@/components/content-context";
 import { publicTopics, publishedQuestions } from "@/features/content/runtime";
@@ -7,6 +8,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
+export const metadata: Metadata = {
+  title: "Learning Workspace",
+  robots: { index: false, follow: false },
+};
 
 export default async function StudentAppPage() {
   const token = (await cookies()).get(cookie)?.value;
