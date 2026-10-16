@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Clock3, Gauge, ShieldCheck, Target } from "lucide-react";
+import {
+  ArrowRight,
+  Clock3,
+  Gauge,
+  ShieldCheck,
+  Target,
+} from "lucide-react";
 
 type TryoutPackage = {
   id: string;
@@ -40,12 +46,14 @@ export function TryoutCatalog({ busy, start }: Props) {
     fetch("/api/tryout-packages", { cache: "no-store" })
       .then(async (response) => {
         const json = await response.json();
-        if (!response.ok)
+        if (!response.ok) {
           throw new Error(json.error || "Assessment gagal dimuat.");
+        }
         if (alive) setItems((json.data || []) as TryoutPackage[]);
       })
       .catch((reason: Error) => alive && setError(reason.message))
       .finally(() => alive && setLoading(false));
+
     return () => {
       alive = false;
     };
@@ -56,15 +64,18 @@ export function TryoutCatalog({ busy, start }: Props) {
       string,
       { title: string; sections: TryoutPackage[] }
     >();
+
     for (const item of items) {
       const current = map.get(item.suiteCode);
       if (current) current.sections.push(item);
-      else
+      else {
         map.set(item.suiteCode, {
           title: item.suiteTitle,
           sections: [item],
         });
+      }
     }
+
     return [...map.entries()].map(([code, value]) => ({
       code,
       title: value.title,
@@ -74,31 +85,35 @@ export function TryoutCatalog({ busy, start }: Props) {
 
   if (loading) {
     return (
-      <div className="grid gap-5 lg:grid-cols-2">
+      <div className="space-y-5">
         {[0, 1].map((item) => (
           <div
             key={item}
-            className="h-[420px] animate-pulse rounded-3xl bg-[#eef1f5]"
+            className="h-[360px] animate-pulse rounded-[28px] bg-[#eef1f5]"
           />
         ))}
       </div>
     );
   }
-  if (error)
+
+  if (error) {
     return (
       <div className="rounded-2xl border border-[#f1cfd4] bg-[#fff5f6] p-5 text-sm font-semibold text-[#b83848]">
         {error}
       </div>
     );
-  if (!suites.length)
+  }
+
+  if (!suites.length) {
     return (
       <div className="rounded-2xl border border-[#dfe4ec] bg-white p-6 text-sm text-[#697386]">
         Belum ada VECTRA Assessment yang dipublikasikan.
       </div>
     );
+  }
 
   return (
-    <div className="grid min-w-0 gap-5 xl:grid-cols-2">
+    <div className="space-y-5 md:space-y-6">
       {suites.map((suite, suiteIndex) => {
         const totalQuestions = suite.sections.reduce(
           (sum, item) => sum + item.questionCount,
@@ -108,89 +123,122 @@ export function TryoutCatalog({ busy, start }: Props) {
           (sum, item) => sum + item.durationSeconds,
           0,
         );
+
         return (
           <article
             key={suite.code}
-            className="min-w-0 overflow-hidden rounded-3xl border border-[#dfe4ec] bg-white shadow-sm"
+            className="overflow-hidden rounded-[24px] border border-[#dfe4ec] bg-white shadow-[0_12px_35px_rgba(11,16,32,0.05)] md:rounded-[28px]"
           >
-            <div className="border-b border-[#dfe4ec] bg-[linear-gradient(135deg,#eef2ff_0%,#fff_52%,#f3ffde_100%)] p-6 md:p-7">
-              <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-[#0b1020] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white">
-                  Mini Assessment {String(suiteIndex + 1).padStart(2, "0")}
-                </span>
-                <span className="flex items-center gap-1.5 text-xs font-bold text-[#17745f]">
-                  <ShieldCheck size={15} /> Gratis
-                </span>
+            <div className="grid gap-5 border-b border-[#e5e9f0] bg-[linear-gradient(125deg,#f0f4ff_0%,#ffffff_50%,#f5ffe7_100%)] px-5 py-5 sm:px-6 md:grid-cols-[1fr_auto] md:items-end md:px-7 md:py-6 lg:px-8">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <span className="inline-flex items-center rounded-full bg-[#0b1020] px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.13em] text-white sm:text-[11px]">
+                    Mini Assessment {String(suiteIndex + 1).padStart(2, "0")}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#ccefe7] bg-[#effbf8] px-2.5 py-1.5 text-[10px] font-extrabold text-[#14705f] sm:text-[11px]">
+                    <ShieldCheck size={14} /> Gratis
+                  </span>
+                </div>
+
+                <h2 className="mt-4 text-[22px] font-black leading-tight tracking-[-0.025em] text-[#11182b] sm:text-2xl md:text-[26px]">
+                  {suite.title}
+                </h2>
+                <p className="mt-2 max-w-3xl text-[13px] leading-6 text-[#697386] sm:text-sm">
+                  Kerjakan PK, PM, dan PU sebagai section terpisah. Setiap section
+                  memiliki timer sendiri dan pembahasan dibuka setelah selesai.
+                </p>
               </div>
-              <h2 className="mt-4 text-2xl font-black tracking-[-0.02em] text-[#11182b]">
-                {suite.title}
-              </h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-[#697386]">
-                Assessment untuk tiga section yang tersedia di VECTRA Math.
-                Jumlah soal dan timer tiap section mengikuti blueprint yang sudah
-                ditetapkan.
-              </p>
-              <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-[#596477]">
-                <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
-                  <Target size={14} /> {totalQuestions} soal
-                </span>
-                <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
-                  <Clock3 size={14} /> {minutes(totalSeconds)} total
-                </span>
-                <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
-                  <Gauge size={14} /> timer per section
-                </span>
+
+              <div className="grid grid-cols-3 gap-2 md:min-w-[300px]">
+                <div className="rounded-xl border border-white/80 bg-white/90 px-3 py-3 shadow-sm">
+                  <Target size={15} className="text-[#5c7cfa]" />
+                  <strong className="mt-1.5 block text-sm text-[#11182b]">
+                    {totalQuestions}
+                  </strong>
+                  <span className="text-[10px] font-semibold text-[#7a8496]">
+                    soal
+                  </span>
+                </div>
+                <div className="rounded-xl border border-white/80 bg-white/90 px-3 py-3 shadow-sm">
+                  <Clock3 size={15} className="text-[#00a98f]" />
+                  <strong className="mt-1.5 block text-sm text-[#11182b]">
+                    {minutes(totalSeconds)}
+                  </strong>
+                  <span className="text-[10px] font-semibold text-[#7a8496]">
+                    total
+                  </span>
+                </div>
+                <div className="rounded-xl border border-white/80 bg-white/90 px-3 py-3 shadow-sm">
+                  <Gauge size={15} className="text-[#7c9b19]" />
+                  <strong className="mt-1.5 block text-sm text-[#11182b]">
+                    {suite.sections.length}
+                  </strong>
+                  <span className="text-[10px] font-semibold text-[#7a8496]">
+                    section
+                  </span>
+                </div>
               </div>
             </div>
 
-            <div className="p-5 md:p-6">
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-[0.12em] text-[#7a8496] md:hidden">
-                Geser untuk melihat semua section ↔
-              </p>
-              <div className="-mx-5 flex snap-x snap-mandatory gap-3 overflow-x-auto px-5 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:block md:space-y-3 md:overflow-visible md:px-0 md:pb-0">
+            <div className="px-4 py-4 sm:px-5 sm:py-5 md:px-6 md:py-6 lg:px-7">
+              <div className="grid gap-3 md:grid-cols-3 md:gap-4">
                 {suite.sections.map((item, index) => (
-                  <div
+                  <section
                     key={item.id}
-                    className="w-[82vw] max-w-[360px] shrink-0 snap-start rounded-2xl border border-[#dfe4ec] bg-[#fbfcfe] p-4 md:w-auto md:max-w-none"
+                    className="group flex min-w-0 flex-col rounded-2xl border border-[#dfe4ec] bg-[#fbfcfe] p-4 transition md:min-h-[228px] md:p-5 md:hover:-translate-y-0.5 md:hover:border-[#c7d1e4] md:hover:shadow-[0_10px_25px_rgba(11,16,32,0.05)]"
                   >
-                    <div className="flex h-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e9fbf7] text-xs font-black text-[#0b7f6d]">
-                            {index + 1}
-                          </span>
-                          <span className="text-xs font-black uppercase tracking-[0.12em] text-[#405fd6]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex min-w-0 items-center gap-2.5">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[10px] bg-[#e9fbf7] text-xs font-black text-[#0b7f6d]">
+                          {index + 1}
+                        </span>
+                        <div className="min-w-0">
+                          <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-[#405fd6]">
                             {item.section.code}
                           </span>
-                        </div>
-                        <h3 className="mt-2 text-base font-extrabold text-[#11182b]">
-                          {item.title}
-                        </h3>
-                        <p className="mt-1 text-xs leading-5 text-[#697386]">
-                          {item.description}
-                        </p>
-                        <div className="mt-2 flex gap-3 text-xs font-bold text-[#596477]">
-                          <span>{item.questionCount} soal</span>
-                          <span>•</span>
-                          <span>{minutes(item.durationSeconds)}</span>
+                          <span className="block truncate text-[11px] font-semibold text-[#7a8496]">
+                            {item.section.name}
+                          </span>
                         </div>
                       </div>
-                      <button
-                        type="button"
-                        disabled={busy || item.access !== "FREE"}
-                        onClick={() => void start("tryout", item.slug)}
-                        className="flex w-full shrink-0 items-center justify-between gap-3 rounded-xl bg-[#0b1020] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#18233e] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-                      >
-                        Start {item.section.code} ↗ <ArrowRight size={16} />
-                      </button>
+                      <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold text-[#596477] ring-1 ring-[#e2e7ef]">
+                        {minutes(item.durationSeconds)}
+                      </span>
                     </div>
-                  </div>
+
+                    <h3 className="mt-4 text-[16px] font-extrabold leading-snug text-[#11182b] md:text-[17px]">
+                      {item.title}
+                    </h3>
+                    <p className="mt-2 text-[12px] leading-5 text-[#697386] md:text-[13px] md:leading-6">
+                      {item.description}
+                    </p>
+
+                    <div className="mt-4 flex items-center gap-2 text-[11px] font-bold text-[#596477] md:mt-auto md:pt-5">
+                      <span>{item.questionCount} soal</span>
+                      <span className="text-[#b8c0cc]">•</span>
+                      <span>Timer khusus</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={busy || item.access !== "FREE"}
+                      onClick={() => void start("tryout", item.slug)}
+                      className="mt-4 flex min-h-11 w-full items-center justify-between gap-3 rounded-xl bg-[#0b1020] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#18233e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#5c7cfa] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      Mulai {item.section.code}
+                      <ArrowRight size={16} />
+                    </button>
+                  </section>
                 ))}
               </div>
-              <p className="px-1 pt-3 text-[11px] leading-5 text-[#7a8496]">
-                Timer berjalan sejak section dibuka sampai dikumpulkan atau waktu
-                habis. Pembahasan tersedia setelah section selesai.
-              </p>
+
+              <div className="mt-4 flex items-start gap-2 rounded-xl bg-[#f7f8fa] px-3.5 py-3 text-[11px] leading-5 text-[#697386] sm:px-4">
+                <Clock3 size={14} className="mt-0.5 shrink-0 text-[#5c7cfa]" />
+                <p>
+                  Timer dimulai saat section dibuka. Kamu tetap bisa meninjau
+                  jawaban sebelum mengumpulkan selama waktu masih tersedia.
+                </p>
+              </div>
             </div>
           </article>
         );
