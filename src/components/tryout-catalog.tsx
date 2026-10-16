@@ -38,14 +38,12 @@ export function TryoutCatalog({ busy, start }: Props) {
     fetch("/api/tryout-packages", { cache: "no-store" })
       .then(async (response) => {
         const json = await response.json();
-        if (!response.ok) throw new Error(json.error || "Tryout gagal dimuat.");
+        if (!response.ok) throw new Error(json.error || "Assessment gagal dimuat.");
         if (alive) setItems((json.data || []) as TryoutPackage[]);
       })
       .catch((reason: Error) => alive && setError(reason.message))
       .finally(() => alive && setLoading(false));
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, []);
 
   const suites = useMemo(() => {
@@ -63,14 +61,10 @@ export function TryoutCatalog({ busy, start }: Props) {
   }, [items]);
 
   if (loading) {
-    return (
-      <div className="grid gap-5 lg:grid-cols-2">
-        {[0, 1].map((item) => <div key={item} className="h-[420px] animate-pulse rounded-3xl bg-[#f4eeee]" />)}
-      </div>
-    );
+    return <div className="grid gap-5 lg:grid-cols-2">{[0, 1].map((item) => <div key={item} className="h-[420px] animate-pulse rounded-3xl bg-[#eef1f5]" />)}</div>;
   }
-  if (error) return <div className="rounded-2xl border border-[#efcdd0] bg-[#fff4f4] p-5 text-sm font-semibold text-[#8f1d24]">{error}</div>;
-  if (!suites.length) return <div className="rounded-2xl border border-[#eadfe0] bg-white p-6 text-sm text-[#806d6f]">Belum ada Mini Tryout yang dipublikasikan.</div>;
+  if (error) return <div className="rounded-2xl border border-[#f1cfd4] bg-[#fff5f6] p-5 text-sm font-semibold text-[#b83848]">{error}</div>;
+  if (!suites.length) return <div className="rounded-2xl border border-[#dfe4ec] bg-white p-6 text-sm text-[#697386]">Belum ada VECTRA Assessment yang dipublikasikan.</div>;
 
   return (
     <div className="grid gap-5 xl:grid-cols-2">
@@ -78,15 +72,15 @@ export function TryoutCatalog({ busy, start }: Props) {
         const totalQuestions = suite.sections.reduce((sum, item) => sum + item.questionCount, 0);
         const totalSeconds = suite.sections.reduce((sum, item) => sum + item.durationSeconds, 0);
         return (
-          <article key={suite.code} className="overflow-hidden rounded-3xl border border-[#e5d7d8] bg-white shadow-sm">
-            <div className="border-b border-[#efe4e5] bg-[linear-gradient(135deg,#fff7f4_0%,#fff_55%,#fff7df_100%)] p-6 md:p-7">
+          <article key={suite.code} className="overflow-hidden rounded-3xl border border-[#dfe4ec] bg-white shadow-sm">
+            <div className="border-b border-[#dfe4ec] bg-[linear-gradient(135deg,#eef2ff_0%,#fff_52%,#f3ffde_100%)] p-6 md:p-7">
               <div className="flex items-center justify-between gap-3">
-                <span className="rounded-full bg-[#8f1d24] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white">Mini Tryout {String(suiteIndex + 1).padStart(2, "0")}</span>
-                <span className="flex items-center gap-1.5 text-xs font-bold text-[#60755c]"><ShieldCheck size={15} /> Gratis</span>
+                <span className="rounded-full bg-[#0b1020] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white">Mini Assessment {String(suiteIndex + 1).padStart(2, "0")}</span>
+                <span className="flex items-center gap-1.5 text-xs font-bold text-[#17745f]"><ShieldCheck size={15} /> Gratis</span>
               </div>
-              <h2 className="mt-4 text-2xl font-black tracking-[-0.02em] text-[#302426]">{suite.title}</h2>
-              <p className="mt-2 max-w-xl text-sm leading-6 text-[#796668]">Simulasi untuk tiga section yang sudah tersedia di LevelUP. Jumlah soal dan timer setiap section mengikuti framework SNBT 2026.</p>
-              <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-[#6f5a5d]">
+              <h2 className="mt-4 text-2xl font-black tracking-[-0.02em] text-[#11182b]">{suite.title}</h2>
+              <p className="mt-2 max-w-xl text-sm leading-6 text-[#697386]">Assessment untuk tiga section yang tersedia di VECTRA Math. Jumlah soal dan timer tiap section mengikuti blueprint yang sudah ditetapkan.</p>
+              <div className="mt-5 flex flex-wrap gap-2 text-xs font-extrabold text-[#596477]">
                 <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm"><Target size={14} /> {totalQuestions} soal</span>
                 <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm"><Clock3 size={14} /> {minutes(totalSeconds)} total</span>
                 <span className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm"><Gauge size={14} /> timer per section</span>
@@ -95,31 +89,29 @@ export function TryoutCatalog({ busy, start }: Props) {
 
             <div className="space-y-3 p-5 md:p-6">
               {suite.sections.map((item, index) => (
-                <div key={item.id} className="rounded-2xl border border-[#eee3e4] bg-[#fffdfc] p-4">
+                <div key={item.id} className="rounded-2xl border border-[#dfe4ec] bg-[#fbfcfe] p-4">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#fff0ee] text-xs font-black text-[#9e2027]">{index + 1}</span>
-                        <span className="text-xs font-black uppercase tracking-[0.12em] text-[#a52b31]">{item.section.code}</span>
+                        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#e9fbf7] text-xs font-black text-[#0b7f6d]">{index + 1}</span>
+                        <span className="text-xs font-black uppercase tracking-[0.12em] text-[#405fd6]">{item.section.code}</span>
                       </div>
-                      <h3 className="mt-2 text-base font-extrabold text-[#35292b]">{item.title}</h3>
-                      <p className="mt-1 text-xs leading-5 text-[#846f71]">{item.description}</p>
-                      <div className="mt-2 flex gap-3 text-xs font-bold text-[#6f5d5f]">
-                        <span>{item.questionCount} soal</span><span>•</span><span>{minutes(item.durationSeconds)}</span>
-                      </div>
+                      <h3 className="mt-2 text-base font-extrabold text-[#11182b]">{item.title}</h3>
+                      <p className="mt-1 text-xs leading-5 text-[#697386]">{item.description}</p>
+                      <div className="mt-2 flex gap-3 text-xs font-bold text-[#596477]"><span>{item.questionCount} soal</span><span>•</span><span>{minutes(item.durationSeconds)}</span></div>
                     </div>
                     <button
                       type="button"
                       disabled={busy || item.access !== "FREE"}
                       onClick={() => void start("tryout", item.slug)}
-                      className="flex shrink-0 items-center justify-between gap-3 rounded-xl bg-[#8f1d24] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#74161c] disabled:cursor-not-allowed disabled:opacity-50"
+                      className="flex shrink-0 items-center justify-between gap-3 rounded-xl bg-[#0b1020] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#18233e] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Mulai {item.section.code}<ArrowRight size={16} />
+                      Start {item.section.code} ↗ <ArrowRight size={16} />
                     </button>
                   </div>
                 </div>
               ))}
-              <p className="px-1 pt-1 text-[11px] leading-5 text-[#978184]">Timer dimulai saat section dibuka dan tetap berjalan sampai dikumpulkan atau waktu habis. Pembahasan muncul setelah section selesai.</p>
+              <p className="px-1 pt-1 text-[11px] leading-5 text-[#7a8496]">Timer berjalan sejak section dibuka sampai dikumpulkan atau waktu habis. Pembahasan tersedia setelah section selesai.</p>
             </div>
           </article>
         );
