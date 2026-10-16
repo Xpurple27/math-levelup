@@ -7,8 +7,11 @@ import {
   BookOpen,
   Check,
   Clock,
+  Compass,
+  Crosshair,
   Flame,
   GraduationCap,
+  Route,
   Sparkles,
   Target,
   TrendingUp,
@@ -35,118 +38,52 @@ type Props = {
   go: (v: View) => void;
 };
 
-export function DashboardView({
-  user,
-  busy,
-  start,
-  history,
-  avg,
-  solved,
-  streak,
-  weakest,
-  recommended,
-  setTopic,
-  go,
-}: Props) {
+export function DashboardView({ user, busy, start, history, avg, solved, streak, weakest, recommended, setTopic, go }: Props) {
   const topicName = useTopicName();
   const published = usePublishedCount();
   const hasDiagnostic = history.some((h) => h.kind === "diagnostic");
   const diagnosticReady = published > 0;
+  const confidence = weakest ? Math.round(weakest.confidence * 100) : null;
 
   return (
     <>
       <div className="page-heading">
         <div>
-          <div className="eyebrow">FOKUSMU HARI INI</div>
-          <h1>
-            {user ? `Halo, ${user.name}` : "Halo, Sobat LevelUP"}{" "}
-            <span className="wave">✦</span>
-          </h1>
+          <div className="eyebrow">YOUR LEARNING DIRECTION</div>
+          <h1>{user ? `Halo, ${user.name}` : "Halo"} <span className="wave">↗</span></h1>
           <p>
             {hasDiagnostic
-              ? "Profil awalmu sudah terbentuk. Sekarang lanjutkan dari area yang paling membutuhkan perhatian."
-              : "Kenali kemampuan awalmu sebelum memilih apa yang perlu dipelajari."}
+              ? "Lihat posisi kemampuanmu, lalu lanjutkan ke area yang paling membutuhkan bukti berikutnya."
+              : "Mulai dengan mengetahui posisi kemampuanmu sebelum memilih arah belajar."}
           </p>
         </div>
-        <span className="exam-chip">
-          <GraduationCap size={17} /> Persiapan UTBK 2027
-        </span>
+        <span className="exam-chip"><GraduationCap size={17} /> Persiapan UTBK 2027</span>
       </div>
 
       <section className={`hero ${hasDiagnostic ? "hero-complete" : ""}`}>
         <div className="hero-copy">
-          <span className="hero-label">
-            <span />{" "}
-            {hasDiagnostic ? "PROFIL AWAL TERSEDIA" : "KENALI TITIK AWALMU"}
-          </span>
+          <span className="hero-label"><span />{hasDiagnostic ? "CURRENT POSITION AVAILABLE" : "FIND YOUR CURRENT POSITION"}</span>
           {hasDiagnostic ? (
             <>
-              <h2>
-                Kamu sudah tahu titik awal.
-                <br />
-                Sekarang perkuat <em>{topicName(recommended)}.</em>
-              </h2>
+              <h2>Current Position identified.<br />Next Direction: <em>{topicName(recommended)}.</em></h2>
               <p>
-                Diagnostikmu sudah selesai. Gunakan profil kemampuan untuk
-                melihat area kuat, area yang perlu diperkuat, dan langkah
-                belajar berikutnya.
+                Gunakan mastery dan confidence sebagai konteks, lalu bangun bukti baru pada area yang paling perlu diperkuat.
               </p>
               <div className="diagnostic-actions">
-                <button
-                  className="button yellow"
-                  onClick={() => go("progress")}
-                >
-                  Lihat profil kemampuan <ArrowRight size={18} />
-                </button>
-                <button
-                  className="diagnostic-retake"
-                  disabled={busy || !diagnosticReady}
-                  style={{ cursor: !diagnosticReady ? "not-allowed" : undefined }}
-                  title={!diagnosticReady ? "Diagnostik akan aktif setelah soal dipublikasikan." : undefined}
-                  onClick={() => start("diagnostic")}
-                >
-                  Ulangi diagnostik
-                </button>
+                <button className="button yellow" onClick={() => go("progress")}>View Learning Profile <ArrowRight size={18} /></button>
+                <button className="diagnostic-retake" disabled={busy || !diagnosticReady} onClick={() => start("diagnostic")}>Ulangi diagnostic</button>
               </div>
             </>
           ) : (
             <>
-              <h2>
-                Jangan mulai dari tebakan.
-                <br />
-                Mulai dari <em>kemampuanmu sekarang.</em>
-              </h2>
-              <p>
-                Diagnostik membantu memetakan kekuatan dan kelemahanmu sebelum
-                LevelUP merekomendasikan apa yang perlu dipelajari lebih dulu.
-              </p>
-              <button
-                className="button yellow"
-                disabled={busy || !diagnosticReady}
-                style={{ cursor: !diagnosticReady ? "not-allowed" : undefined }}
-                title={!diagnosticReady ? "Diagnostik akan aktif setelah soal dipublikasikan." : undefined}
-                onClick={() => start("diagnostic")}
-              >
-                Mulai diagnostik <ArrowRight size={18} />
-              </button>
-              {!diagnosticReady && (
-                <p style={{ marginTop: 10, marginBottom: 0, color: "#dfd08b" }}>
-                  Diagnostik belum tersedia karena belum ada soal yang dipublikasikan.
-                </p>
-              )}
+              <h2>Know where you are.<br />Then know <em>where to go next.</em></h2>
+              <p>VECTRA Diagnostic memetakan kekuatan dan learning gap sebelum memberi arah belajar berikutnya.</p>
+              <button className="button yellow" disabled={busy || !diagnosticReady} onClick={() => start("diagnostic")}>Start Diagnostic ↗</button>
+              {!diagnosticReady && <p style={{ marginTop: 10, marginBottom: 0, color: "#B7FF3C" }}>Diagnostic belum tersedia karena belum ada soal yang dipublikasikan.</p>}
               <div className="hero-meta">
-                <span>
-                  <Clock size={14} />
-                  ± 10 menit
-                </span>
-                <span>
-                  <BookOpen size={14} />
-                  {published || 0} soal tersedia
-                </span>
-                <span>
-                  <ShieldCheck size={14} />
-                  Tanpa feedback selama tes
-                </span>
+                <span><Clock size={14} /> ± 10 menit</span>
+                <span><BookOpen size={14} /> {published || 0} soal tersedia</span>
+                <span><ShieldCheck size={14} /> Tanpa feedback selama tes</span>
               </div>
             </>
           )}
@@ -155,191 +92,73 @@ export function DashboardView({
         <div className="hero-art" aria-hidden="true">
           <div className="orbit orbit-one" />
           <div className="orbit orbit-two" />
-          <span className="math-float float-one">x² + y²</span>
-          <span className="math-float float-two">π</span>
-          <span className="math-float float-three">√x</span>
           <div className="level-card">
             <div className="level-card-top">
-              <span className="mini-mark">
-                <TrendingUp size={20} />
-              </span>
-              <span>
-                LEVEL UP
-                <br />
-                <small>YOUR POTENTIAL</small>
-              </span>
-              <Sparkles size={19} />
+              <span className="mini-mark"><Crosshair size={20} /></span>
+              <span>POSITION<br /><small>LEARNING PROFILE</small></span>
+              <Compass size={19} />
             </div>
-            <div className="chart-art">
-              <div />
-              <div />
-              <div />
-              <div />
-              <div />
-            </div>
+            <div className="chart-art"><div /><div /><div /><div /><div /></div>
             <div className="art-line" />
-            <div className="level-card-bottom">
-              <span>
-                {hasDiagnostic
-                  ? "Profilmu siap digunakan."
-                  : "Setiap langkah berarti."}
-              </span>
-              <ArrowUpRight size={20} />
-            </div>
+            <div className="level-card-bottom"><span>{hasDiagnostic ? "Direction ready." : "Build the first evidence."}</span><ArrowUpRight size={20} /></div>
           </div>
-          <div className="art-badge">
-            <span>
-              <Check size={17} />
-            </span>
-            {hasDiagnostic ? "Diagnostic complete" : "Lebih paham. Lebih siap."}
-          </div>
-          <div className="star-art">✳︎</div>
+          <div className="art-badge"><span><Route size={17} /></span>{hasDiagnostic ? "Next Direction available" : "Position → Direction → Progress"}</div>
         </div>
       </section>
 
       <div className="stat-grid">
-        <Stat
-          icon={<Target size={21} />}
-          label="Math mastery"
-          value={avg === null ? "Belum diukur" : `${avg}%`}
-          foot={
-            avg === null
-              ? "Belum ada bukti belajar yang cukup"
-              : "Berdasarkan bukti belajar"
-          }
-          color="purple"
-        />
-        <Stat
-          icon={<BookOpen size={21} />}
-          label="Soal diselesaikan"
-          value={String(solved)}
-          foot="Satu soal, satu bukti belajar"
-          color="blue"
-        />
-        <Stat
-          icon={<Flame size={21} />}
-          label="Streak belajar"
-          value={`${streak} hari`}
-          foot="Belajar aktif, bukan sekadar login"
-          color="orange"
-        />
-        <Stat
-          icon={<GraduationCap size={21} />}
-          label="Target UTBK"
-          value={String(user?.goal || 700)}
-          foot="Targetmu, arah perjalananmu"
-          color="green"
-        />
+        <Stat icon={<Target size={21} />} label="Mastery" value={avg === null ? "Belum diukur" : `${avg}%`} foot={avg === null ? "Belum ada bukti belajar yang cukup" : "Berdasarkan bukti belajar"} color="purple" />
+        <Stat icon={<Compass size={21} />} label="Confidence" value={confidence === null ? "Belum diukur" : `${confidence}%`} foot="Kekuatan bukti pada area prioritas" color="blue" />
+        <Stat icon={<BookOpen size={21} />} label="Evidence" value={String(solved)} foot="Soal yang sudah menjadi bukti belajar" color="orange" />
+        <Stat icon={<Flame size={21} />} label="Learning streak" value={`${streak} hari`} foot="Aktivitas belajar yang tercatat" color="green" />
       </div>
 
       <div className="dashboard-lower">
         <section>
-          <div className="section-heading">
-            <h2>Langkah berikutnya</h2>
-            <span className="muted small-text">Satu fokus pada satu waktu</span>
-          </div>
+          <div className="section-heading"><h2>Next Direction ↗</h2><span className="muted small-text">Satu prioritas pada satu waktu</span></div>
           <div className="next-card">
-            <div className="next-icon">
-              <BookOpen size={25} />
-            </div>
+            <div className="next-icon"><Route size={25} /></div>
             <div>
-              <span className="eyebrow purple-text">
-                {weakest ? "REKOMENDASI BELAJAR" : "MULAI DARI DASAR"}
-              </span>
+              <span className="eyebrow purple-text">{weakest ? "RECOMMENDED LEARNING" : "BUILD YOUR FIRST PROFILE"}</span>
               <h3>{topicName(recommended)}</h3>
-              <p>
-                {weakest
-                  ? "Perkuat konsep dari profil kemampuanmu."
-                  : "Belum ada cukup bukti. Mulai dari fondasi atau lakukan diagnostik terlebih dahulu."}
-              </p>
-              <div className="tag-row">
-                <span>Konsep + contoh</span>
-                <span>± 15 menit</span>
-                <span className="green-tag">Terarah</span>
-              </div>
+              <p>{weakest ? "Area ini menjadi prioritas dari bukti kemampuan yang tersedia." : "Belum ada cukup bukti. Mulai dari diagnostic untuk menentukan arah pertama."}</p>
+              <div className="tag-row"><span>Konsep + contoh</span><span>± 15 menit</span><span className="green-tag">Direction</span></div>
             </div>
-            <button
-              className="round-arrow"
-              aria-label="Buka rekomendasi belajar"
-              onClick={() => {
-                setTopic(recommended);
-                go("learn");
-              }}
-            >
-              <ArrowUpRight size={22} />
-            </button>
+            <button className="round-arrow" aria-label="Buka rekomendasi belajar" onClick={() => { setTopic(recommended); go("learn"); }}><ArrowUpRight size={22} /></button>
           </div>
+
           <div className="quick-cards">
             <button onClick={() => go("practice")}>
-              <span className="quick-icon orange">
-                <Zap size={21} />
-              </span>
-              <strong>Latihan terarah</strong>
-              <p>Pilih subtopik dan tingkat kesulitan sesuai kebutuhanmu.</p>
-              <span className="quick-link">
-                Mulai latihan <ArrowRight size={15} />
-              </span>
+              <span className="quick-icon orange"><Zap size={21} /></span>
+              <strong>VECTRA Practice</strong>
+              <p>Practice what matters pada domain yang ingin diperkuat.</p>
+              <span className="quick-link">Open Practice <ArrowRight size={15} /></span>
             </button>
             <button onClick={() => go("tryout")}>
-              <span className="quick-icon blue">
-                <Target size={21} />
-              </span>
-              <strong>Ukur kesiapanmu</strong>
-              <p>Ukur kesiapanmu dalam kondisi ujian.</p>
-              <span className="quick-link">
-                Lihat tryout <ArrowRight size={15} />
-              </span>
+              <span className="quick-icon blue"><Target size={21} /></span>
+              <strong>VECTRA Assessment</strong>
+              <p>Ukur kesiapan dalam sesi dengan batas waktu dan hasil terstruktur.</p>
+              <span className="quick-link">Open Assessment <ArrowRight size={15} /></span>
             </button>
           </div>
         </section>
 
         <section className="journey-card">
-          <div className="section-heading">
-            <h2>Perjalanan belajarmu</h2>
-            <span className="green-dot" />
-          </div>
-          <p>
-            Kemajuan dimulai dari mengenali posisi, lalu memilih langkah yang
-            tepat.
-          </p>
+          <div className="section-heading"><h2>Learning trajectory</h2><span className="green-dot" /></div>
+          <p>Progress bergerak dari posisi yang diketahui menuju arah yang dibuktikan.</p>
           <div className="journey-steps">
             {[
-              {
-                title: "Kenali kemampuan",
-                desc: "Diagnostik & profil awal",
-                done: hasDiagnostic,
-              },
-              {
-                title: "Pahami konsep",
-                desc: "Belajar sesuai kebutuhanmu",
-                done: history.some((h) => h.kind === "mini"),
-              },
-              {
-                title: "Latih & ukur",
-                desc: "Buktikan dengan latihan",
-                done: history.some((h) => h.kind === "practice"),
-              },
+              { title: "Position", desc: "Diagnostic & learning profile", done: hasDiagnostic },
+              { title: "Direction", desc: "Recommended learning", done: history.some((h) => h.kind === "mini") },
+              { title: "Progress", desc: "Practice & assessment evidence", done: history.some((h) => h.kind === "practice") },
             ].map((s, i) => (
-              <div
-                className={`journey-step ${s.done ? "done" : ""}`}
-                key={s.title}
-              >
+              <div className={`journey-step ${s.done ? "done" : ""}`} key={s.title}>
                 <span>{s.done ? <Check size={15} /> : i + 1}</span>
-                <div>
-                  <strong>{s.title}</strong>
-                  <small>{s.desc}</small>
-                </div>
+                <div><strong>{s.title}</strong><small>{s.desc}</small></div>
               </div>
             ))}
           </div>
-          <div className="journey-note">
-            <Sparkles size={17} />
-            <span>
-              Fokus pada langkah berikutnya,
-              <br />
-              bukan pada semua hal sekaligus.
-            </span>
-          </div>
+          <div className="journey-note"><Sparkles size={17} /><span>Measure the ability.<br />Find the direction.</span></div>
         </section>
       </div>
     </>
