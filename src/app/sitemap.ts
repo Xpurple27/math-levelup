@@ -1,12 +1,8 @@
 import type { MetadataRoute } from "next";
-
-function publicUrl() {
-  const deploymentHost = process.env.VERCEL_PROJECT_PRODUCTION_URL || process.env.VERCEL_URL;
-  return process.env.NEXT_PUBLIC_APP_URL || (deploymentHost ? `https://${deploymentHost}` : "http://localhost:3000");
-}
+import { publicSiteUrl } from "@/lib/site-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const base = publicUrl().replace(/\/$/, "");
+  const base = publicSiteUrl();
   return [
     {
       url: base,
