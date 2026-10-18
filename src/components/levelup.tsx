@@ -242,7 +242,7 @@ export default function Levelup() {
             {view === "profile" && user && <ProfileView user={user} onUpdated={setUser} />}
             {view === "progress" && <ProgressView avg={avg} solved={solved} streak={streak} days={days} history={history} mastery={mastery} start={start} syncAttempt={syncAttempt} setView={setView} />}
             {view === "exam" && attempt && q && <ExamView attempt={attempt} time={time} timeText={timeText} index={index} q={q} selected={selected} busy={busy} feedback={feedback} call={call} syncAttempt={syncAttempt} setIndex={setIndex} setConfirm={setConfirm} answered={answered} go={go} />}
-            {view === "result" && attempt?.result && <ResultView attempt={attempt} resultTab={resultTab} setResultTab={setResultTab} setTopic={setTopic} go={go} recommended={recommended} />}
+            {view === "result" && attempt?.result && <ResultView attempt={attempt} resultTab={resultTab} setResultTab={setResultTab} setTopic={setTopic} go={go} recommended={recommended} start={start} />}
           </div>
         )}
       </main>
