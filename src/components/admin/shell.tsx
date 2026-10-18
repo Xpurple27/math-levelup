@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { createContext, useContext, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { BookOpenText, Boxes, Files, Image as ImageIcon, LayoutDashboard, LibraryBig, LogOut, ShieldCheck } from "lucide-react";
+import { BookOpenText, Boxes, Files, Image as ImageIcon, LayoutDashboard, LibraryBig, LogOut, MonitorUp, ShieldCheck } from "lucide-react";
 import type { Role } from "@/features/content/model";
 import { VectraMark } from "../vectra-brand";
 
@@ -28,8 +28,6 @@ export function AdminShell({ role, children }: { role: Role; children: React.Rea
   const [pendingHref, setPendingHref] = useState<string | null>(null);
 
   useEffect(() => {
-    // The existing binary template is kept at its legacy static path for compatibility.
-    // Present it to admins with VECTRA naming until the asset itself is regenerated.
     if (pathname !== "/admin/imports") return;
     const frame = window.requestAnimationFrame(() => {
       document.querySelectorAll<HTMLElement>(".import-format-card p").forEach((node) => {
@@ -78,12 +76,15 @@ export function AdminShell({ role, children }: { role: Role; children: React.Rea
           <button className="ops-logout" onClick={() => void logout()}><LogOut size={16} /> Keluar</button>
         </aside>
         <section className="ops-workspace">
-          <header className="ops-topbar"><div><span>AUTHORING SYSTEM</span><strong>VECTRA Content Studio</strong></div><Link href="/app" onClick={() => setPendingHref("/app")}>Lihat ruang siswa</Link></header>
+          <header className="ops-topbar"><div><span>AUTHORING SYSTEM</span><strong>VECTRA Content Studio</strong></div><Link href="/app" onClick={() => setPendingHref("/app")}><MonitorUp size={16} /> Lihat ruang siswa</Link></header>
           <main className="ops-main" id="content">
             <div className="ops-view-transition" key={pathname}>{children}</div>
             <footer className="ops-app-footer"><strong>VECTRA Math · Admin</strong><span>Question Bank · Learning · Assessment · Quality</span></footer>
           </main>
         </section>
+        <Link href="/app" onClick={() => setPendingHref("/app")} className="fixed bottom-5 right-5 z-[80] flex min-h-12 items-center gap-2 rounded-full bg-[#0b1020] px-4 py-3 text-sm font-extrabold text-white shadow-xl md:hidden" aria-label="Lihat ruang siswa">
+          <MonitorUp size={17} /> Ruang siswa
+        </Link>
       </div>
     </AdminRole.Provider>
   );
