@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { AuthPage } from "@/components/auth-page";
-import { getUser } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Masuk",
@@ -9,12 +10,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function LoginPage() {
-  let user = null;
-  try {
-    user = await getUser();
-  } catch {}
-
-  if (user) redirect("/app");
+export default function LoginPage() {
   return <AuthPage mode="login" />;
 }
