@@ -14,6 +14,12 @@
 body { font-family: var(--vectra-body); }
 h1, h2, h3, h4, h5, h6, .vectra-wordmark { font-family: var(--vectra-heading); }
 
+/* Public pages must not inherit the legacy app <main> max-width/padding. */
+.public-site { width: 100%; min-height: 100vh; overflow-x: clip; }
+.public-site > main { width: 100%; max-width: none; margin: 0; padding: 0; }
+.public-site > .public-nav { width: 100%; max-width: none; margin: 0; padding-left: max(4vw, 22px); padding-right: max(4vw, 22px); }
+.public-site .vectra-public-hero { width: 100%; max-width: none; margin: 0; }
+
 .vectra-brand-mark svg { display: block; filter: drop-shadow(0 7px 16px rgba(0, 209, 178, .12)); }
 .public-nav .vectra-brand-mark svg { filter: drop-shadow(0 8px 18px rgba(92, 124, 250, .18)); }
 
@@ -164,7 +170,6 @@ h1, h2, h3, h4, h5, h6, .vectra-wordmark { font-family: var(--vectra-heading); }
 .vectra-measure-card p { margin-top: 10px; color: rgba(255,255,255,.6); line-height: 1.75; }
 .vectra-measure-card small { display: block; margin-top: 20px; color: rgba(255,255,255,.42); font-size: 11px; letter-spacing: .05em; }
 
-/* Better touch targets and predictable focus states. */
 .public-nav a,
 .public-nav button,
 .student-nav button,
@@ -188,6 +193,7 @@ h1, h2, h3, h4, h5, h6, .vectra-wordmark { font-family: var(--vectra-heading); }
 }
 
 @media (max-width: 680px) {
+  .public-site > .public-nav { padding-left: 16px; padding-right: 16px; }
   .vectra-intelligence-card { min-height: 0; padding: 22px; }
   .vectra-measure-grid { grid-template-columns: 1fr; }
   .vectra-profile-preview { min-height: 340px; padding: 20px; }
