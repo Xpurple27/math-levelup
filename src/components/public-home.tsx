@@ -41,10 +41,10 @@ export function PublicHome() {
       <main id="content">
         <section className="vectra-public-hero">
           <div className="vectra-hero-copy">
-            <span className="vectra-hero-eyebrow"><Crosshair size={15} /> LEARNING & ASSESSMENT PLATFORM</span>
+            <span className="vectra-hero-eyebrow"><Crosshair size={15} /> PLATFORM BELAJAR & ASSESSMENT UTBK MATEMATIKA</span>
             <h1>Know Your <span>Direction.</span></h1>
             <p>
-              Pahami kemampuanmu, temukan learning gap, lalu tahu apa yang perlu dipelajari berikutnya. VECTRA Math menghubungkan diagnostic, learning, practice, assessment, dan progress dalam satu learning trajectory.
+              Persiapkan UTBK Matematika dengan memahami kemampuanmu, menemukan learning gap, dan mengetahui apa yang perlu dipelajari berikutnya. VECTRA Math menghubungkan diagnostic, learning, practice, assessment, tryout, dan progress dalam satu learning trajectory.
             </p>
             <div className="vectra-hero-actions">
               <Link className="public-cta" href="/register">Start Diagnostic ↗</Link>
@@ -168,96 +168,70 @@ export function PublicHome() {
               <div className="vectra-profile-bars">
                 <div className="vectra-profile-row">
                   <div><span>Bilangan</span><strong>82%</strong></div>
-                  <div className="vectra-profile-track"><span style={{ width: "82%" }} /></div>
+                  <div className="vectra-bar"><i style={{ width: "82%" }} /></div>
                 </div>
                 <div className="vectra-profile-row">
-                  <div><span>Aljabar & Fungsi</span><strong>61%</strong></div>
-                  <div className="vectra-profile-track"><span style={{ width: "61%" }} /></div>
+                  <div><span>Aljabar</span><strong>49%</strong></div>
+                  <div className="vectra-bar"><i style={{ width: "49%" }} /></div>
                 </div>
                 <div className="vectra-profile-row">
-                  <div><span>Analisis Data</span><strong>54%</strong></div>
-                  <div className="vectra-profile-track"><span style={{ width: "54%" }} /></div>
+                  <div><span>Geometri</span><strong>66%</strong></div>
+                  <div className="vectra-bar"><i style={{ width: "66%" }} /></div>
                 </div>
               </div>
-              <div className="vectra-profile-direction">
-                <div><span>NEXT DIRECTION</span><strong>Aljabar & Fungsi · Build stronger evidence</strong></div>
-                <b>↗</b>
+              <div className="vectra-next-card">
+                <span>NEXT DIRECTION</span>
+                <strong>Persamaan Linear</strong>
+                <small>Highest priority gap · Confidence medium</small>
               </div>
             </div>
           </div>
         </section>
 
-        <section className="vectra-section vectra-dark-section" id="assessment">
-          <div className="vectra-section-head">
-            <span>ASSESSMENT & PROGRESS</span>
-            <h2>Measure the ability. Find the direction.</h2>
-            <p>
-              Practice dan learning saja tidak cukup. VECTRA menggunakan checkpoint, diagnostic, dan timed assessment untuk melihat apakah pemahaman bertahan ketika diuji kembali.
-            </p>
+        <section className="vectra-section alt" id="assessment">
+          <div className="vectra-section-head split">
+            <div>
+              <span>ASSESSMENT THAT CONNECTS</span>
+              <h2>Tryout bukan akhir. Hasilnya kembali menjadi learning signal.</h2>
+            </div>
+            <p>Assessment memperbarui learning profile agar rekomendasi berikutnya berasal dari evidence terbaru, bukan asumsi lama.</p>
           </div>
-          <div className="vectra-measure-grid">
-            <article className="vectra-measure-card">
-              <Target size={25} />
-              <h3>VECTRA Assessment</h3>
-              <p>Kerjakan assessment dengan navigation, timer, review, scoring, dan pembahasan setelah sesi selesai.</p>
-              <small>Diagnostic · Checkpoint · Mini Tryout · Tryout</small>
+          <div className="vectra-assessment-grid">
+            <article>
+              <Target size={22} />
+              <strong>Diagnostic</strong>
+              <span>Temukan baseline dan learning gap awal.</span>
             </article>
-            <article className="vectra-measure-card">
-              <BarChart3 size={25} />
-              <h3>VECTRA Progress</h3>
-              <p>Bandingkan bukti dari waktu ke waktu untuk melihat domain yang menguat dan area yang masih membutuhkan arah baru.</p>
-              <small>Mastery · Confidence · Evidence · Trajectory</small>
+            <article>
+              <BookOpenCheck size={22} />
+              <strong>Checkpoint</strong>
+              <span>Ukur apakah konsep yang dipelajari mulai dikuasai.</span>
+            </article>
+            <article>
+              <BarChart3 size={22} />
+              <strong>Tryout</strong>
+              <span>Uji performa dalam konteks assessment yang lebih lengkap.</span>
+            </article>
+            <article>
+              <CheckCircle2 size={22} />
+              <strong>Progress</strong>
+              <span>Lihat apakah mastery dan confidence benar-benar berubah.</span>
             </article>
           </div>
         </section>
 
-        <section className="vectra-section">
-          <div className="vectra-section-head">
-            <span>BUILT FOR FOCUSED LEARNING</span>
-            <h2>Lebih sedikit noise. Lebih jelas langkah berikutnya.</h2>
-            <p>VECTRA memprioritaskan informasi yang membantu keputusan belajar, bukan dekorasi, leaderboard, atau jumlah fitur yang tidak mengubah arah belajar.</p>
-          </div>
-          <div className="vectra-three-grid">
-            <article className="vectra-card"><BookOpenCheck size={24} /><h3>Structured learning</h3><p>Materi dibangun dari konsep menuju evidence, bukan hanya daftar video atau catatan.</p></article>
-            <article className="vectra-card"><CheckCircle2 size={24} /><h3>Readable explanations</h3><p>Pembahasan menjelaskan konsep, langkah, kesalahan umum, dan shortcut ketika memang relevan.</p></article>
-            <article className="vectra-card"><Compass size={24} /><h3>One next direction</h3><p>Rekomendasi dibuat agar siswa tahu apa yang paling layak dikerjakan berikutnya.</p></article>
-          </div>
-        </section>
-
-        <section className="vectra-cta-band">
-          <div>
-            <h2>Know where you are. Know where to go next.</h2>
-            <p>Mulai dari diagnostic pertama dan biarkan bukti menentukan arah belajarmu.</p>
-          </div>
-          <Link className="public-cta" href="/register">Start Diagnostic ↗</Link>
+        <section className="vectra-final-cta">
+          <span>YOUR POSITION IS THE START.</span>
+          <h2>Know where you are.<br />Know where to go next.</h2>
+          <p>Mulai dari diagnostic. Bangun learning profile. Ikuti arah belajar berikutnya dengan evidence yang terus diperbarui.</p>
+          <Link className="public-cta large" href="/register">Start Diagnostic ↗</Link>
         </section>
       </main>
 
-      <footer className="vectra-footer">
-        <div className="mx-auto grid max-w-[1390px] gap-10 px-6 py-12 md:grid-cols-[1.5fr_1fr_1fr] md:px-10 lg:px-14">
-          <div>
-            <VectraBrand inverse />
-            <p className="mt-5 max-w-md text-sm leading-7 text-white/60">
-              VECTRA Math adalah learning & assessment platform untuk memahami kemampuan, menemukan gap, dan menentukan arah belajar berikutnya.
-            </p>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#00D1B2]">Explore</p>
-            <nav className="mt-5 flex flex-col gap-3 text-sm text-white/65" aria-label="Navigasi footer">
-              <a href="#cara-kerja">How it works</a>
-              <a href="#product">Learning intelligence</a>
-              <a href="#assessment">Assessment</a>
-            </nav>
-          </div>
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[#B7FF3C]">Start</p>
-            <div className="mt-5 flex flex-col gap-3 text-sm text-white/65">
-              <Link href="/register">Buat akun</Link>
-              <Link href="/login">Masuk</Link>
-            </div>
-          </div>
-        </div>
-        <div className="border-t border-white/10 px-6 py-5 text-center text-xs text-white/45">© 2026 VECTRA · Know Your Direction.</div>
+      <footer className="public-footer">
+        <VectraBrand inverse compact />
+        <div>Position → Direction → Progress ↗</div>
+        <span>© 2026 VECTRA Math</span>
       </footer>
     </div>
   );
