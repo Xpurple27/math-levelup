@@ -10,6 +10,5 @@ export default function robots(): MetadataRoute.Robots {
       disallow: ["/app", "/admin", "/reviewer", "/api", "/auth", "/login", "/register"],
     },
     sitemap: `${base}/sitemap.xml`,
-    host: base,
   };
 }
