@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Compass } from "lucide-react";
 import { VectraBrand } from "./vectra-brand";
 
@@ -22,18 +22,34 @@ function GoogleMark() {
 export function AuthPage({ mode }: { mode: Mode }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [checkingSession, setCheckingSession] = useState(true);
   const [error, setError] = useState("");
   const [confirmation, setConfirmation] = useState(false);
 
   async function finishLogin() {
-    const me = await fetch("/api/me", { cache: "no-store" });
-    if (!me.ok) { router.push("/app"); return; }
+    const me = await fetch("/api/me", { cache: "no-store", credentials: "same-origin" });
+    if (!me.ok) return false;
     const data = await me.json();
-    if (data.role === "ADMIN") router.push("/admin");
-    else if (data.role === "REVIEWER") router.push("/reviewer");
-    else router.push("/app");
+    const target = data.role === "ADMIN" ? "/admin" : data.role === "REVIEWER" ? "/reviewer" : "/app";
+    router.replace(target);
     router.refresh();
+    return true;
   }
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/me", { cache: "no-store", credentials: "same-origin" })
+      .then(async (response) => {
+        if (!alive || !response.ok) return;
+        const data = await response.json();
+        const target = data.role === "ADMIN" ? "/admin" : data.role === "REVIEWER" ? "/reviewer" : "/app";
+        router.replace(target);
+        router.refresh();
+      })
+      .catch(() => undefined)
+      .finally(() => alive && setCheckingSession(false));
+    return () => { alive = false; };
+  }, [router]);
 
   function loginWithGoogle() {
     setError("");
@@ -49,6 +65,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
       const response = await fetch("/api/action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "same-origin",
         body: JSON.stringify({ action: mode, ...data }),
       });
       const payload = await response.json();
@@ -59,7 +76,8 @@ export function AuthPage({ mode }: { mode: Mode }) {
         return;
       }
       sessionStorage.removeItem("levelup-email-confirmation");
-      await finishLogin();
+      const routed = await finishLogin();
+      if (!routed) throw new Error("Sesi belum terbentuk. Muat ulang lalu coba masuk kembali.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Koneksi gagal. Silakan coba lagi.");
     } finally {
@@ -84,6 +102,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
 
       <section className="auth-form-panel">
         <div className="auth-form-card">
+          {checkingSession && <p className="mb-4 text-xs font-semibold text-[#697386]">Memeriksa sesi akun…</p>}
           {confirmation ? (
             <div className="confirmation-state">
               <CheckCircle2 size={38} />
@@ -100,7 +119,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
                 {mode === "login" ? "Masuk untuk melanjutkan trajectory belajarmu." : "Akunmu menyimpan mastery, confidence, rekomendasi, dan progress."}
               </p>
 
-              <button type="button" onClick={loginWithGoogle} disabled={busy} className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-[#dfe4ec] bg-white px-4 py-3 text-sm font-extrabold text-[#11182b] shadow-sm transition hover:border-[#5c7cfa] hover:bg-[#f7f8fa] disabled:cursor-wait disabled:opacity-60">
+              <button type="button" onClick={loginWithGoogle} disabled={busy || checkingSession} className="mb-4 flex w-full items-center justify-center gap-3 rounded-xl border border-[#dfe4ec] bg-white px-4 py-3 text-sm font-extrabold text-[#11182b] shadow-sm transition hover:border-[#5c7cfa] hover:bg-[#f7f8fa] disabled:cursor-wait disabled:opacity-60">
                 <GoogleMark />{busy ? "Menghubungkan…" : "Lanjutkan dengan Google"}
               </button>
 
@@ -121,7 +140,7 @@ export function AuthPage({ mode }: { mode: Mode }) {
                   </div>
                 )}
                 {error && <p className="auth-error" role="alert">{error}</p>}
-                <button className="auth-submit" disabled={busy}>
+                <button className="auth-submit" disabled={busy || checkingSession}>
                   {busy ? "Memproses…" : mode === "login" ? "Masuk" : "Buat akun"}<ArrowRight size={17} />
                 </button>
               </form>
