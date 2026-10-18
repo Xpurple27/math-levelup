@@ -64,7 +64,7 @@ export async function GET() {
         .order("sort_order"),
       client
         .from("lesson_question_assignments")
-        .select("id,lesson_id,question_version_id,role,sort_order,question_versions(id,question_id,question_type,difficulty,stem_md,status,questions(code))")
+        .select("id,lesson_id,question_version_id,role,sort_order,question_versions:question_versions!lesson_question_assignments_question_version_id_fkey(id,question_id,question_type,difficulty,stem_md,status,questions:questions!question_versions_question_id_fkey(code))")
         .in("lesson_id", lessonIds)
         .order("sort_order"),
     ]);
@@ -111,7 +111,8 @@ export async function GET() {
       { data: { modules: modules || [], lessons: lessons || [], blocks: safeBlocks, assignments: safeAssignments } },
       { headers: { "Cache-Control": "no-store" } },
     );
-  } catch {
+  } catch (error) {
+    console.error("Learning API failed", error);
     return Response.json({ error: "Materi belajar belum dapat dimuat." }, { status: 500 });
   }
 }
