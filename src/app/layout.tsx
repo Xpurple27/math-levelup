@@ -5,6 +5,7 @@ import "./c45-hotfix.css";
 import "./admin-content-polish.css";
 import "./c46.css";
 import "./c5-learning.css";
+import "./c5-student-learning.css";
 import "./c5-workflow.css";
 import "./student-polish.css";
 import "./vectra.css";
