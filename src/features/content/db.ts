@@ -11,9 +11,19 @@ let local:
       >
     >
   | undefined;
+
 export function testContentAllowed() {
   return !onlineBackend() && process.env.LEVELUP_TEST_MODE === "1";
 }
+
+export async function localContentDatabase() {
+  if (onlineBackend()) return null;
+  local ??= import("../../../scripts/local-content-db.mjs").then((m) =>
+    m.openLocalContent(),
+  );
+  return local;
+}
+
 export async function contentRPC<T>(
   name: string,
   args: Record<string, unknown> = {},
@@ -30,10 +40,8 @@ export async function contentRPC<T>(
       if (error) throw error;
       return data as T;
     }
-    local ??= import("../../../scripts/local-content-db.mjs").then((m) =>
-      m.openLocalContent(),
-    );
-    const db = await local;
+    const db = await localContentDatabase();
+    if (!db) throw new Error("Local content database unavailable");
     if (typeof args.p_actor === "string")
       await db.query(
         "INSERT INTO auth.users(id) VALUES($1) ON CONFLICT DO NOTHING",
