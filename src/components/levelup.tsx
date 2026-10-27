@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { BookOpen, ChartNoAxesCombined, Flame, Home, LogOut, Target, Zap } from "lucide-react";
+import {
+  BookOpen,
+  ChartNoAxesCombined,
+  Flame,
+  Home,
+  LogOut,
+  Target,
+  Zap,
+} from "lucide-react";
 import { useTopics } from "./content-context";
 import type { Mastery } from "@/lib/scoring";
 import type { View, User, Attempt, History } from "./levelup/types";
@@ -33,6 +41,7 @@ export default function Levelup() {
   const [pendingView, setPendingView] = useState<View | null>(null);
   const [mastery, setMastery] = useState<Mastery[]>([]);
   const [history, setHistory] = useState<History[]>([]);
+  const [learningCoverage, setLearningCoverage] = useState<string[]>([]);
   const [streak, setStreak] = useState(0);
   const [days, setDays] = useState<string[]>([]);
   const [difficulty, setDifficulty] = useState("Mixed");
@@ -54,6 +63,7 @@ export default function Levelup() {
     setUser(d.user);
     setMastery(d.mastery || []);
     setHistory(d.history || []);
+    setLearningCoverage(d.learningCoverage || []);
     setStreak(d.streak || 0);
     setDays(d.days || []);
     if (d.notice) setError(d.notice);
@@ -80,26 +90,30 @@ export default function Levelup() {
           setAttempt(d.attempt);
           setOffset(d.attempt.serverNow - Date.now());
           setView(d.attempt.status === "completed" ? "result" : "exam");
-          if (d.attempt.status === "completed") localStorage.removeItem("levelup-attempt");
+          if (d.attempt.status === "completed")
+            localStorage.removeItem("levelup-attempt");
         } else {
           localStorage.removeItem("levelup-attempt");
         }
       });
   }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const syncAttempt = useCallback((a: Attempt) => {
-    setAttempt(a);
-    setResultTab("result");
-    setOffset(a.serverNow - Date.now());
-    if (a.status === "completed") {
-      setView("result");
-      setConfirm(false);
-      localStorage.removeItem("levelup-attempt");
-      void refresh();
-    } else {
-      localStorage.setItem("levelup-attempt", a.id);
-    }
-  }, [refresh]);
+  const syncAttempt = useCallback(
+    (a: Attempt) => {
+      setAttempt(a);
+      setResultTab("result");
+      setOffset(a.serverNow - Date.now());
+      if (a.status === "completed") {
+        setView("result");
+        setConfirm(false);
+        localStorage.removeItem("levelup-attempt");
+        void refresh();
+      } else {
+        localStorage.setItem("levelup-attempt", a.id);
+      }
+    },
+    [refresh],
+  );
 
   useEffect(() => {
     if (view !== "exam" || !attempt || attempt.status !== "active") return;
@@ -107,9 +121,14 @@ export default function Levelup() {
     const poll = setInterval(() => {
       fetch(`/api/action?attempt=${attempt.id}`)
         .then((r) => r.json())
-        .then((d) => { if (d.attempt) syncAttempt(d.attempt); });
+        .then((d) => {
+          if (d.attempt) syncAttempt(d.attempt);
+        });
     }, 15000);
-    return () => { clearInterval(tick); clearInterval(poll); };
+    return () => {
+      clearInterval(tick);
+      clearInterval(poll);
+    };
   }, [view, attempt?.id, attempt?.status, syncAttempt]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const call = async (data: Record<string, unknown>) => {
@@ -142,7 +161,10 @@ export default function Levelup() {
         body: JSON.stringify({ action: "submit", id: attempt.id }),
       });
       const d = await r.json();
-      if (!r.ok) { setError(d.error); return; }
+      if (!r.ok) {
+        setError(d.error);
+        return;
+      }
       syncAttempt(d.attempt);
     } catch {
       setError("Koneksi terputus. Jawaban yang sudah tersimpan tetap aman.");
@@ -152,7 +174,13 @@ export default function Levelup() {
   }, [attempt, syncAttempt]);
 
   useEffect(() => {
-    if (view === "exam" && attempt?.status === "active" && attempt.deadline && clock + offset >= attempt.deadline && !busy) {
+    if (
+      view === "exam" &&
+      attempt?.status === "active" &&
+      attempt.deadline &&
+      clock + offset >= attempt.deadline &&
+      !busy
+    ) {
       const timer = setTimeout(() => void submit(), 0);
       return () => clearTimeout(timer);
     }
@@ -162,11 +190,17 @@ export default function Levelup() {
     if (v === view) return;
     setPendingView(v);
     setError("");
-    window.setTimeout(() => { setView(v); setPendingView(null); }, 90);
+    window.setTimeout(() => {
+      setView(v);
+      setPendingView(null);
+    }, 90);
   };
 
   const start = async (kind: string, t = topic) => {
-    if (!user) { window.location.assign("/login"); return; }
+    if (!user) {
+      window.location.assign("/login");
+      return;
+    }
     const d = await call({
       action: "start",
       kind,
@@ -191,20 +225,46 @@ export default function Levelup() {
     window.location.replace("/?signed_out=1");
   }
 
-  const weakest = [...mastery].sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
-  const recommended = weakest?.topic || topics[0]?.id || "";
-  const avg = mastery.length ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length) : null;
-  const solved = history.reduce((s, h) => s + h.result.total - h.result.unanswered, 0);
+  const weakest = [...mastery].sort(
+    (a, b) => a.value - b.value || a.confidence - b.confidence,
+  )[0];
+  const recommendedMastery = [...mastery]
+    .filter((item) => learningCoverage.includes(item.topic))
+    .sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
+  const recommended =
+    recommendedMastery?.topic || learningCoverage[0] || "";
+  const avg = mastery.length
+    ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length)
+    : null;
+  const solved = history.reduce(
+    (s, h) => s + h.result.total - h.result.unanswered,
+    0,
+  );
   const q = attempt?.questions[index];
   const feedback = q && attempt?.feedback[q.id];
-  const selected = q ? (attempt?.answers[q.id] ?? feedback?.selected) : undefined;
+  const selected = q
+    ? (attempt?.answers[q.id] ?? feedback?.selected)
+    : undefined;
   const answered = attempt ? Object.keys(attempt.answers).length : 0;
-  const time = attempt ? Math.max(0, Math.floor((attempt.deadline ? attempt.deadline - clock - offset : clock + offset - attempt.started) / 1000)) : 0;
-  const timeText = `${Math.floor(time / 60).toString().padStart(2, "0")}:${(time % 60).toString().padStart(2, "0")}`;
+  const time = attempt
+    ? Math.max(
+        0,
+        Math.floor(
+          (attempt.deadline
+            ? attempt.deadline - clock - offset
+            : clock + offset - attempt.started) / 1000,
+        ),
+      )
+    : 0;
+  const timeText = `${Math.floor(time / 60)
+    .toString()
+    .padStart(2, "0")}:${(time % 60).toString().padStart(2, "0")}`;
 
   return (
     <div className={`app-shell ${view === "exam" ? "student-exam-mode" : ""}`}>
-      {(pendingView || busy) && <div className="app-nav-progress" aria-hidden="true" />}
+      {(pendingView || busy) && (
+        <div className="app-nav-progress" aria-hidden="true" />
+      )}
 
       {view !== "exam" && (
         <header className="student-header">
@@ -212,37 +272,163 @@ export default function Levelup() {
             <VectraBrand href="/app" compact />
             <nav className="student-nav" aria-label="VECTRA Math">
               {nav.map((item) => {
-                const selectedNav = pendingView ? pendingView === item.id : view === item.id;
+                const selectedNav = pendingView
+                  ? pendingView === item.id
+                  : view === item.id;
                 return (
-                  <button key={item.id} className={selectedNav ? (pendingView === item.id ? "pending active" : "active") : ""} onClick={() => go(item.id)}>
+                  <button
+                    key={item.id}
+                    className={
+                      selectedNav
+                        ? pendingView === item.id
+                          ? "pending active"
+                          : "active"
+                        : ""
+                    }
+                    onClick={() => go(item.id)}
+                  >
                     {item.label}
                   </button>
                 );
               })}
             </nav>
             <div className="student-header-actions">
-              <span className="student-streak"><Flame size={15} /> {streak} hari</span>
-              <button className="student-avatar" onClick={() => go("profile")} aria-label="Buka profil">{user?.name.slice(0, 1).toUpperCase() || "S"}</button>
-              <button className="student-logout" onClick={() => void logout()} aria-label="Keluar dari akun" disabled={busy}><LogOut size={17} /></button>
+              <span className="student-streak">
+                <Flame size={15} /> {streak} hari
+              </span>
+              <button
+                className="student-avatar"
+                onClick={() => go("profile")}
+                aria-label="Buka profil"
+              >
+                {user?.name.slice(0, 1).toUpperCase() || "S"}
+              </button>
+              <button
+                className="student-logout"
+                onClick={() => void logout()}
+                aria-label="Keluar dari akun"
+                disabled={busy}
+              >
+                <LogOut size={17} />
+              </button>
             </div>
           </div>
         </header>
       )}
 
       <main className="student-main" id="content">
-        {error && <div className="error" role="alert">{error}<button onClick={() => setError("")} aria-label="Tutup pesan">×</button></div>}
+        {error && (
+          <div className="error" role="alert">
+            {error}
+            <button onClick={() => setError("")} aria-label="Tutup pesan">
+              ×
+            </button>
+          </div>
+        )}
         {!ready ? (
-          <div className="student-skeleton" role="status" aria-label="Memuat VECTRA"><span /><span /><span /></div>
+          <div
+            className="student-skeleton"
+            role="status"
+            aria-label="Memuat VECTRA"
+          >
+            <span />
+            <span />
+            <span />
+          </div>
         ) : (
           <div className="student-view-transition" key={view}>
-            {view === "dashboard" && <DashboardView user={user} busy={busy} start={start} history={history} avg={avg} solved={solved} streak={streak} weakest={weakest} recommended={recommended} setTopic={setTopic} go={go} />}
-            {view === "learn" && <LearnView />}
-            {view === "practice" && <PracticeView section={section} setSection={setSection} topic={topic} setTopic={setTopic} difficulty={difficulty} setDifficulty={setDifficulty} count={count} setCount={setCount} busy={busy} start={start} recommended={recommended} weakest={weakest} />}
-            {view === "tryout" && <TryoutView history={history} busy={busy} start={start} syncAttempt={syncAttempt} setView={setView} setError={setError} />}
-            {view === "profile" && user && <ProfileView user={user} onUpdated={setUser} />}
-            {view === "progress" && <ProgressView avg={avg} solved={solved} streak={streak} days={days} history={history} mastery={mastery} start={start} syncAttempt={syncAttempt} setView={setView} />}
-            {view === "exam" && attempt && q && <ExamView attempt={attempt} time={time} timeText={timeText} index={index} q={q} selected={selected} busy={busy} feedback={feedback} call={call} syncAttempt={syncAttempt} setIndex={setIndex} setConfirm={setConfirm} answered={answered} go={go} />}
-            {view === "result" && attempt?.result && <ResultView attempt={attempt} resultTab={resultTab} setResultTab={setResultTab} setTopic={setTopic} go={go} recommended={recommended} start={start} />}
+            {view === "dashboard" && (
+              <DashboardView
+                user={user}
+                busy={busy}
+                start={start}
+                history={history}
+                avg={avg}
+                solved={solved}
+                streak={streak}
+                weakest={recommendedMastery || weakest}
+                recommended={recommended}
+                setTopic={setTopic}
+                go={go}
+              />
+            )}
+            {view === "learn" && (
+              <LearnView
+                targetSubtopicId={topic}
+                onPractice={() => go("practice")}
+              />
+            )}
+            {view === "practice" && (
+              <PracticeView
+                section={section}
+                setSection={setSection}
+                topic={topic}
+                setTopic={setTopic}
+                difficulty={difficulty}
+                setDifficulty={setDifficulty}
+                count={count}
+                setCount={setCount}
+                busy={busy}
+                start={start}
+                recommended={recommended}
+                weakest={recommendedMastery || weakest}
+              />
+            )}
+            {view === "tryout" && (
+              <TryoutView
+                history={history}
+                busy={busy}
+                start={start}
+                syncAttempt={syncAttempt}
+                setView={setView}
+                setError={setError}
+              />
+            )}
+            {view === "profile" && user && (
+              <ProfileView user={user} onUpdated={setUser} />
+            )}
+            {view === "progress" && (
+              <ProgressView
+                avg={avg}
+                solved={solved}
+                streak={streak}
+                days={days}
+                history={history}
+                mastery={mastery}
+                start={start}
+                syncAttempt={syncAttempt}
+                setView={setView}
+              />
+            )}
+            {view === "exam" && attempt && q && (
+              <ExamView
+                attempt={attempt}
+                time={time}
+                timeText={timeText}
+                index={index}
+                q={q}
+                selected={selected}
+                busy={busy}
+                feedback={feedback}
+                call={call}
+                syncAttempt={syncAttempt}
+                setIndex={setIndex}
+                setConfirm={setConfirm}
+                answered={answered}
+                go={go}
+              />
+            )}
+            {view === "result" && attempt?.result && (
+              <ResultView
+                attempt={attempt}
+                resultTab={resultTab}
+                setResultTab={setResultTab}
+                setTopic={setTopic}
+                go={go}
+                recommended={recommended}
+                start={start}
+              />
+            )}
           </div>
         )}
       </main>
@@ -251,11 +437,22 @@ export default function Levelup() {
         <footer className="mt-14 border-t border-[#dfe4ec] bg-white px-6 py-8 md:px-10 lg:px-14">
           <div className="mx-auto flex max-w-[1390px] flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <VectraBrand compact />
-            <div className="text-xs text-[#697386] md:text-center">Position → Direction → Progress ↗</div>
-            <nav className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[#697386]" aria-label="Informasi VECTRA">
-              <Link className="hover:text-[#0b1020]" href="/">Tentang</Link>
-              <Link className="hover:text-[#0b1020]" href="/">Ketentuan</Link>
-              <Link className="hover:text-[#0b1020]" href="/">Privasi</Link>
+            <div className="text-xs text-[#697386] md:text-center">
+              Position → Direction → Progress ↗
+            </div>
+            <nav
+              className="flex flex-wrap gap-x-5 gap-y-2 text-xs font-semibold text-[#697386]"
+              aria-label="Informasi VECTRA"
+            >
+              <Link className="hover:text-[#0b1020]" href="/">
+                Tentang
+              </Link>
+              <Link className="hover:text-[#0b1020]" href="/">
+                Ketentuan
+              </Link>
+              <Link className="hover:text-[#0b1020]" href="/">
+                Privasi
+              </Link>
             </nav>
           </div>
         </footer>
@@ -264,17 +461,39 @@ export default function Levelup() {
       {view !== "exam" && (
         <nav className="student-mobile-nav" aria-label="Navigasi mobile siswa">
           {nav.map((item) => {
-            const selectedNav = pendingView ? pendingView === item.id : view === item.id;
+            const selectedNav = pendingView
+              ? pendingView === item.id
+              : view === item.id;
             return (
-              <button key={item.id} className={selectedNav ? (pendingView === item.id ? "pending active" : "active") : ""} onClick={() => go(item.id)}>
-                <item.icon size={17} />{item.label}
+              <button
+                key={item.id}
+                className={
+                  selectedNav
+                    ? pendingView === item.id
+                      ? "pending active"
+                      : "active"
+                    : ""
+                }
+                onClick={() => go(item.id)}
+              >
+                <item.icon size={17} />
+                {item.label}
               </button>
             );
           })}
         </nav>
       )}
 
-      {confirm && attempt && <SubmitDialog answered={answered} attempt={attempt} error={error} setConfirm={setConfirm} busy={busy} submit={submit} />}
+      {confirm && attempt && (
+        <SubmitDialog
+          answered={answered}
+          attempt={attempt}
+          error={error}
+          setConfirm={setConfirm}
+          busy={busy}
+          submit={submit}
+        />
+      )}
     </div>
   );
 }
