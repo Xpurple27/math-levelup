@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
 
-test("register, diagnostic autosave/resume, result and empty learning/packages", async ({
+test("register, diagnostic autosave/resume, result and learning transition", async ({
   page,
 }) => {
   await page.goto("/register");
@@ -14,9 +14,7 @@ test("register, diagnostic autosave/resume, result and empty learning/packages",
   await expect(
     page.getByRole("heading", { name: "Halo, Siswa" }),
   ).toBeVisible();
-  await page
-    .getByRole("button", { name: "Mulai diagnostik", exact: true })
-    .click();
+  await page.getByRole("button", { name: /^Start Diagnostic/ }).click();
   await expect(
     page.getByRole("heading", { name: "Satu soal, satu langkah." }),
   ).toBeVisible();
@@ -49,7 +47,11 @@ test("register, diagnostic autosave/resume, result and empty learning/packages",
   await page
     .getByRole("button", { name: "Lanjut belajar", exact: true })
     .click();
-  await expect(page.getByRole("heading", { name: "Belajar" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: /Belajar konsep, lihat contoh, lalu buktikan pemahamanmu/i,
+    }),
+  ).toBeVisible();
   expect(
     await page.evaluate(async () => (await fetch("/api/admin/content")).status),
   ).toBe(403);
@@ -102,10 +104,14 @@ test("mobile student app fits viewport and bottom navigation opens learning", as
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
   await page
-    .getByRole("button", { name: "Belajar", exact: true })
+    .getByRole("button", { name: "Learn", exact: true })
     .last()
     .click();
-  await expect(page.getByRole("heading", { name: "Belajar" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", {
+      name: /Belajar konsep, lihat contoh, lalu buktikan pemahamanmu/i,
+    }),
+  ).toBeVisible();
 });
 
 test("assessment authority and ownership boundaries", async ({
