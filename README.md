@@ -10,6 +10,20 @@ Core product loop:
 
 The application keeps answer keys server-side, freezes completed attempts, tracks mastery/confidence evidence, and uses normalized content authoring with explicit publishing workflows.
 
+## Current milestone
+
+Target: **“Vectra — satu alur belajar terverifikasi dan siap uji coba.”**
+
+Use [VECTRA execution status](docs/vectra-execution-status.md) as the current operational source of truth. It distinguishes confirmed runtime evidence, historical observations, blockers, and work that still requires a live backend or human review.
+
+Pilot and portfolio artifacts:
+
+- [Student pilot protocol](docs/student-pilot-protocol.md)
+- [MT-01 / MT-02 content review status](docs/content-review-status.md)
+- [Portfolio case study](docs/vectra-case-study.md)
+- [60–90 second demo script](docs/demo-script.md)
+- [Premium package blueprint](docs/premium-blueprint.md)
+
 ## Run locally
 
 Node.js 24+, npm, and a writable persistent filesystem:
@@ -52,6 +66,10 @@ Student navigation is intentionally compact: **Home · Learn · Practice · Asse
 - VECTRA branding is presentation-only; mastery, recommendation, assessment, database, and authentication logic remain independent of the brand layer.
 
 Read [content architecture](docs/content-architecture-v2.md), [Excel instructions](docs/content-import.md), [engine architecture](docs/architecture.md), [UTBK content master](docs/utbk-content-master-2026.md), and [deployment](docs/deployment.md).
+
+## Interpreting VECTRA indicators
+
+`Mastery` and `Confidence` are internal evidence indicators implemented with explicit weighting rules. They are **not** psychometrically calibrated ability estimates, statistical probabilities, or official UTBK score predictions. See [VECTRA execution status](docs/vectra-execution-status.md) and `src/lib/scoring.ts` for the current implementation contract.
 
 ## Brand system
 
