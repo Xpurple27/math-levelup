@@ -1,50 +1,76 @@
 # Supabase + Vercel deployment
 
+> This is the deployment procedure, not a statement that production is healthy. See [VECTRA execution status](vectra-execution-status.md) for the latest checked project/deployment state.
+
 Vercel always selects Supabase Auth/Postgres. Do not deploy SQLite/PGlite runtime data. The operator applies SQL and configures environment values; local tests do not prove hosted setup is complete.
 
-## SQL
+## SQL and migration history
 
-For a new database, execute all files under `supabase/migrations` in filename order. For a project already on the previous pilot baseline, apply these **three new migrations in order**:
+For a new database, execute all files under `supabase/migrations` in filename order. For an existing VECTRA database, **do not replay or cherry-pick a short historical list from this document**. Inspect the project's migration history and apply only migrations that have not already been applied.
 
-1. `202610090001_content_v2.sql`
-2. `202610090002_content_operations.sql`
-3. `202610090003_reset_generated_content.sql`
+Historical migrations such as `202610090001_content_v2.sql`, `202610090002_content_operations.sql` and `202610090003_reset_generated_content.sql` remain part of the replay chain. The reset migration had a narrowly authorized historical purpose; it must not be rerun ad hoc to solve current production problems.
 
-The third migration intentionally removes only obsolete generated-content attempts and dependent mastery/report/activity data as specified in [content reset](content-reset.md). Inspect it and take a project backup before execution. Auth users/profiles and unrelated histories are retained. Do not remove/rewrite historical migration files; they remain needed for replay/upgrades.
-
-Run `supabase/verify-content-v2.sql`. Expect no missing tables/browser grants, RLS true, both browser RPC permission flags false, invalid_published zero and initial production_published zero. This verifier is read-only and prints no answer content. Check applied migrations in Supabase's migration history if using its CLI.
+Run the repository verification/audit scripts appropriate to the current schema. Do not use a stale expectation such as “production_published = 0” once real content exists.
 
 ## Roles
 
-Create/confirm two separate accounts with Supabase Auth through the app. In the Supabase SQL Editor, assign roles to the intended existing accounts (replace these placeholders with your own emails):
+Create/confirm separate accounts with Supabase Auth through the app. Assign roles only to intended existing accounts through the trusted server/database workflow. Accounts with no role row are STUDENT. Do not grant privileges through signup metadata or browser-controlled fields.
 
-```sql
-INSERT INTO public.levelup_roles(user_id,role)
-SELECT id,'ADMIN' FROM auth.users WHERE email='YOUR_ADMIN_EMAIL'
-ON CONFLICT(user_id) DO UPDATE SET role=excluded.role;
-INSERT INTO public.levelup_roles(user_id,role)
-SELECT id,'REVIEWER' FROM auth.users WHERE email='YOUR_REVIEWER_EMAIL'
-ON CONFLICT(user_id) DO UPDATE SET role=excluded.role;
-```
-
-Verify each statement matches one account. Accounts with no row are STUDENT. Do not grant through signup metadata or browser SQL. A reviewer must differ from question creator/last editor. The service key is required for server operations; never paste it into chat, source, frontend variables or test artifacts.
+Where independent review is required, reviewer identity must differ from the question creator/last editor. The service-role key is required for server operations; never paste it into chat, source, frontend variables, screenshots or test artifacts.
 
 ## Vercel environment
 
-Set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or the application's supported anon-key fallback) and server-only `SUPABASE_SERVICE_ROLE_KEY`. Use your project's values in Vercel settings. The service key must never have a NEXT_PUBLIC prefix. Redeploy after environment changes. Do not set local test flags as deployment configuration.
+Set:
 
-Supabase Auth Site URL should be the production Vercel URL. Configure `/auth/callback` redirect allowlist for the production URL and any deliberate preview/local environments. If email confirmation is enabled, the student confirms email then logs in; unconfirmed signup does not grant a session. Existing local accounts do not automatically migrate into Supabase.
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` or the application's supported anon-key fallback
+- server-only `SUPABASE_SERVICE_ROLE_KEY`
+- `NEXT_PUBLIC_SITE_URL` / `NEXT_PUBLIC_APP_URL` as supported by the current deployment configuration
+
+The service key must never have a `NEXT_PUBLIC_` prefix. Redeploy after environment changes. Do not set local test flags as production configuration.
+
+## Supabase Auth URLs
+
+Supabase Auth Site URL must be a plain valid production URL, with no label prefix such as `Site URL:`. Add the production `/auth/callback` URL to the redirect allowlist and add only deliberate preview/local callbacks.
+
+Google Cloud's OAuth redirect remains the Supabase Auth provider callback, while the application `/auth/callback` belongs in the Supabase redirect allowlist.
+
+Next.js 16 hosted auth uses `src/proxy.ts` to refresh Supabase SSR cookies. Protected routes still verify the user server-side; the proxy is not an authorization layer.
 
 ## Hosted acceptance checklist
 
-1. Run the migration verifier and inspect expected results.
-2. Confirm an ordinary student account persists across reload/login and cannot access `/admin` or authoring APIs.
-3. Confirm ADMIN opens the Question Bank and saves a draft; its options/explanation render Markdown/KaTeX in preview.
-4. Send to QA. Confirm self-review fails, the separate REVIEWER approves, and approval alone does not make content available to students.
-5. ADMIN publishes explicitly. Confirm a new revision leaves the prior published version available and cannot change existing frozen attempts.
-6. Upload the downloadable Excel template: the example must be skipped. Upload real curated rows, inspect preview/errors, confirm DRAFT only and complete independent QA before publication.
-7. With enough published questions, verify diagnostic start, answer autosave, reload/resume, expiry/finalization, results/progress and contextual feedback.
-8. Confirm learning/tryout display their intentional empty state and no obsolete packages appear.
-9. If linking media, upload existing objects to a dedicated public content bucket and register `bucket/path`; verify display and alt text. Keep answer-bearing/private objects out of active question media.
+Run this checklist against the **correct production Supabase project** after confirming it is active:
 
-Human mathematical/editorial approval, sufficient published coverage, hosted SQL/role/environment setup and the live checklist remain prerequisites for student release. C1–C4 is an authoring foundation, not a full content library or Learning/Tryout Builder.
+1. Confirm the Vercel production commit and aliases match the intended release.
+2. Confirm Vercel points to the intended Supabase project without exposing secret values.
+3. Test email login and Google login on a clean browser and on a browser containing an older session cookie.
+4. Confirm logout/login persistence and absence of `/login` redirect loops.
+5. Confirm an ordinary student cannot access `/admin`, reviewer/admin APIs, another user's attempts, answer keys or private snapshots.
+6. Confirm ADMIN and REVIEWER access follows the configured role workflow; do not self-approve when independent review is required.
+7. Query current question-version status and package references before publishing/replacing any content.
+8. Start Diagnostic, answer multiple questions, reload and verify autosave/resume.
+9. Logout/login again and resume an active attempt.
+10. Submit; reopen the completed result from Progress; submit again and verify idempotent result/finalization.
+11. Verify expired attempts reject late answers and finalize once.
+12. Verify published Learning does not show empty lessons and `Next Direction` only links to published learning coverage.
+13. Verify the recommended Learn path continues to a relevant Practice domain.
+14. Verify Practice keys/explanations are exposed only according to its completed/feedback contract.
+15. Verify MT-01/MT-02 (or current replacement suites) use the expected fixed question versions and server-owned per-section timer.
+16. Verify result explanations render Markdown/KaTeX, tables/media and option references correctly on desktop and phone.
+17. Verify completed historical attempts retain their frozen snapshot after later content revisions.
+18. Run the pilot-readiness E2E/quality checks and record local/CI/preview/production results separately.
+
+## Current release gate
+
+A Vercel `READY` build is not sufficient to invite students. Student pilot requires all of the following:
+
+- production Supabase project active;
+- auth/session smoke tests pass;
+- current content/version state is known;
+- at least one published learning path and related Practice are accessible;
+- assigned assessment is accessible;
+- critical ownership/timer/save/finalization tests pass;
+- mobile and desktop critical flows pass;
+- human content approval requirements are satisfied.
+
+Do not switch to another Supabase project, reset production data, or rewrite historical attempt snapshots to bypass a failed acceptance step.
