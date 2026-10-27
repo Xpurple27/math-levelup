@@ -9,13 +9,20 @@ export async function GET() {
   try {
     const token = (await cookies()).get(cookie)?.value;
     const user = await getUser(token);
-    if (!user) return Response.json({ error: "Masuk terlebih dahulu." }, { status: 401 });
+    if (!user)
+      return Response.json(
+        { error: "Masuk terlebih dahulu." },
+        { status: 401 },
+      );
 
     return Response.json(
       { data: await listTryoutPackages() },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch {
-    return Response.json({ error: "Paket tryout belum dapat dimuat." }, { status: 500 });
+    return Response.json(
+      { error: "Paket tryout belum dapat dimuat." },
+      { status: 500 },
+    );
   }
 }

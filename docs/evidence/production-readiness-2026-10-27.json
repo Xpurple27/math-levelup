@@ -1,0 +1,100 @@
+{
+  "checked_at": "2026-10-27T08:02:23.95639+00:00",
+  "project": "azrpaihfdtghcbdxkhqh",
+  "current_questions": 245,
+  "versions": [
+    {
+      "total": 1,
+      "status": "QA_PASSED"
+    },
+    {
+      "total": 663,
+      "status": "PUBLISHED"
+    },
+    {
+      "total": 113,
+      "status": "IN_REVIEW"
+    }
+  ],
+  "current_missing_approval_records": 245,
+  "waiting_count": 113,
+  "packages": [
+    {
+      "code": "MT01-PK",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 20,
+      "suite_code": "MT-01",
+      "question_count": 20,
+      "duration_seconds": 1200,
+      "current_references": 20
+    },
+    {
+      "code": "MT01-PM",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 20,
+      "suite_code": "MT-01",
+      "question_count": 20,
+      "duration_seconds": 2550,
+      "current_references": 20
+    },
+    {
+      "code": "MT01-PU",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 30,
+      "suite_code": "MT-01",
+      "question_count": 30,
+      "duration_seconds": 1800,
+      "current_references": 30
+    },
+    {
+      "code": "MT02-PK",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 20,
+      "suite_code": "MT-02",
+      "question_count": 20,
+      "duration_seconds": 1200,
+      "current_references": 20
+    },
+    {
+      "code": "MT02-PM",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 20,
+      "suite_code": "MT-02",
+      "question_count": 20,
+      "duration_seconds": 2550,
+      "current_references": 20
+    },
+    {
+      "code": "MT02-PU",
+      "access": "FREE",
+      "status": "PUBLISHED",
+      "references": 30,
+      "suite_code": "MT-02",
+      "question_count": 30,
+      "duration_seconds": 1800,
+      "current_references": 30
+    }
+  ],
+  "learning": [
+    {
+      "code": "LM-PERCENT-01",
+      "blocks": 22,
+      "status": "PUBLISHED",
+      "subtopic_id": "14000000-0000-4000-8000-000000000003",
+      "published_lessons": 3
+    },
+    {
+      "code": "LM-PK-LIN-01",
+      "blocks": 19,
+      "status": "PUBLISHED",
+      "subtopic_id": "14000000-0000-4000-8000-000000000002",
+      "published_lessons": 3
+    }
+  ],
+  "query": "supabase/verify-vectra-readiness.sql"
+}

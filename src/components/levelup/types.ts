@@ -44,6 +44,7 @@ export type Q = {
 export type Attempt = {
   id: string;
   kind: string;
+  reusedQuestionCount?: number;
   topic: string | null;
   started: number;
   deadline: number | null;

@@ -1,5 +1,7 @@
 # Validation
 
+> Historical scope note: this document describes its named implementation phase. For current inventory, acceptance evidence and release blockers, see [VECTRA execution status](vectra-execution-status.md). Statements such as zero production questions or deferred builders are historical, not a current inventory.
+
 Run `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test`, `npm run build`, then `LEVELUP_E2E_PRODUCTION=1 npm run test:e2e` and `npm run audit:repository`.
 
 Database tests replay the SQL chain and exercise browser access denial, role enforcement, independent QA, publication/version immutability, single-key/unique-version/taxonomy constraints, draft deletion, import validation/atomic draft confirmation and idempotency. Existing engine tests retain scoring/mastery, SQLite/Postgres parity, optimistic revisions, ownership, timer expiry and trusted auth/storage boundaries. Excel tests parse the actual template and reject duplicate/invalid/missing/formula input.

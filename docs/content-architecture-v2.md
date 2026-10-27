@@ -1,5 +1,7 @@
 # Content architecture V2 — C1–C4
 
+> Historical scope note: this document describes its named implementation phase. For current inventory, acceptance evidence and release blockers, see [VECTRA execution status](vectra-execution-status.md). Statements such as zero production questions or deferred builders are historical, not a current inventory.
+
 The student engine remains: Auth, server-owned attempts/deadlines, autosave/resume, frozen snapshots, scoring, mastery confidence, feedback and backend selection. Content now comes from normalized PostgreSQL tables. There are **zero production questions** in this release's seeds. Classification seeds are labels, not learning modules or approved exam content.
 
 ## Schema

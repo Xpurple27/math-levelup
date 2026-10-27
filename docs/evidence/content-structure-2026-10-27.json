@@ -1,0 +1,19 @@
+{
+  "scope": "structural checks; mathematical/editorial approval remains independent",
+  "checked": "2026-10-27",
+  "questions": 140,
+  "mathFragments": 0,
+  "flaggedQuestions": 2,
+  "findings": [
+    {
+      "code": "V2-PM-CH-001",
+      "version_id": "a1c2f1ac-9d59-4e83-85f6-9a2b675df1da",
+      "issues": ["manual-option-letter-review"]
+    },
+    {
+      "code": "V2-PU-Q-008",
+      "version_id": "f41022f0-f826-4fe7-b2c4-9257e11e1c63",
+      "issues": ["manual-option-letter-review"]
+    }
+  ]
+}

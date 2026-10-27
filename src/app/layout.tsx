@@ -72,7 +72,14 @@ export const metadata: Metadata = {
     title,
     description,
     url: siteUrl,
-    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "VECTRA Math — Know Your Direction" }],
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "VECTRA Math — Know Your Direction",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
@@ -102,13 +109,19 @@ const websiteSchema = {
   description,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="id">
       <body>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(organizationSchema),
+          }}
         />
         <script
           type="application/ld+json"

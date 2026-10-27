@@ -5,10 +5,12 @@ Status: **LOCKED BASELINE — 2026-10-12**
 ## Sumber dan prinsip
 
 Sumber resmi utama:
+
 - https://snpmb.id/fr/
 - https://www.snpmb.id/utbk-snbt/informasi-umum
 
 Framework resmi 2026 menetapkan:
+
 - PK: 20 soal / 20 menit; domain resmi Bilangan, Aljabar, Geometri dan Pengukuran, Analisis Data, Peluang.
 - PU: 30 soal / 30 menit; 10 Induktif / 10 menit, 10 Deduktif / 10 menit, 10 Kuantitatif / 10 menit.
 - PM: 20 soal / 42,5 menit; proses kognitif Merumuskan, Menggunakan, Menafsirkan & Mengevaluasi; konteks pribadi, pekerjaan, sosial, ilmiah.
@@ -20,6 +22,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 ## PK — 5 pintu latihan
 
 ### 1. Bilangan
+
 - representasi, sifat, dan operasi bilangan;
 - pecahan dan desimal;
 - persen;
@@ -31,6 +34,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - pola dan barisan bilangan berbasis konsep kuantitatif.
 
 ### 2. Aljabar dan Fungsi
+
 - bentuk dan operasi aljabar;
 - pemfaktoran;
 - persamaan dan pertidaksamaan;
@@ -43,6 +47,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - matriks dasar.
 
 ### 3. Geometri dan Pengukuran
+
 - garis dan sudut;
 - segitiga dan Pythagoras;
 - segiempat/poligon;
@@ -54,6 +59,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - skala, satuan, dan pengukuran.
 
 ### 4. Analisis Data
+
 - tabel, diagram, grafik;
 - mean, median, modus;
 - kuartil dan ukuran letak yang relevan;
@@ -64,6 +70,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - evaluasi pernyataan/klaim dari data.
 
 ### 5. Peluang
+
 - aturan pencacahan;
 - faktorial;
 - permutasi/kombinasi pada tingkat relevan;
@@ -80,6 +87,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 ## PM — 4 pintu latihan
 
 ### 1. Bilangan dan Kuantitas
+
 - representasi kuantitas;
 - operasi dan sifat bilangan dalam konteks;
 - rasio/proporsi;
@@ -89,6 +97,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - pola kuantitatif.
 
 ### 2. Aljabar dan Perubahan
+
 - menerjemahkan konteks menjadi model aljabar;
 - persamaan/pertidaksamaan dan batas praktis;
 - sistem persamaan;
@@ -99,6 +108,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - membandingkan strategi/model.
 
 ### 3. Geometri dan Pengukuran
+
 - skala dan peta;
 - luas/keliling dalam konteks;
 - volume/luas permukaan;
@@ -108,6 +118,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - toleransi dan pengukuran.
 
 ### 4. Data dan Ketidakpastian
+
 - membaca tabel/grafik;
 - statistika deskriptif;
 - membandingkan distribusi/ringkasan;
@@ -117,6 +128,7 @@ Subtopik di bawah adalah **taxonomy operasional LevelUP**, disusun untuk produks
 - mengevaluasi klaim berbasis data/ketidakpastian.
 
 Setiap soal PM juga diberi metadata:
+
 - **process**: FORMULATING | EMPLOYING | INTERPRETING_EVALUATING
 - **context**: PERSONAL | OCCUPATIONAL | SOCIAL | SCIENTIFIC
 
@@ -127,6 +139,7 @@ Practice V1 tetap 10 soal/paket, 4 Basic + 3 Medium + 3 Hard. Kesulitan berasal 
 ## PU — 3 pintu latihan
 
 ### 1. Penalaran Induktif
+
 - generalisasi dari observasi;
 - kesesuaian pernyataan;
 - sebab-akibat, korelasi, variabel perancu;
@@ -136,6 +149,7 @@ Practice V1 tetap 10 soal/paket, 4 Basic + 3 Medium + 3 Hard. Kesulitan berasal 
 - kualitas bukti, hipotesis, sampling.
 
 ### 2. Penalaran Deduktif
+
 - kuantor dan relasi himpunan;
 - implikasi, kontraposisi, syarat perlu/cukup;
 - silogisme;
@@ -145,6 +159,7 @@ Practice V1 tetap 10 soal/paket, 4 Basic + 3 Medium + 3 Hard. Kesulitan berasal 
 - konsistensi, kemungkinan, constraint logic.
 
 ### 3. Penalaran Kuantitatif
+
 - kuantitas dan operasi aritmetika dasar;
 - rasio/proporsi;
 - persen/perubahan;
@@ -174,6 +189,7 @@ Practice V1: masing-masing pintu Paket 01 dan Paket 02, 10 soal/paket, 4 Basic +
 Learning tidak harus satu modul untuk setiap butir latihan. Unit belajar mengikuti subtopic terkecil, sedangkan pintu latihan mengikuti domain/mode besar.
 
 Setiap subtopic Learning idealnya memiliki urutan:
+
 1. Konsep inti dan prasyarat.
 2. Cara mengenali bentuk masalah.
 3. Contoh worked example.
@@ -190,6 +206,7 @@ Diagnostic/Tryout → weakness pada subtopic → Learning subtopic → Practice 
 ## Practice Blueprint V1
 
 Ada 12 pintu:
+
 - PK: 5
 - PM: 4
 - PU: 3
@@ -211,6 +228,7 @@ Karena LevelUP V1 saat ini memproduksi PK, PM, dan PU, satu Mini Tryout terdiri 
 Total cakupan LevelUP Mini Tryout: **70 soal / 92,5 menit**, tetapi timer tetap dikunci per section, bukan digabung menjadi satu timer 92,5 menit. Disebut Mini Tryout karena belum mencakup PPU, PBM, Literasi Indonesia, dan Literasi Inggris.
 
 V1 menyediakan:
+
 - Mini Tryout #01
 - Mini Tryout #02
 

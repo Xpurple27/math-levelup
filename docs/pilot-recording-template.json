@@ -1,0 +1,47 @@
+{
+  "status": "EMPTY_TEMPLATE_NOT_REAL_PARTICIPANTS",
+  "productionGates": {
+    "backendHealthy": null,
+    "contentPathReviewedAndPublished": null,
+    "accountAttemptAcceptancePassed": null,
+    "approvedForPilotByOwner": null
+  },
+  "participantRecordFields": {
+    "pilotId": null,
+    "deviceCategory": null,
+    "accountSuccess": null,
+    "diagnosticStartedAt": null,
+    "diagnosticSubmittedAt": null,
+    "recommendationAvailable": null,
+    "recommendationOpenedAt": null,
+    "finalLessonReachedAt": null,
+    "practiceStartedAt": null,
+    "practiceSubmittedAt": null,
+    "miniStartedAt": null,
+    "miniSubmittedAt": null,
+    "resultReopened": null,
+    "feedback": []
+  },
+  "issueRecordFields": {
+    "pilotId": null,
+    "deviceCategory": null,
+    "step": null,
+    "severity": null,
+    "observedBehavior": null,
+    "expectedBehavior": null,
+    "reproductionSteps": [],
+    "status": null
+  },
+  "participants": [],
+  "issues": [],
+  "metrics": {
+    "validParticipants": null,
+    "diagnosticCompleted": null,
+    "recommendationOpened": null,
+    "practiceCompleted": null,
+    "miniCompleted": null,
+    "entireLoopCompleted": null,
+    "medianDiagnosticDurationSeconds": null,
+    "unresolvedCriticalIssues": null
+  }
+}

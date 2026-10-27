@@ -67,8 +67,22 @@ export async function createAttempt(
   kind: string,
   topic: string | null,
   questions: Question[],
+  durationSeconds?: number,
 ) {
-  return (await adapter()).createAttempt(userId, kind, topic, questions);
+  if (onlineBackend())
+    return (await import("./store-supabase")).createAttempt(
+      userId,
+      kind,
+      topic,
+      questions,
+    );
+  return (await import("./store-local")).createAttempt(
+    userId,
+    kind,
+    topic,
+    questions,
+    durationSeconds,
+  );
 }
 export async function saveAttempt(a: Attempt) {
   return (await adapter()).saveAttempt(a);
