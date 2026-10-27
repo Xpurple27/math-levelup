@@ -35,4 +35,6 @@ jobs:
       - if: always()
         run: npm test
       - if: always()
+        run: npm run audit:repository
+      - if: always()
         run: npm run build

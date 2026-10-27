@@ -1,5 +1,7 @@
 # Stabilization scope
 
+> Historical scope note: this document describes its named implementation phase. For current inventory, acceptance evidence and release blockers, see [VECTRA execution status](vectra-execution-status.md). Statements such as zero production questions or deferred builders are historical, not a current inventory.
+
 C1–C4 preserves the student engine and replaces its content source with normalized published versions. See [architecture](architecture.md) for frozen snapshots/ownership/scoring contracts and [content V2](content-architecture-v2.md) for authoring security and lifecycle.
 
 General CI checks formatting, lint, types, unit/database tests and production build. Critical E2E uses isolated TEST_ONLY storage and covers student registration/resume/result plus admin draft/KaTeX/QA/publication/import. Pure engine tests retain adapter parity, ownership, deadlines, optimistic revisions, atomic finalization, mastery confidence and replayable migrations. There is no pilot mode, generated registry or source-bank QA script in the active system.

@@ -22,7 +22,7 @@ The milestone deliberately focuses on PK, PM and PU before expanding into unrela
 
 ## Product contribution
 
-The project owner combines mathematics teaching/content expertise with product implementation. The system includes:
+Muhammad Wafiq Afansa supplies the product direction, mathematics-teaching context, UTBK content standards and acceptance decisions. Implementation and automated verification in this stabilization were AI-assisted and remain subject to owner/code review. Do not describe assistance as independent human mathematical approval. The system includes:
 
 - UTBK taxonomy and content workflows;
 - versioned question content and publication workflow;
@@ -81,7 +81,7 @@ Confidence is not a statistical probability. It measures the amount and diversit
 
 ### Direction
 
-A recommendation should not point into an empty module. The pilot-readiness stabilization filters recommended topics against published learning modules that also have published lessons, then carries that direction into Learn and the nearest matching Practice domain.
+A recommendation requires readable published lessons, a FREE practice set containing the same subtopic and the existing mini-assessment quota. The weakest measured eligible skill is chosen by mastery, then confidence; if none has evidence, an available path is labeled as an initial path. Missing content is reported rather than replaced with an unrelated domain.
 
 ## Content QA
 
@@ -114,7 +114,7 @@ See `vectra-execution-status.md` for exact status and blockers.
 ## Limitations
 
 - mastery/confidence are rules-based internal indicators, not calibrated psychometrics;
-- production backend inactivity currently blocks a full production acceptance run;
+- production backend is healthy on recheck, but connected content, independent review records and authenticated production acceptance are incomplete;
 - content approval requires human reviewer workflow where configured;
 - no claim of real student outcome improvement is made before pilot data exists;
 - the current scope covers PK, PM and PU, not the entire UTBK-SNBT test battery.
@@ -141,7 +141,7 @@ Continue from the final lesson to the related Practice domain. Answer one sample
 
 **55–72s — Measure again**
 
-Open Assessment/Mini Tryout and show the package-level entry, section timer concept, and result view with analysis/pembahasan.
+From the Practice result open the targeted mini reassessment; show its server timer, result and repeated-item limitation.
 
 **72–90s — Progress**
 
@@ -151,6 +151,17 @@ Return to Progress and reopen the completed attempt from history. End with: `Pos
 
 Use claims tied to implementation, for example:
 
-> Built VECTRA Math, a Next.js + Supabase learning and assessment platform for UTBK preparation with versioned question content, server-side assessment controls, mastery/evidence tracking, guided learning, practice and timed assessment flows.
+> Developed VECTRA Math, a Next.js + Supabase learning/assessment platform; implemented server-side attempt controls and evidence-based learning direction, with a complete learning loop verified locally on desktop/mobile. Production content review and student pilot remain pending.
 
 After a real pilot, append only measured, anonymized metrics that can be traced to a dated pilot report.
+
+## Evidence of this stabilization
+
+- Base main/production: `2c20c6f`; stabilization baseline: `f0a09ea` from PR #17.
+- Local complete browser loop covers registration, autosave/reload, logout/login/resume, recommendation, readable lesson, targeted practice, mini reassessment, progress and historical result reopening at 1280px and 390px.
+- Unit/database and browser counts plus exact commands are in [validation](validation-current.md). Fixture accounts and content are TEST_ONLY, not real student usage.
+- Production read-only evidence: backend healthy, correct OAuth target host, MT-01/02 at 70 questions each, 113 revisions still IN_REVIEW, 24 published practice sets, two modules/six lessons.
+- The actual production gap is content linkage and review evidence: the existing lessons do not have a matching practice subtopic with the mini quota. All 140 MT references lack matching approval records. No completion rate or learning gain is claimed.
+- Rendering audit covers 2,037 fields of the actual 140 MT versions with no KaTeX error. It does not certify all mathematical answers. See [review status](content-review-status.md).
+
+No real pilot participants, testimonials, sales or learning-effect estimates are included. Owner contribution is product/content design and project development with assistance; evidence of student outcomes must be added only after the real pilot.

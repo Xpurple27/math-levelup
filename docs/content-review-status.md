@@ -1,100 +1,53 @@
-# MT-01 / MT-02 content review status
+# MT-01 / MT-02 — review status, 27 Oktober 2026
 
-Checked: 27 October 2026.
+Status: **versi dan rendering terverifikasi; persetujuan independen serta review matematis/editorial penuh belum selesai**. Tidak ada approval, publish, reject, archive atau revision baru dibuat dalam database oleh sesi ini.
 
-This document intentionally separates **last known production facts** from facts that could be re-verified today.
+## Inventaris yang benar-benar tampil
 
-## Current verification state
+Database produksi `azrpaihfdtghcbdxkhqh` sudah `ACTIVE_HEALTHY` pada pemeriksaan ulang. Enam bagian MT berstatus FREE/PUBLISHED: per suite PU 30 soal/30 menit, PK 20/20 menit, PM 20/42,5 menit. Kedua suite menggunakan 140 referensi current ACTIVE/PUBLISHED. [Manifest](evidence/production-version-manifest.json) mencatat code, version ID, nomor versi, status dan paket; kunci tidak disertakan.
 
-The correct VECTRA Supabase project (`azrpaihfdtghcbdxkhqh`) is currently `INACTIVE`. Direct database queries fail, so the stabilization pass cannot truthfully enumerate the current question-version status or inspect all question bodies from production.
+Terdapat 113 revisi IN_REVIEW: PK 40, PM 40, PU 33. Semuanya masih menunggu; tidak satu pun direferensikan langsung oleh tryout. Jumlah ini sama dengan laporan historis, tetapi kesamaan count saja tidak membuktikan identitas setiap anggota antrean historis tanpa snapshot 18 Oktober. Manifest mencatat anggota antrean yang terkonfirmasi hari ini.
 
-No content version was approved, published, rejected, deleted, or duplicated by this stabilization pass.
+Seluruh 140 versi MT mempunyai **nol approval record yang cocok** dalam `content_reviews`. Seluruh 245 current ACTIVE/PUBLISHED juga belum mempunyai record tersebut. Hanya ada satu approval QUESTION_VERSION dalam tabel, terkait butir QA_PASSED yang belum terbit. Tidak ada review module/lesson. Ini adalah **kesenjangan bukti review**, bukan bukti bahwa setiap kunci salah atau penjelasan tentang bagaimana penerbitan historis terjadi. Trigger publikasi/immutability tetap enabled pada pemeriksaan.
 
-## Last verified package structure
+| Kategori                                | Keadaan terkonfirmasi                                                  |
+| --------------------------------------- | ---------------------------------------------------------------------- |
+| Current MT                              | 140 referensi PUBLISHED/current, belum terbukti approval independennya |
+| Revisi menunggu                         | 113 IN_REVIEW, belum terbit                                            |
+| QA_PASSED                               | 1 di luar paket, perlu pemeriksaan ulang; bukan konten siswa           |
+| Revisi disetujui/ditolak dalam sesi ini | 0; tidak ada keputusan reviewer diisi oleh otomatisasi                 |
 
-Last database verification available from 18 October 2026 recorded:
+## Pemeriksaan otomatis
 
-| Suite | Section | Questions | Timer |
-| --- | --- | ---: | ---: |
-| MT-01 | PU | 30 | 30 min |
-| MT-01 | PK | 20 | 20 min |
-| MT-01 | PM | 20 | 42.5 min |
-| MT-02 | PU | 30 | 30 min |
-| MT-02 | PK | 20 | 20 min |
-| MT-02 | PM | 20 | 42.5 min |
+[Audit struktur](evidence/content-structure-2026-10-27.json) memeriksa semua 140 versi MT: 4–5 opsi, satu key, teks opsi duplikat, ekuivalensi angka sederhana, field wajib, konsistensi huruf jawaban akhir dan flag analisis opsi. Tidak ditemukan kegagalan count/key/field wajib/huruf jawaban akhir pada pemeriksaan terbatas itu; dua butir memunculkan flag analisis huruf untuk review manual.
 
-Each suite therefore had 70 questions and a nominal total of 92 minutes 30 seconds with timer authority remaining per section.
+Batas: pemeriksa ekuivalensi angka tidak membuktikan ekuivalensi aljabar; label kesulitan, kejelasan stimulus, orisinalitas dan ketepatan semua inferensi tetap memerlukan review. Semua field MT masih menggunakan matematika teks biasa pada export, sehingga hitungan fragmen LaTeX mentah adalah nol; ini bukan bukti tidak ada matematika yang dirender.
 
-Treat this table as **historical until re-query succeeds**.
+[Audit renderer](evidence/content-render-2026-10-27.json) memakai komponen Markdown/KaTeX aplikasi yang sebenarnya: 2.037 field, 267 field menghasilkan KaTeX, nol error KaTeX. Tidak ada stimulus tabel Markdown atau gambar dalam subset MT yang diekspor ini; keterbacaan gambar/tabel produksi belum dibuktikan. Uji HP alur memakai konten sintetis, sehingga tidak boleh disebut review HP atas seluruh 140 soal.
 
-## Historical review queue
+## Sampel editorial yang dihitung/diperiksa ulang
 
-A report dated 18 October 2026 recorded **113 question versions in `IN_REVIEW`**. That count cannot be confirmed while the project is inactive.
+| Butir / versi siswa                   | Temuan                                                                                                                             | Revisi yang sudah tersedia                                                                           | Tindakan                                                                                                                                    |
+| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| V2-PM-CH-001 v2                       | Model benar B. Opsi C dan E ekuivalen (`3.000+8.000x` dan `8.000x+3.000`); analisis menyebut B sebagai kesalahan menukar koefisien | v3 `059b80f9-14bc-4951-b2c8-eaa25b22d318`, IN_REVIEW: penjelasan B dan pengecoh E diperbaiki         | Reviewer periksa opsi revisi penuh; gunakan revisi ini, jangan duplikasi                                                                    |
+| V2-PU-DED-001 v2                      | Rantai inklusi menghasilkan B; analisis justru menyebut B membalik hubungan                                                        | v3 `69259dea-3a51-4a54-82fe-f7066ef6c9d9`, IN_REVIEW                                                 | Review dan persetujuan independen                                                                                                           |
+| V2-PU-DED-003 v2                      | Rina anggota Merah ⇒ tidak ikut kelas malam (E); analisis menuduh E menambah informasi                                             | v3 `b43332a2-7a77-4bb2-acb7-4914f23510c3`, IN_REVIEW                                                 | Review dan persetujuan independen                                                                                                           |
+| V2-PU-Q-008 v2                        | Masing-masing pernyataan tidak cukup, gabungan cukup; A benar. Analisis menyebut A mengabaikan nilai negatif                       | v3 `ff617801-e651-47e1-85a9-4c183e83e4b6`, IN_REVIEW, memakai contoh n=±11 dan n=5/11                | Review dan persetujuan independen                                                                                                           |
+| PK-LIN-001–005 v1, di luar MT         | Hasil ulang masing-masing x=6; a=4; x=4; p=5/2; a=0. Pada 005, a=2/4 tidak memberi solusi persamaan terkait                        | Belum ada tambahan/revisi diimpor                                                                    | Lima kunci sampel konsisten; kesulitan dan analisis pengecoh masih provisional                                                              |
+| Q-7E5E8A3AD6504657B29E9D5C0F7A954D v1 | Dua persamaan memberi y=3, tetapi key B/4; pembahasan tidak memadai dan taxonomy PLSV tidak cocok dengan SPLDV                     | **QA_PASSED, belum PUBLISHED**, tidak di MT/practice; satu approval record bukan jaminan kunci benar | Kembalikan melalui workflow yang berlaku untuk koreksi key A/3, solusi eliminasi dan taxonomy. Jangan terbitkan. Tidak diubah oleh sesi ini |
 
-When the backend is restored, do not regenerate those revisions blindly. First query their IDs, parent question IDs, statuses and package/lesson references.
+Validasi independen untuk butir terakhir: kurangi `2x+4y=32` dengan `2x+3y=29`, diperoleh y=3. Substitusi menghasilkan x=10 dan memenuhi kedua persamaan. Tidak ada persetujuan manusia yang ditambahkan oleh audit ini.
 
-Required classification:
+## Standar reviewer
 
-| Version ID | Question code | Section | Current status | Reviewer approval | Math/editorial status | Referenced by | Action |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| … | … | PK/PM/PU | DRAFT/IN_REVIEW/QA_PASSED/PUBLISHED/etc. | verified/pending | verified/pending/rejected | tryout/practice/lesson/current pointer | publish/revise/reject/wait |
+Gunakan writer skill dan blueprint PK, PM, PU yang disediakan proyek. Periksa matematika melalui dua lintasan bila relevan; asumsi; satu key; ekuivalensi semua pengecoh; huruf opsi setelah reorder; kejelasan bahasa; taxonomy dan konstruk; alasan kesulitan; solusi serta diagnosis pengecoh; orisinalitas. Distribusi kesulitan adalah label editorial sementara, bukan parameter IRT.
 
-## QA standard to apply after backend restoration
+Catatan sumber: pada contoh induktif blueprint PU yang dilampirkan, contoh perpustakaan menuliskan key D sementara penalarannya mendukung C; contoh pola menuliskan C sementara perhitungannya memberi 30/D. Jangan menyalin key contoh tanpa menghitung ulang. File sumber pengguna tidak diubah. Referensi mode tambahan yang disebut skill tidak seluruhnya dilampirkan; gunakan blueprint yang tersedia dan minta standar lengkap sebelum produksi PU baru yang bergantung padanya.
 
-The existing VECTRA PK, PM and PU writer/blueprint standards were reread during this stabilization. Review must check at least:
+## Penerbitan berikutnya
 
-1. stem/stimulus is unambiguous and contains sufficient information;
-2. mathematical/logical solution is independently recomputed;
-3. exactly one intended answer exists for single-choice items;
-4. no distractor is equivalent to the correct option;
-5. option units, forms and precision are consistent;
-6. explanation reaches the correct answer and does not silently rely on unstated assumptions;
-7. explanation fields are coherent: understanding/known/asked/concept/first step/solution/final answer/shortcut/common mistake/option analysis when applicable;
-8. option-letter references remain correct after option reorder;
-9. taxonomy matches the actual construct: PK vs PM vs PU Induktif/Deduktif/Kuantitatif;
-10. difficulty label is supported by reasoning depth/representation load, not just large arithmetic;
-11. LaTeX, tables and any media render correctly on desktop and phone;
-12. the item is original and not a reconstruction of official/leaked questions.
-
-### PK-specific
-
-Use the five official broad domains: Bilangan, Aljabar, Geometri dan Pengukuran, Analisis Data, Peluang. Granular subtopics are a VECTRA production taxonomy, not an official weighting claim.
-
-### PM-specific
-
-Check content plus reasoning process (Formulating/Employing/Interpreting-Evaluating) and context. Do not accept a PK computation with decorative story text as PM.
-
-### PU-specific
-
-Keep the construct boundaries explicit:
-
-- Induktif: generalization/evidence/causal reasoning/analogy/pattern/strengthen-weaken;
-- Deduktif: implication/quantifier/syllogism/sequencing/grouping/constraints;
-- Kuantitatif: elementary quantitative reasoning, not advanced PK or multi-stage PM modeling.
-
-## Publication rules
-
-The stabilization agent must not self-sign human review.
-
-After reviewer approval exists and publication is authorized:
-
-- publish through the repository/application workflow rather than direct ad-hoc row edits;
-- maintain `current_version_id` consistency;
-- update tryout/practice/lesson references only to intended approved versions;
-- do not rewrite snapshots in completed attempts;
-- verify the package question count and timer contract after pointer changes;
-- rerun render and assessment tests.
-
-## Acceptance evidence required
-
-Stage 2 can be called complete only when a backend-active verification produces:
-
-- current count by question-version status;
-- exact list/status of the historical 113 revisions or an explanation of how that historical set changed;
-- exact version IDs currently referenced by MT-01/MT-02;
-- reviewer/math/editorial decision for every proposed replacement;
-- automated structural validation results;
-- a reviewed sample of rendered desktop/mobile questions and explanations;
-- proof that student packages reference the approved versions.
-
-Until then the accurate status is: **review procedure ready; production content re-verification blocked by inactive backend**.
+1. Reviewer sah dan independen memeriksa versi yang sudah ada; pisahkan persetujuan matematis dan editorial yang disyaratkan workflow. Identitas reviewer harus berbeda dari creator/editor.
+2. Setelah diotorisasi, admin menggunakan workflow penerbitan, bukan mengubah status langsung melalui SQL.
+3. Periksa current pointer dan referensi versi tryout/practice/lesson secara atomik; renderer runtime menolak paket yang menjadi parsial karena referensi usang.
+4. Simpan snapshot attempt lama; jangan menjalankan reset/rebuild database untuk memperbaiki status.
+5. Jalankan ulang verifier, audit/render dan acceptance desktop/HP pada versi siswa yang benar-benar baru.

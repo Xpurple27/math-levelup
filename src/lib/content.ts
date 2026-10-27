@@ -6,6 +6,7 @@ export type Question = {
   id: string;
   version: number;
   versionId?: string;
+  previouslySeen?: boolean;
   topic: string;
   section: string;
   difficulty: Difficulty;

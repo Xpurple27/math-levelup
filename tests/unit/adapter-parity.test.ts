@@ -32,6 +32,14 @@ beforeAll(async () => {
     .filter((f) => f.endsWith(".sql"))
     .sort())
     await pg.exec(readFileSync(join("supabase/migrations", file), "utf8"));
+  // Current RPCs validate the catalog rather than accepting historical slugs.
+  for (const pack of tryoutPackages) {
+    await pg.query(
+      `INSERT INTO public.tryout_packages(section_id,code,slug,suite_code,suite_title,title,status,question_count,duration_seconds)
+      VALUES('11000000-0000-4000-8000-000000000001',$1,$2,'TEST-ONLY','TEST_ONLY',$1,'PUBLISHED',20,1200)`,
+      ["TEST-" + pack.slug.toUpperCase(), pack.slug],
+    );
+  }
 }, 30000);
 afterAll(async () => {
   sqlite.close();

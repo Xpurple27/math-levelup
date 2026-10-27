@@ -22,15 +22,16 @@ Mastery uses unique answered logical question IDs and weighted difficulty eviden
 
 ## Learning direction
 
-Published learning modules are linked to normalized subtopics. Pilot-readiness logic exposes only subtopics that have a published module **and** at least one published lesson as recommendation coverage. This prevents `Next Direction` from sending a student to an empty learning path.
+Published learning modules are linked to normalized subtopics. A recommendation requires an active taxonomy chain, published module with readable published lessons, a runnable FREE practice package containing that subtopic, and the existing reassessment quota (3 Medium + 2 Hard). No completed test can manufacture missing content. `readableLearning` filters incomplete modules; `resolveQuestionSet` requires every pinned version to be current and published, without duplicate logical IDs. Package references are fetched in batches rather than one request per package.
 
 When a covered subtopic is selected:
 
 1. Learn opens the module attached to that subtopic.
 2. The final lesson can continue to Practice.
-3. Practice attempts to select the section/domain corresponding to the recommended subtopic when a package is available.
-4. Completed Practice/Assessment attempts contribute evidence through the existing mastery engine.
-5. Progress can reopen completed attempts using the stored frozen snapshot.
+3. Practice selects a FREE package whose actual question coverage includes the lesson’s subtopic.
+4. Practice result offers a targeted mini reassessment only where its quota exists. New items are prioritized; frozen snapshots record exposure in the owner’s last 30 sessions. The result reports repeats.
+5. Completed Practice/Assessment attempts contribute evidence through the existing mastery engine.
+6. Progress can reopen completed attempts using the stored frozen snapshot.
 
 If a published learning path is not available, the UI must state that clearly instead of fabricating a recommendation.
 
@@ -47,3 +48,9 @@ The shared Markdown renderer disables raw HTML, sanitizes content and runs KaTeX
 Pure engine fixtures are test-only. Browser fixtures use a unique temporary data directory and marked TEST_ONLY normalized questions; Vercel cannot enable them. Database tests replay the migration chain and exercise role/grant denial, version immutability, key validity, QA/import and existing transactional engine contracts. CI separates general validation from Chromium-based critical flows.
 
 Local/CI success proves the code/fixture contract, not production database health. Production acceptance requires the correct Supabase project to be active and is recorded separately in [VECTRA execution status](vectra-execution-status.md).
+
+## Evidence interpretation
+
+A session with no answers does not update mastery. In a partially answered skill, blanks contribute zero credit to session evidence and remain in its denominator. Repeated IDs can change mastery through the existing moving average, but unique evidence count does not grow. Across versions, confidence retains the highest difficulty weight observed for each answered logical ID. See the exact equations in [execution status](vectra-execution-status.md).
+
+Suite summaries in browser storage are scoped to the authenticated user ID and are conveniences, not authoritative cross-device assessment records. Legacy unscoped summaries are not imported into another account. Completed server attempts remain authoritative. Reading a lesson is not yet a persisted server-side completion event; pilot observers record that milestone manually.

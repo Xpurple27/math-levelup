@@ -148,6 +148,7 @@ export function createAttempt(
   kind: string,
   topic: string | null,
   questions: Question[],
+  durationSeconds?: number,
 ) {
   db.exec("BEGIN IMMEDIATE");
   try {
@@ -158,7 +159,10 @@ export function createAttempt(
     }
     const id = randomUUID(),
       now = Date.now(),
-      duration = attemptDurationMs(kind, topic);
+      duration =
+        kind === "tryout" && durationSeconds
+          ? durationSeconds * 1000
+          : attemptDurationMs(kind, topic);
     db.prepare(
       "INSERT INTO attempts(id,user_id,kind,topic,started,deadline,snapshot) VALUES(?,?,?,?,?,?,?)",
     ).run(

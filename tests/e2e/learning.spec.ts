@@ -103,10 +103,7 @@ test("mobile student app fits viewport and bottom navigation opens learning", as
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth),
   ).toBeLessThanOrEqual(390);
-  await page
-    .getByRole("button", { name: "Learn", exact: true })
-    .last()
-    .click();
+  await page.getByRole("button", { name: "Learn", exact: true }).last().click();
   await expect(
     page.getByRole("heading", {
       name: /Belajar konsep, lihat contoh, lalu buktikan pemahamanmu/i,

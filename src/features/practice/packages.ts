@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { publishedQuestions } from "@/features/content/runtime";
 import { localContentDatabase } from "@/features/content/db";
 import { onlineBackend } from "@/lib/backend";
+import { resolveQuestionSet } from "@/lib/content-readiness";
 import type { Question } from "@/lib/content";
 
 function hostedDb() {
@@ -25,6 +26,7 @@ export type PracticePackageCard = {
   estimatedMinutes: number;
   section: { id: string; code: string; name: string };
   domain: { id: string; name: string; description: string };
+  subtopicIds?: string[];
   questionCount: number;
   difficulty: { basic: number; medium: number; hard: number };
 };
@@ -163,7 +165,22 @@ async function localPackages(): Promise<PracticePackageCard[]> {
 }
 
 export async function listPracticePackages(): Promise<PracticePackageCard[]> {
-  return onlineBackend() ? hostedPackages() : localPackages();
+  const [cards, bank] = await Promise.all([
+    onlineBackend() ? hostedPackages() : localPackages(),
+    publishedQuestions(),
+  ]);
+  const references = await packageVersionIds(cards.map((card) => card.id));
+  return cards.flatMap((card) => {
+    const questions = resolveQuestionSet(
+      references.get(card.id) || [],
+      bank,
+      card.section.code,
+    );
+    if (!questions || questions.length !== card.questionCount) return [];
+    return [
+      { ...card, subtopicIds: [...new Set(questions.map((q) => q.topic))] },
+    ];
+  });
 }
 
 async function domainForSubtopic(target: string): Promise<string | null> {
@@ -190,27 +207,38 @@ async function domainForSubtopic(target: string): Promise<string | null> {
   return result.rows[0]?.domain_id || null;
 }
 
-async function packageVersionIds(packageId: string) {
+async function packageVersionIds(packageIds: string[]) {
+  const grouped = new Map<string, string[]>();
+  if (!packageIds.length) return grouped;
+  let rows: { package_id: string; question_version_id: string }[];
   if (onlineBackend()) {
     const { data, error } = await hostedDb()
       .from("practice_package_questions")
-      .select("sort_order,question_version_id")
-      .eq("practice_package_id", packageId)
+      .select("practice_package_id,sort_order,question_version_id")
+      .in("practice_package_id", packageIds)
       .order("sort_order");
     if (error) throw error;
-    return (data || []).map((item) => item.question_version_id);
+    rows = (data || []).map((row) => ({
+      package_id: row.practice_package_id,
+      question_version_id: row.question_version_id,
+    }));
+  } else {
+    const db = await localContentDatabase();
+    if (!db) return grouped;
+    rows = (
+      await db.query<{ package_id: string; question_version_id: string }>(
+        `SELECT practice_package_id as package_id,question_version_id FROM public.practice_package_questions
+       WHERE practice_package_id = ANY($1::uuid[]) ORDER BY sort_order`,
+        [packageIds],
+      )
+    ).rows;
   }
-
-  const db = await localContentDatabase();
-  if (!db) return [];
-  const result = await db.query<{ question_version_id: string }>(
-    `SELECT question_version_id
-     FROM public.practice_package_questions
-     WHERE practice_package_id=$1
-     ORDER BY sort_order`,
-    [packageId],
-  );
-  return result.rows.map((item) => item.question_version_id);
+  for (const row of rows) {
+    const items = grouped.get(row.package_id) || [];
+    items.push(row.question_version_id);
+    grouped.set(row.package_id, items);
+  }
+  return grouped;
 }
 
 export async function loadPracticePackage(
@@ -226,22 +254,20 @@ export async function loadPracticePackage(
     const domainId = await domainForSubtopic(target);
     if (domainId)
       card = cards.find(
-        (item) => item.access === "FREE" && item.domain.id === domainId,
+        (item) =>
+          item.access === "FREE" &&
+          item.domain.id === domainId &&
+          item.subtopicIds?.includes(target),
       );
   }
   if (!card) return null;
 
-  const versionIds = await packageVersionIds(card.id);
-  const order = new Map(versionIds.map((id, index) => [id, index]));
-  const ids = new Set(versionIds);
-  const questions = (await publishedQuestions())
-    .filter((question) => question.versionId && ids.has(question.versionId))
-    .sort(
-      (a, b) =>
-        (order.get(a.versionId || "") ?? 9999) -
-        (order.get(b.versionId || "") ?? 9999),
-    );
-
-  if (!questions.length) return null;
+  const versionIds = (await packageVersionIds([card.id])).get(card.id) || [];
+  const questions = resolveQuestionSet(
+    versionIds,
+    await publishedQuestions(),
+    card.section.code,
+  );
+  if (!questions || questions.length !== card.questionCount) return null;
   return { card, questions };
 }

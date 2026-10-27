@@ -1,5 +1,9 @@
 import { createClient } from "@supabase/supabase-js";
-import { adminIdentity, adminError, assertOrigin } from "@/features/content/auth";
+import {
+  adminIdentity,
+  adminError,
+  assertOrigin,
+} from "@/features/content/auth";
 import { StorageError } from "@/lib/store-errors";
 
 export const runtime = "nodejs";
@@ -7,48 +11,76 @@ export const runtime = "nodejs";
 function db() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new StorageError("Database practice belum dikonfigurasi.", 500);
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  if (!url || !key)
+    throw new StorageError("Database practice belum dikonfigurasi.", 500);
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
 }
 
 async function requireAdmin() {
   const identity = await adminIdentity();
-  if (identity.role !== "ADMIN") throw new StorageError("Akses admin ditolak.", 403);
+  if (identity.role !== "ADMIN")
+    throw new StorageError("Akses admin ditolak.", 403);
   return identity;
 }
 
 async function packagePayload() {
   const client = db();
-  const [packagesResult, domainsResult, sectionsResult, questionsResult] = await Promise.all([
-    client
-      .from("practice_packages")
-      .select("id,section_id,domain_id,subtopic_id,code,slug,title,description,access,status,estimated_minutes,sort_order,published_at,practice_package_questions(id,question_version_id,sort_order)")
-      .order("sort_order")
-      .order("title"),
-    client
-      .from("domains")
-      .select("id,code,name,description,sort_order")
-      .eq("status", "ACTIVE")
-      .in("code", ["PK_NUM", "PK_ALG", "PK_GEO", "PK_DATA", "PK_PROB", "PM_QTY", "PM_CHANGE", "PM_GEO", "PM_DATA", "PU_IND", "PU_DED", "PU_QUANT"])
-      .order("sort_order"),
-    client
-      .from("exam_sections")
-      .select("id,code,name,exam_id,exams(code,name)")
-      .eq("status", "ACTIVE")
-      .order("sort_order"),
-    client
-      .from("levelup_question_bank")
-      .select("id,code,version_id,status,stem_md,difficulty,section_id,section,subtopic_id,subtopic,topic_id,topic,domain_id,domain")
-      .eq("status", "PUBLISHED")
-      .order("code")
-      .limit(2000),
-  ]);
-  const error = packagesResult.error || domainsResult.error || sectionsResult.error || questionsResult.error;
+  const [packagesResult, domainsResult, sectionsResult, questionsResult] =
+    await Promise.all([
+      client
+        .from("practice_packages")
+        .select(
+          "id,section_id,domain_id,subtopic_id,code,slug,title,description,access,status,estimated_minutes,sort_order,published_at,practice_package_questions(id,question_version_id,sort_order)",
+        )
+        .order("sort_order")
+        .order("title"),
+      client
+        .from("domains")
+        .select("id,code,name,description,sort_order")
+        .eq("status", "ACTIVE")
+        .in("code", [
+          "PK_NUM",
+          "PK_ALG",
+          "PK_GEO",
+          "PK_DATA",
+          "PK_PROB",
+          "PM_QTY",
+          "PM_CHANGE",
+          "PM_GEO",
+          "PM_DATA",
+          "PU_IND",
+          "PU_DED",
+          "PU_QUANT",
+        ])
+        .order("sort_order"),
+      client
+        .from("exam_sections")
+        .select("id,code,name,exam_id,exams(code,name)")
+        .eq("status", "ACTIVE")
+        .order("sort_order"),
+      client
+        .from("levelup_question_bank")
+        .select(
+          "id,code,version_id,status,stem_md,difficulty,section_id,section,subtopic_id,subtopic,topic_id,topic,domain_id,domain",
+        )
+        .eq("status", "PUBLISHED")
+        .order("code")
+        .limit(2000),
+    ]);
+  const error =
+    packagesResult.error ||
+    domainsResult.error ||
+    sectionsResult.error ||
+    questionsResult.error;
   if (error) throw error;
   return {
     packages: packagesResult.data || [],
     domains: domainsResult.data || [],
-    sections: (sectionsResult.data || []).filter((row) => ["PK", "PM", "PU"].includes(row.code)),
+    sections: (sectionsResult.data || []).filter((row) =>
+      ["PK", "PM", "PU"].includes(row.code),
+    ),
     questions: questionsResult.data || [],
   };
 }
@@ -56,7 +88,10 @@ async function packagePayload() {
 export async function GET() {
   try {
     await requireAdmin();
-    return Response.json({ data: await packagePayload() }, { headers: { "Cache-Control": "no-store" } });
+    return Response.json(
+      { data: await packagePayload() },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     return adminError(error);
   }
@@ -78,7 +113,10 @@ export async function POST(request: Request) {
       const sectionId = String(payload.section_id || "");
       const domainId = String(payload.domain_id || "");
       if (!title || !sectionId || !domainId)
-        throw new StorageError("Judul, bagian UTBK, dan pintu/domain wajib diisi.", 400);
+        throw new StorageError(
+          "Judul, bagian UTBK, dan pintu/domain wajib diisi.",
+          400,
+        );
       const slugBase = String(payload.slug || title)
         .toLowerCase()
         .trim()
@@ -112,7 +150,8 @@ export async function POST(request: Request) {
       const id = String(payload.id || "");
       const sectionId = String(payload.section_id || "");
       const domainId = String(payload.domain_id || "");
-      if (!id || !sectionId || !domainId) throw new StorageError("Paket, bagian, atau pintu tidak valid.", 400);
+      if (!id || !sectionId || !domainId)
+        throw new StorageError("Paket, bagian, atau pintu tidak valid.", 400);
       const { data, error } = await client
         .from("practice_packages")
         .update({
@@ -139,9 +178,13 @@ export async function POST(request: Request) {
         ? payload.question_version_ids.map(String)
         : [];
       if (!packageId) throw new StorageError("Paket tidak valid.", 400);
-      if (versionIds.length > 10) throw new StorageError("Maksimal 10 soal per paket latihan.", 400);
+      if (versionIds.length > 10)
+        throw new StorageError("Maksimal 10 soal per paket latihan.", 400);
       if (new Set(versionIds).size !== versionIds.length)
-        throw new StorageError("Soal duplikat tidak boleh ada dalam satu paket.", 400);
+        throw new StorageError(
+          "Soal duplikat tidak boleh ada dalam satu paket.",
+          400,
+        );
 
       const { data: pack, error: packError } = await client
         .from("practice_packages")
@@ -149,8 +192,10 @@ export async function POST(request: Request) {
         .eq("id", packageId)
         .single();
       if (packError) throw packError;
-      if (pack.status === "ARCHIVED") throw new StorageError("Paket sudah diarsipkan.", 400);
-      if (!pack.domain_id) throw new StorageError("Paket belum memiliki pintu/domain.", 400);
+      if (pack.status === "ARCHIVED")
+        throw new StorageError("Paket sudah diarsipkan.", 400);
+      if (!pack.domain_id)
+        throw new StorageError("Paket belum memiliki pintu/domain.", 400);
 
       if (versionIds.length) {
         const { data: versions, error: versionsError } = await client
@@ -161,10 +206,16 @@ export async function POST(request: Request) {
         if ((versions || []).length !== versionIds.length)
           throw new StorageError("Sebagian soal tidak ditemukan.", 400);
         const invalid = (versions || []).find(
-          (row) => row.status !== "PUBLISHED" || row.section_id !== pack.section_id || row.domain_id !== pack.domain_id,
+          (row) =>
+            row.status !== "PUBLISHED" ||
+            row.section_id !== pack.section_id ||
+            row.domain_id !== pack.domain_id,
         );
         if (invalid)
-          throw new StorageError("Semua soal paket harus PUBLISHED dan berada pada section serta pintu/domain yang sama.", 400);
+          throw new StorageError(
+            "Semua soal paket harus PUBLISHED dan berada pada section serta pintu/domain yang sama.",
+            400,
+          );
       }
 
       const { error: deleteError } = await client
@@ -173,13 +224,15 @@ export async function POST(request: Request) {
         .eq("practice_package_id", packageId);
       if (deleteError) throw deleteError;
       if (versionIds.length) {
-        const { error: insertError } = await client.from("practice_package_questions").insert(
-          versionIds.map((questionVersionId, index) => ({
-            practice_package_id: packageId,
-            question_version_id: questionVersionId,
-            sort_order: (index + 1) * 10,
-          })),
-        );
+        const { error: insertError } = await client
+          .from("practice_package_questions")
+          .insert(
+            versionIds.map((questionVersionId, index) => ({
+              practice_package_id: packageId,
+              question_version_id: questionVersionId,
+              sort_order: (index + 1) * 10,
+            })),
+          );
         if (insertError) throw insertError;
       }
       return Response.json({ data: { count: versionIds.length } });
@@ -194,10 +247,17 @@ export async function POST(request: Request) {
         .eq("practice_package_id", id);
       if (countError) throw countError;
       if ((count || 0) !== 10)
-        throw new StorageError("Paket latihan V2 harus berisi tepat 10 soal sebelum dipublish.", 400);
+        throw new StorageError(
+          "Paket latihan V2 harus berisi tepat 10 soal sebelum dipublish.",
+          400,
+        );
       const { data, error } = await client
         .from("practice_packages")
-        .update({ status: "PUBLISHED", published_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+        .update({
+          status: "PUBLISHED",
+          published_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", id)
         .select()
         .single();
@@ -209,7 +269,11 @@ export async function POST(request: Request) {
       const id = String(payload.id || "");
       const { data, error } = await client
         .from("practice_packages")
-        .update({ status: "DRAFT", published_at: null, updated_at: new Date().toISOString() })
+        .update({
+          status: "DRAFT",
+          published_at: null,
+          updated_at: new Date().toISOString(),
+        })
         .eq("id", id)
         .select()
         .single();

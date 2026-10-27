@@ -14,7 +14,6 @@ import {
   Route,
   Sparkles,
   Target,
-  TrendingUp,
   Zap,
   ShieldCheck,
 } from "lucide-react";
@@ -34,6 +33,7 @@ type Props = {
   streak: number;
   weakest: Mastery | undefined;
   recommended: string;
+  diagnosticReady: boolean;
   setTopic: Dispatch<SetStateAction<string>>;
   go: (v: View) => void;
 };
@@ -48,13 +48,15 @@ export function DashboardView({
   streak,
   weakest,
   recommended,
+  diagnosticReady,
   setTopic,
   go,
 }: Props) {
   const topicName = useTopicName();
   const published = usePublishedCount();
-  const hasDiagnostic = history.some((h) => h.kind === "diagnostic");
-  const diagnosticReady = published > 0;
+  const hasDiagnostic = history.some(
+    (h) => h.kind === "diagnostic" && h.result.total > h.result.unanswered,
+  );
   const learningReady = Boolean(recommended);
   const confidence = weakest ? Math.round(weakest.confidence * 100) : null;
 
@@ -146,13 +148,13 @@ export function DashboardView({
                     color: "#B7FF3C",
                   }}
                 >
-                  Diagnostic belum tersedia karena belum ada soal yang
-                  dipublikasikan.
+                  Diagnostic belum tersedia. Cakupan 15 soal PK, PM, dan PU
+                  dengan tingkat kesulitan yang diperlukan belum lengkap.
                 </p>
               )}
               <div className="hero-meta">
                 <span>
-                  <Clock size={14} /> ± 10 menit
+                  <Clock size={14} /> 15 soal · maksimal 30 menit
                 </span>
                 <span>
                   <BookOpen size={14} /> {published || 0} soal tersedia
@@ -233,9 +235,9 @@ export function DashboardView({
         />
         <Stat
           icon={<BookOpen size={21} />}
-          label="Evidence"
+          label="Jawaban terkirim"
           value={String(solved)}
-          foot="Soal yang sudah menjadi bukti belajar"
+          foot="Termasuk pengulangan dalam 30 sesi terakhir"
           color="orange"
         />
         <Stat
@@ -251,7 +253,9 @@ export function DashboardView({
         <section>
           <div className="section-heading">
             <h2>Next Direction ↗</h2>
-            <span className="muted small-text">Satu prioritas pada satu waktu</span>
+            <span className="muted small-text">
+              Satu prioritas pada satu waktu
+            </span>
           </div>
           <div className="next-card">
             <div className="next-icon">
@@ -273,7 +277,7 @@ export function DashboardView({
               <p>
                 {learningReady
                   ? weakest
-                    ? "Area ini menjadi prioritas dari bukti kemampuan yang tersedia dan memiliki materi yang sudah dipublikasikan."
+                    ? `Indikator mastery ${weakest.value}% dari ${weakest.count} soal unik; kecukupan bukti ${Math.round(weakest.confidence * 100)}%. Area ini memiliki mastery terendah di antara keterampilan dengan materi, latihan gratis, dan asesmen ulang yang tersedia.`
                     : "Materi ini sudah tersedia untuk membangun bukti kemampuan pertamamu."
                   : "Bukti kemampuan tetap tersimpan, tetapi VECTRA tidak akan mengarahkanmu ke materi kosong. Pilih Practice atau tunggu learning path dipublikasikan."}
               </p>
@@ -316,7 +320,8 @@ export function DashboardView({
               </span>
               <strong>VECTRA Assessment</strong>
               <p>
-                Ukur kesiapan dalam sesi dengan batas waktu dan hasil terstruktur.
+                Ukur kesiapan dalam sesi dengan batas waktu dan hasil
+                terstruktur.
               </p>
               <span className="quick-link">
                 Open Assessment <ArrowRight size={15} />

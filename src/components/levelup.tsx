@@ -41,6 +41,9 @@ export default function Levelup() {
   const [pendingView, setPendingView] = useState<View | null>(null);
   const [mastery, setMastery] = useState<Mastery[]>([]);
   const [history, setHistory] = useState<History[]>([]);
+  const [diagnosticReady, setDiagnosticReady] = useState(false);
+  const [practiceCoverage, setPracticeCoverage] = useState<string[]>([]);
+  const [miniCoverage, setMiniCoverage] = useState<string[]>([]);
   const [learningCoverage, setLearningCoverage] = useState<string[]>([]);
   const [streak, setStreak] = useState(0);
   const [days, setDays] = useState<string[]>([]);
@@ -64,6 +67,9 @@ export default function Levelup() {
     setMastery(d.mastery || []);
     setHistory(d.history || []);
     setLearningCoverage(d.learningCoverage || []);
+    setPracticeCoverage(d.practiceCoverage || []);
+    setMiniCoverage(d.miniCoverage || []);
+    setDiagnosticReady(d.diagnosticReady === true);
     setStreak(d.streak || 0);
     setDays(d.days || []);
     if (d.notice) setError(d.notice);
@@ -225,16 +231,16 @@ export default function Levelup() {
     window.location.replace("/?signed_out=1");
   }
 
-  const weakest = [...mastery].sort(
+  const measured = mastery.filter((m) => m.count > 0);
+  const weakest = [...measured].sort(
     (a, b) => a.value - b.value || a.confidence - b.confidence,
   )[0];
-  const recommendedMastery = [...mastery]
+  const recommendedMastery = [...measured]
     .filter((item) => learningCoverage.includes(item.topic))
     .sort((a, b) => a.value - b.value || a.confidence - b.confidence)[0];
-  const recommended =
-    recommendedMastery?.topic || learningCoverage[0] || "";
-  const avg = mastery.length
-    ? Math.round(mastery.reduce((s, m) => s + m.value, 0) / mastery.length)
+  const recommended = recommendedMastery?.topic || learningCoverage[0] || "";
+  const avg = measured.length
+    ? Math.round(measured.reduce((s, m) => s + m.value, 0) / measured.length)
     : null;
   const solved = history.reduce(
     (s, h) => s + h.result.total - h.result.unanswered,
@@ -346,8 +352,9 @@ export default function Levelup() {
                 avg={avg}
                 solved={solved}
                 streak={streak}
-                weakest={recommendedMastery || weakest}
+                weakest={recommendedMastery}
                 recommended={recommended}
+                diagnosticReady={diagnosticReady}
                 setTopic={setTopic}
                 go={go}
               />
@@ -355,7 +362,11 @@ export default function Levelup() {
             {view === "learn" && (
               <LearnView
                 targetSubtopicId={topic}
-                onPractice={() => go("practice")}
+                practiceCoverage={practiceCoverage}
+                onPractice={(subtopic) => {
+                  setTopic(subtopic);
+                  go("practice");
+                }}
               />
             )}
             {view === "practice" && (
@@ -370,12 +381,13 @@ export default function Levelup() {
                 setCount={setCount}
                 busy={busy}
                 start={start}
-                recommended={recommended}
+                recommended={topic || recommended}
                 weakest={recommendedMastery || weakest}
               />
             )}
             {view === "tryout" && (
               <TryoutView
+                userId={user?.id || ""}
                 history={history}
                 busy={busy}
                 start={start}
@@ -420,6 +432,9 @@ export default function Levelup() {
             )}
             {view === "result" && attempt?.result && (
               <ResultView
+                userId={user?.id || ""}
+                learningCoverage={learningCoverage}
+                miniCoverage={miniCoverage}
                 attempt={attempt}
                 resultTab={resultTab}
                 setResultTab={setResultTab}

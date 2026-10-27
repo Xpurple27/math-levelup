@@ -118,22 +118,45 @@ function LessonBlockPreview({ block }: { block: Block }) {
     return text ? (
       <figure className="learning-preview-image">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={text} alt={String(block.content_json.alt || "Media lesson")} />
-        {block.content_json.alt ? <figcaption>{String(block.content_json.alt)}</figcaption> : null}
+        <img
+          src={text}
+          alt={String(block.content_json.alt || "Media lesson")}
+        />
+        {block.content_json.alt ? (
+          <figcaption>{String(block.content_json.alt)}</figcaption>
+        ) : null}
       </figure>
     ) : null;
   }
-  if (block.block_type === "LATEX")
-    return <Markdown text={`$$${text}$$`} />;
+  if (block.block_type === "LATEX") return <Markdown text={`$$${text}$$`} />;
   if (block.block_type === "HEADING") return <h2>{text || "Judul bagian"}</h2>;
   if (block.block_type === "CALLOUT")
-    return <aside className="learning-preview-callout"><Markdown text={text} /></aside>;
+    return (
+      <aside className="learning-preview-callout">
+        <Markdown text={text} />
+      </aside>
+    );
   if (block.block_type === "EXAMPLE")
-    return <section className="learning-preview-example"><span>CONTOH TERBIMBING</span><Markdown text={text} /></section>;
+    return (
+      <section className="learning-preview-example">
+        <span>CONTOH TERBIMBING</span>
+        <Markdown text={text} />
+      </section>
+    );
   if (block.block_type === "COMMON_MISTAKE")
-    return <section className="learning-preview-mistake"><span>KESALAHAN UMUM</span><Markdown text={text} /></section>;
+    return (
+      <section className="learning-preview-mistake">
+        <span>KESALAHAN UMUM</span>
+        <Markdown text={text} />
+      </section>
+    );
   if (block.block_type === "SUMMARY")
-    return <section className="learning-preview-summary"><span>RANGKUMAN</span><Markdown text={text} /></section>;
+    return (
+      <section className="learning-preview-summary">
+        <span>RANGKUMAN</span>
+        <Markdown text={text} />
+      </section>
+    );
   return <Markdown text={text} />;
 }
 
@@ -148,7 +171,7 @@ export function LearningBuilder() {
     assignments: [],
   });
   const [selectedModule, setSelectedModule] = useState("");
-  const [selectedLesson, setSelectedLesson] = useState("");
+  const [selectedLessonId, setSelectedLesson] = useState("");
   const [draftBlocks, setDraftBlocks] = useState<Block[]>([]);
   const [draftAssignments, setDraftAssignments] = useState<Assignment[]>([]);
   const [questionSearch, setQuestionSearch] = useState("");
@@ -176,15 +199,42 @@ export function LearningBuilder() {
   }
 
   useEffect(() => {
-    void load().catch((error: Error) => setMessage(error.message));
+    const controller = new AbortController();
+    fetch("/api/admin/learning", {
+      cache: "no-store",
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const json = await response.json();
+        if (!response.ok)
+          throw new Error(json.error || "Gagal memuat learning.");
+        if (controller.signal.aborted) return;
+        setData(json.data);
+        setSelectedModule(
+          (current) => current || json.data.modules[0]?.id || "",
+        );
+      })
+      .catch((error: Error) => {
+        if (!controller.signal.aborted) setMessage(error.message);
+      });
+    return () => controller.abort();
   }, []);
 
   const lessons = useMemo(
     () => data.lessons.filter((lesson) => lesson.module_id === selectedModule),
     [data.lessons, selectedModule],
   );
-  const currentLesson = data.lessons.find((lesson) => lesson.id === selectedLesson);
-  const currentModule = data.modules.find((module) => module.id === selectedModule);
+  const selectedLesson = lessons.some(
+    (lesson) => lesson.id === selectedLessonId,
+  )
+    ? selectedLessonId
+    : lessons[0]?.id || "";
+  const currentLesson = data.lessons.find(
+    (lesson) => lesson.id === selectedLesson,
+  );
+  const currentModule = data.modules.find(
+    (module) => module.id === selectedModule,
+  );
   const filteredQuestions = useMemo(() => {
     const query = questionSearch.trim().toLowerCase();
     return data.questions
@@ -197,18 +247,31 @@ export function LearningBuilder() {
           question.topic,
           question.subtopic,
           question.section,
-        ].some((value) => String(value || "").toLowerCase().includes(query));
+        ].some((value) =>
+          String(value || "")
+            .toLowerCase()
+            .includes(query),
+        );
       })
       .slice(0, 30);
   }, [data.questions, questionSearch]);
 
-  useEffect(() => {
-    if (!selectedModule) return;
-    if (!lessons.some((lesson) => lesson.id === selectedLesson))
-      setSelectedLesson(lessons[0]?.id || "");
-  }, [lessons, selectedLesson, selectedModule]);
-
-  useEffect(() => {
+  // Reset edits with their server payload before rendering the selected editor.
+  const [draftSource, setDraftSource] = useState({
+    blocks: data.blocks,
+    assignments: data.assignments,
+    lesson: selectedLesson,
+  });
+  if (
+    draftSource.blocks !== data.blocks ||
+    draftSource.assignments !== data.assignments ||
+    draftSource.lesson !== selectedLesson
+  ) {
+    setDraftSource({
+      blocks: data.blocks,
+      assignments: data.assignments,
+      lesson: selectedLesson,
+    });
     setDraftBlocks(
       data.blocks
         .filter((block) => block.lesson_id === selectedLesson)
@@ -219,7 +282,7 @@ export function LearningBuilder() {
         .filter((item) => item.lesson_id === selectedLesson)
         .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0)),
     );
-  }, [data.blocks, data.assignments, selectedLesson]);
+  }
 
   async function post(action: string, payload: Record<string, unknown>) {
     setBusy(true);
@@ -607,10 +670,15 @@ export function LearningBuilder() {
               </header>
               <div className="learning-preview-body">
                 {draftBlocks.map((block, index) => (
-                  <LessonBlockPreview block={block} key={`${index}-${block.block_type}`} />
+                  <LessonBlockPreview
+                    block={block}
+                    key={`${index}-${block.block_type}`}
+                  />
                 ))}
                 {!draftBlocks.length && (
-                  <p className="learning-empty">Lesson belum memiliki materi.</p>
+                  <p className="learning-empty">
+                    Lesson belum memiliki materi.
+                  </p>
                 )}
                 {draftAssignments.length > 0 && (
                   <section className="learning-preview-questions">
@@ -655,8 +723,9 @@ export function LearningBuilder() {
                     <header>
                       <span>{String(index + 1).padStart(2, "0")}</span>
                       <strong>
-                        {blockTypes.find(([type]) => type === block.block_type)?.[1] ||
-                          block.block_type}
+                        {blockTypes.find(
+                          ([type]) => type === block.block_type,
+                        )?.[1] || block.block_type}
                       </strong>
                       <div>
                         <button
@@ -673,7 +742,10 @@ export function LearningBuilder() {
                         >
                           <ChevronDown size={15} />
                         </button>
-                        <button className="danger" onClick={() => remove(index)}>
+                        <button
+                          className="danger"
+                          onClick={() => remove(index)}
+                        >
                           Hapus
                         </button>
                       </div>
@@ -706,12 +778,15 @@ export function LearningBuilder() {
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={blockText(block)}
-                              alt={String(block.content_json.alt || "Preview media")}
+                              alt={String(
+                                block.content_json.alt || "Preview media",
+                              )}
                             />
                           </div>
                         ) : (
                           <small>
-                            Upload dan kelola gambar lebih dulu melalui menu Media.
+                            Upload dan kelola gambar lebih dulu melalui menu
+                            Media.
                           </small>
                         )}
                       </div>
@@ -741,8 +816,8 @@ export function LearningBuilder() {
                     <span>04</span>
                     <strong>Question Bank</strong>
                     <p>
-                      Tautkan soal PUBLISHED sebagai guided practice, checkpoint,
-                      mini assessment, atau reinforcement.
+                      Tautkan soal PUBLISHED sebagai guided practice,
+                      checkpoint, mini assessment, atau reinforcement.
                     </p>
                   </div>
                   <Link2 size={19} />
@@ -771,20 +846,25 @@ export function LearningBuilder() {
                     <article key={question.version_id}>
                       <div>
                         <span>
-                          {question.code} · {question.section} · {question.difficulty}
+                          {question.code} · {question.section} ·{" "}
+                          {question.difficulty}
                         </span>
                         <Markdown text={question.stem_md} />
                         <small>
-                          {question.domain} › {question.topic} › {question.subtopic}
+                          {question.domain} › {question.topic} ›{" "}
+                          {question.subtopic}
                         </small>
                       </div>
-                      <button onClick={() => addQuestion(question)}>+ Tambah</button>
+                      <button onClick={() => addQuestion(question)}>
+                        + Tambah
+                      </button>
                     </article>
                   ))}
                   {!data.questions.length && (
                     <p className="learning-empty">
-                      Belum ada soal PUBLISHED di Question Bank. Builder tetap bisa
-                      disusun; soal dapat ditautkan setelah konten lolos QA.
+                      Belum ada soal PUBLISHED di Question Bank. Builder tetap
+                      bisa disusun; soal dapat ditautkan setelah konten lolos
+                      QA.
                     </p>
                   )}
                 </div>
@@ -799,7 +879,9 @@ export function LearningBuilder() {
                           <span>
                             <b>{String(index + 1).padStart(2, "0")}</b>
                             <em>{item.role.replaceAll("_", " ")}</em>
-                            <small>{question?.code || item.question_version_id}</small>
+                            <small>
+                              {question?.code || item.question_version_id}
+                            </small>
                           </span>
                           <button
                             onClick={() =>

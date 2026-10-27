@@ -84,7 +84,7 @@ Primary identity:
 - Turquoise: `#00D1B2`
 - Lime: `#B7FF3C`
 
-Public URL is configurable through `NEXT_PUBLIC_APP_URL`; do not hardcode a future VECTRA domain into application code.
+Public URL is configurable through `NEXT_PUBLIC_SITE_URL` (or `NEXT_PUBLIC_APP_URL`); do not hardcode a future VECTRA domain into application code.
 
 ## Verify
 
@@ -101,3 +101,15 @@ npm run audit:repository
 The `LEVELUP_E2E_PRODUCTION` name is also retained for internal compatibility. E2E runs use isolated TEST_ONLY fixtures and must never mutate production data.
 
 Vercel always uses Supabase Auth/Postgres and never the local fallback. Apply migrations and server-only configuration using the deployment guide. Never expose `SUPABASE_SERVICE_ROLE_KEY` or publicize frozen assessment snapshots.
+
+## Verified milestone status — 27 October 2026
+
+The full learning loop is verified **locally** at desktop/mobile sizes with TEST_ONLY data, including login/resume and result reopening. Production Supabase is healthy on recheck, but a complete published content path and independent review evidence are still missing. Student pilot has not started; this is not a production-readiness claim.
+
+- [Current execution status](docs/vectra-execution-status.md)
+- [Validation evidence](docs/validation-current.md)
+- [Content/version review](docs/content-review-status.md)
+- [Pilot protocol and blank recording template](docs/student-pilot-protocol.md)
+- [Case study](docs/vectra-case-study.md), [60–90 second demo](docs/demo-script.md), [three premium packages blueprint](docs/premium-blueprint.md)
+
+For read-only production inventory use `supabase/verify-vectra-readiness.sql`. Content exports can be checked with `node scripts/audit-content-export.mjs input.json report.json`; keep answer-bearing exports out of browser assets and public evidence. The structural report is not independent mathematical approval.

@@ -60,7 +60,8 @@ type Payload = {
 
 type Props = {
   targetSubtopicId?: string;
-  onPractice?: () => void;
+  onPractice?: (subtopic: string) => void;
+  practiceCoverage?: string[];
 };
 
 function text(block: Block) {
@@ -134,7 +135,11 @@ const roleLabel: Record<string, string> = {
   REINFORCEMENT: "Reinforcement",
 };
 
-export function LearnView({ targetSubtopicId, onPractice }: Props) {
+export function LearnView({
+  targetSubtopicId,
+  onPractice,
+  practiceCoverage = [],
+}: Props) {
   const [data, setData] = useState<Payload>({
     modules: [],
     lessons: [],
@@ -278,7 +283,9 @@ export function LearnView({ targetSubtopicId, onPractice }: Props) {
                 <strong>{module.title}</strong>
                 <small>
                   {module.subtopics?.topics?.domains?.name || "Matematika"} ·{" "}
-                  {module.subtopics?.topics?.name || module.subtopics?.name || ""}
+                  {module.subtopics?.topics?.name ||
+                    module.subtopics?.name ||
+                    ""}
                 </small>
               </span>
               <em>
@@ -351,7 +358,9 @@ export function LearnView({ targetSubtopicId, onPractice }: Props) {
                   <StudentBlock block={block} key={block.id} />
                 ))}
                 {!blocks.length && (
-                  <p className="learn-sidebar-empty">Isi lesson belum tersedia.</p>
+                  <p className="learn-sidebar-empty">
+                    Isi lesson belum tersedia.
+                  </p>
                 )}
 
                 {assignments.length > 0 && (
@@ -360,7 +369,9 @@ export function LearnView({ targetSubtopicId, onPractice }: Props) {
                       <CheckCircle2 size={18} />
                       <div>
                         <span>UJI PEMAHAMAN</span>
-                        <strong>{assignments.length} aktivitas terhubung</strong>
+                        <strong>
+                          {assignments.length} aktivitas terhubung
+                        </strong>
                       </div>
                     </div>
                     {assignments.map((item) => (
@@ -369,7 +380,9 @@ export function LearnView({ targetSubtopicId, onPractice }: Props) {
                         <strong>
                           {item.question_versions?.questions?.code || "Soal"}
                         </strong>
-                        <Markdown text={item.question_versions?.stem_md || ""} />
+                        <Markdown
+                          text={item.question_versions?.stem_md || ""}
+                        />
                         <small>
                           {item.question_versions?.difficulty || ""} ·{" "}
                           {item.question_versions?.question_type || ""}
@@ -406,29 +419,32 @@ export function LearnView({ targetSubtopicId, onPractice }: Props) {
                 </button>
               </nav>
 
-              {currentIndex === moduleLessons.length - 1 && onPractice && (
-                <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#cfeee8] bg-[#f2fcf9] p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#14705f]">
-                      NEXT DIRECTION
-                    </span>
-                    <h3 className="mt-1 text-lg font-extrabold text-[#11182b]">
-                      Buktikan konsep ini lewat practice.
-                    </h3>
-                    <p className="mt-1 text-sm leading-6 text-[#697386]">
-                      VECTRA akan membuka domain practice yang paling dekat dengan
-                      learning path ini bila paketnya tersedia.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0b1020] px-4 text-sm font-extrabold text-white"
-                    onClick={onPractice}
-                  >
-                    Continue to Practice <ArrowRight size={16} />
-                  </button>
-                </section>
-              )}
+              {currentIndex === moduleLessons.length - 1 &&
+                onPractice &&
+                currentModule &&
+                practiceCoverage.includes(currentModule.subtopic_id) && (
+                  <section className="mt-5 flex flex-col gap-3 rounded-2xl border border-[#cfeee8] bg-[#f2fcf9] p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#14705f]">
+                        NEXT DIRECTION
+                      </span>
+                      <h3 className="mt-1 text-lg font-extrabold text-[#11182b]">
+                        Buktikan konsep ini lewat practice.
+                      </h3>
+                      <p className="mt-1 text-sm leading-6 text-[#697386]">
+                        Latihan yang tersedia memuat keterampilan pada materi
+                        ini.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#0b1020] px-4 text-sm font-extrabold text-white"
+                      onClick={() => onPractice(currentModule!.subtopic_id)}
+                    >
+                      Continue to Practice <ArrowRight size={16} />
+                    </button>
+                  </section>
+                )}
             </>
           )}
         </main>

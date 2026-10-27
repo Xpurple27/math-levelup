@@ -9,9 +9,11 @@ export const kindLabel: Record<string, string> = {
   practice: "VECTRA Practice",
 };
 
-export const topicName = (id: string | null) => (id ? "Subtopik" : "PK · PM · PU");
+export const topicName = (id: string | null) =>
+  id ? "Subtopik" : "PK · PM · PU";
 
 export function useTopicName() {
   const topics = useTopics();
-  return (id: string | null) => topics.find((t) => t.id === id)?.name || topicName(id);
+  return (id: string | null) =>
+    topics.find((t) => t.id === id)?.name || topicName(id);
 }

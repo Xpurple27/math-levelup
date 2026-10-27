@@ -19,9 +19,7 @@ test("public site is separate from protected student app", async ({ page }) => {
 test("login and registration use dedicated pages", async ({ page }) => {
   await page.goto("/login");
   await expect(page.getByRole("button", { name: "Masuk" })).toBeVisible();
-  await expect(
-    page.getByRole("link", { name: "Daftar gratis" }),
-  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "Daftar gratis" })).toBeVisible();
 
   await page.goto("/register");
   await expect(
@@ -36,9 +34,7 @@ test("mobile landing keeps login and registration visible and tappable", async (
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
 
-  const login = page
-    .getByRole("link", { name: "Masuk", exact: true })
-    .first();
+  const login = page.getByRole("link", { name: "Masuk", exact: true }).first();
   const register = page.getByRole("link", { name: /^Mulai/ }).first();
   await expect(login).toBeVisible();
   await expect(register).toBeVisible();
@@ -52,11 +48,16 @@ test("mobile landing keeps login and registration visible and tappable", async (
   await expect(page).toHaveURL(/\/login$/);
 
   await page.goto("/");
-  await page.getByRole("link", { name: /^Mulai/ }).first().click();
+  await page
+    .getByRole("link", { name: /^Mulai/ })
+    .first()
+    .click();
   await expect(page).toHaveURL(/\/register$/);
 });
 
-test("mobile login stays readable without horizontal overflow", async ({ page }) => {
+test("mobile login stays readable without horizontal overflow", async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/login");
 
@@ -78,9 +79,15 @@ test("mobile login stays readable without horizontal overflow", async ({ page })
   ).toBe(true);
 });
 
-test("public diagnostic CTA is an actionable registration link", async ({ page }) => {
+test("public diagnostic CTA is an actionable registration link", async ({
+  page,
+}) => {
   await page.goto("/");
-  const diagnosticCta = page.getByRole("link", { name: /^Start Diagnostic/ });
+  const diagnosticCtas = page.getByRole("link", { name: /^Start Diagnostic/ });
+  await expect(diagnosticCtas).toHaveCount(2);
+  for (const cta of await diagnosticCtas.all())
+    await expect(cta).toHaveAttribute("href", "/register");
+  const diagnosticCta = diagnosticCtas.first();
   await expect(diagnosticCta).toBeVisible();
   await diagnosticCta.click();
   await expect(page).toHaveURL(/\/register$/);

@@ -1,74 +1,32 @@
-# VECTRA premium package blueprint
+# Blueprint tiga paket premium VECTRA
 
-Status: planning only. This document does not change pricing, access entitlements, payment behavior, or production package status.
+Status: **rencana setelah fondasi gratis dan pilot terverifikasi**. Tidak mengubah harga, entitlement, akses, payment atau data produksi. Inventaris yang diperiksa 27 Oktober 2026 mempunyai dua suite gratis dan belum mempunyai suite premium.
 
-Premium work starts only after the free foundation and one complete learning loop are verified.
+## Kontrak yang diusulkan
 
-## Product principle
+Tiga suite lanjutan: MT-03, MT-04, MT-05. Untuk konsistensi dengan MT-01/02 yang terkonfirmasi, rencana awal per suite adalah PU 30 soal/30 menit, PK 20/20 menit, PM 20/42,5 menit; total 70 soal/92m30s. Ini kontrak produk sementara, bukan klaim format resmi UTBK 2027. Periksa framework resmi tahun sasaran sebelum memasarkan kesesuaian ujian.
 
-Premium should sell **better direction and deeper evidence**, not merely “more questions”. The free experience must already demonstrate the core loop; premium extends depth, coverage and repeated measurement.
+| Suite                 | Tujuan bukti                                        | Manfaat yang disiapkan                                                                                 | Pemisahan konten                                                                          |
+| --------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| MT-03 — Coverage      | Memeriksa cakupan PK/PM/PU setelah dua paket gratis | Ringkasan kelompok keterampilan, count bukti unik, prioritas belajar yang mempunyai materi dan latihan | Butir baru dengan blueprint sebanding; bukan copy atau perubahan angka MT-01/02           |
+| MT-04 — Reinforcement | Mengikuti latihan pada kesenjangan yang ditemukan   | Set latihan penguatan per prioritas, pembahasan rinci tiap pengecoh, alasan rekomendasi                | Asesmen memakai ID berbeda dari latihan jika tersedia; paparan ulang dilaporkan           |
+| MT-05 — Reassessment  | Mengukur bukti setelah siklus belajar berikutnya    | Riwayat tiga tes, perbandingan deskriptif keterampilan yang sama, langkah berikutnya                   | Set setara secara blueprint dan tingkat tuntutan editorial; belum dikalibrasi psikometrik |
 
-## Package 1 — Coverage Builder
+Setiap butir wajib mempunyai konsep, langkah pertama, solusi yang dapat diperiksa, jawaban akhir dan analisis pengecoh. Kesulitan berasal dari penalaran, bukan bacaan kabur atau aritmetika panjang. PK, PM dan PU mengikuti standar writer/blueprint masing-masing. Review independen dan penerbitan eksplisit tetap diperlukan.
 
-Purpose: broaden evidence across PK, PM and PU after the free diagnostic/mini tryout.
+## Hubungan gratis dan premium
 
-Candidate content:
+Alur gratis harus sudah menunjukkan diagnostic → profil → alasan rekomendasi → materi → latihan → asesmen ulang → progres. Premium menambah kedalaman dan keluasan bukti, variasi latihan serta kesempatan mengukur lagi; bukan menahan pembahasan pokok agar paket gratis tampak buruk.
 
-- additional curated Practice sets across published taxonomy domains;
-- explanation quality equal to or better than the free sets;
-- domain-level strength/gap summary;
-- recommended reinforcement path after completion;
-- saved attempt history during the access period.
+Catatan keputusan harga historis yang disebut dalam rencana proyek: Rp30.000 untuk bundel tiga paket, dengan gagasan akses 90 hari. Belum ada dasar untuk menyebut entitlement/checkout tersebut aktif pada implementasi yang diperiksa. Validasi keputusan pemilik dan implementasi terbaru sebelum perubahan harga, masa akses atau pembayaran. Dokumen ini tidak menetapkan harga baru.
 
-Value statement: **Build enough evidence to see which domains are consistently strong or weak.**
+## Gate sebelum pembuatan dan penjualan
 
-## Package 2 — Targeted Reinforcement
+1. Acceptance akun/attempt produksi lulus pada backend yang benar.
+2. Versi siswa MT-01/02 telah direview matematis/editorial dan mempunyai bukti reviewer independen.
+3. Satu alur gratis tersedia di produksi, lulus desktop/HP dan pilot awal tanpa kendala kritis yang belum ditangani.
+4. Pemetaan taxonomy, lesson/practice dan current version konsisten; snapshot hasil lama tetap immutable.
+5. Paket premium menggunakan konten yang disetujui; tidak mengandalkan 113 revisi yang masih menunggu.
+6. Klaim pemasaran menggunakan bukti nyata. Tidak memakai prediksi skor resmi, IRT produksi, probabilitas confidence, testimoni atau peningkatan hasil yang belum terukur.
 
-Purpose: turn identified learning gaps into an explicit learn → practice → checkpoint cycle.
-
-Candidate content:
-
-- reinforcement sets mapped to published learning paths;
-- equivalent-but-different reassessment items where available;
-- common-mistake and distractor analysis surfaced after submission;
-- comparison between pre-reinforcement and post-reinforcement evidence without claiming psychometric gain.
-
-Value statement: **Practice the gap, not the entire syllabus again.**
-
-## Package 3 — Assessment Series
-
-Purpose: repeated timed measurement after sufficient Practice inventory exists.
-
-Candidate content:
-
-- three premium Mini/UTBK-scope assessment packages built from reviewed exclusive versions;
-- fixed package snapshots and section timers;
-- result breakdown and structured explanations;
-- best-attempt/history view derived from persisted attempts;
-- next-direction recommendation linked back to available learning/practice.
-
-Value statement: **Measure whether the direction is producing stronger evidence under time pressure.**
-
-## Gating criteria before implementation
-
-Do not create or market these packages until:
-
-1. Supabase production is active and account/attempt acceptance tests pass.
-2. MT-01 and MT-02 version state is re-verified.
-3. At least one free Diagnostic → Learn → Practice → Assessment → Progress loop passes desktop and mobile tests.
-4. Human review requirements for new/revised question versions are satisfied.
-5. The free pilot identifies no critical auth/storage/scoring/content issues.
-6. Current pricing and entitlement decisions are re-confirmed before any checkout/payment change.
-
-## Content separation
-
-Premium assessment items should preferably use question versions not already exposed repeatedly in free Practice. Reusing the exact same item can inflate familiarity and weakens reassessment value. If an item must be reused, label the limitation in internal QA and do not interpret improvement as independent evidence.
-
-## Out of scope for this blueprint
-
-- changing the existing Rp30.000 idea or any other price;
-- payment-provider implementation;
-- subscription architecture;
-- IRT/calibrated score claims;
-- teacher dashboards;
-- AI tutor or unrelated product expansion.
+Dashboard pengajar, game/multiplayer, IELTS, AI tutor, langganan dan integrasi payment baru tetap di luar milestone ini.

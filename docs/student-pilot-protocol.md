@@ -1,6 +1,6 @@
 # VECTRA student pilot protocol
 
-Status: **ready-to-run protocol; no pilot participants or outcomes are claimed here.**
+Status: **protokol siap digunakan; pelaksanaan produksi menunggu gate konten/reviewer dan acceptance akun. Belum ada peserta atau hasil nyata.**
 
 Target: 10–20 students preparing for UTBK.
 
@@ -35,7 +35,7 @@ Keep demo/test accounts separate from real student accounts.
 5. Read the Learning Profile and Next Direction.
 6. Open the recommended lesson and read it through the final lesson step.
 7. Continue to the recommended Practice set and complete it.
-8. Open Assessment and complete the assigned Mini Tryout or reassessment scope.
+8. Dari hasil Practice, pilih Asesmen ulang keterampilan dan selesaikan mini yang ditugaskan.
 9. Open Progress and review the latest evidence.
 10. Report any point where wording, navigation, mathematics, layout, loading, or account state is confusing.
 
@@ -76,16 +76,16 @@ If the production backend is unavailable, stop the pilot. Do not switch students
 
 For each pilot ID record:
 
-| Metric | Definition |
-| --- | --- |
-| Account success | Student reaches authenticated workspace without facilitator workaround |
-| Diagnostic completion | Diagnostic is submitted successfully |
-| Recommendation open rate | Student opens the recommended published learning path |
-| Lesson completion proxy | Student reaches the final lesson step |
-| Practice completion | Recommended Practice attempt is submitted |
-| Reassessment completion | Assigned assessment is submitted |
-| Result reopen success | Student reopens a completed attempt from Progress |
-| Critical failure | Flow cannot continue due to auth, storage, missing content, timer, submit or rendering defect |
+| Metric                   | Definition                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| Account success          | Student reaches authenticated workspace without facilitator workaround                        |
+| Diagnostic completion    | Diagnostic is submitted successfully                                                          |
+| Recommendation open rate | Student opens the recommended published learning path                                         |
+| Lesson completion proxy  | Student reaches the final lesson step                                                         |
+| Practice completion      | Recommended Practice attempt is submitted                                                     |
+| Reassessment completion  | Assigned assessment is submitted                                                              |
+| Result reopen success    | Student reopens a completed attempt from Progress                                             |
+| Critical failure         | Flow cannot continue due to auth, storage, missing content, timer, submit or rendering defect |
 
 Recommended summary after the pilot:
 
@@ -115,9 +115,9 @@ Ask after the task, not during every screen:
 
 ## Issue log template
 
-| Pilot ID | Device | Step | Severity | What happened | Reproducible? | Screenshot ref | Status |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| P01 | phone | Diagnostic submit | critical/high/medium/low | ... | yes/no | anonymized ref only | open/fixed/retest |
+| Pilot ID | Device | Step              | Severity                 | What happened | Reproducible? | Screenshot ref      | Status            |
+| -------- | ------ | ----------------- | ------------------------ | ------------- | ------------- | ------------------- | ----------------- |
+| P01      | phone  | Diagnostic submit | critical/high/medium/low | ...           | yes/no        | anonymized ref only | open/fixed/retest |
 
 Severity:
 
@@ -138,4 +138,12 @@ Before inviting 10–20 students:
 - resume and result reopening work;
 - desktop and mobile critical E2E are green or documented with a non-product infrastructure blocker.
 
-After pilot data exists, create a dated anonymized report. Until then the only valid claim is **“ready for pilot”**, not “validated by students”.
+After pilot data exists, create a dated anonymized report. After all pre-pilot gates pass, status may become **“ready for pilot”**. Until those gates pass, use **“protocol ready; production pilot pending”**. Never claim validation by students without real data.
+
+## Pencatatan siap pakai
+
+Gunakan [template JSON kosong](pilot-recording-template.json). Seluruh nilai hasil masih null/array kosong, bukan peserta atau transaksi contoh. Lesson reach/open recommendation dicatat pengamat; aplikasi belum mempunyai event server khusus untuk completion lesson atau pembukaan rekomendasi.
+
+Hitung dua pandangan funnel: jumlah penyelesaian tiap langkah dibagi seluruh peserta valid; serta rate kondisional (recommendation open / peserta yang memperoleh rekomendasi, practice selesai / practice dimulai, mini selesai / mini dimulai). Bila penyebut nol, laporkan tidak tersedia, bukan 0%. Durasi diagnostic adalah submitted_at−started_at; laporkan median hanya untuk sesi selesai, dan jumlah sesi tidak selesai secara terpisah. Jangan mencampur demo/TEST_ONLY ke penyebut.
+
+Sasaran awal operasional: 10–20 peserta valid dan nol kendala kritis belum ditangani. Target ini keputusan pilot produk, bukan ukuran efektivitas belajar. Pengamatan tidak merekam password, cookie, kunci jawaban atau identitas pribadi. Undangan belum dikirim; fasilitator menunggu instruksi eksplisit pemilik sebelum menghubungi siswa.

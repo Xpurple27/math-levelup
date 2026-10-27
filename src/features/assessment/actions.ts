@@ -18,7 +18,7 @@ export async function finish(a: store.Attempt) {
   const masteries = [...new Set(a.snapshot.map((q) => q.topic))].flatMap(
     (topic) => {
       const qs = a.snapshot.filter((q) => q.topic === topic);
-      return qs.length
+      return qs.some((q) => Object.hasOwn(a.answers, q.id))
         ? [
             updateMastery(
               old.find((m) => m.topic === topic),
@@ -47,6 +47,12 @@ export function safe(a: store.Attempt) {
     result: a.result,
     feedback: a.feedback,
     serverNow: Date.now(),
+    ...(a.snapshot.every((q) => typeof q.previouslySeen === "boolean")
+      ? {
+          reusedQuestionCount: a.snapshot.filter((q) => q.previouslySeen)
+            .length,
+        }
+      : {}),
     questions: a.snapshot.map((q) => ({
       ...publicQuestion(q),
       ...(a.status === "completed" || a.feedback[q.id]?.done
@@ -75,7 +81,8 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
     )
       return response({ error: "Jenis sesi tidak valid." }, 400);
 
-    const requestedTryoutSlug = typeof b.packageSlug === "string" ? b.packageSlug : "";
+    const requestedTryoutSlug =
+      typeof b.packageSlug === "string" ? b.packageSlug : "";
     const tryoutPack =
       b.kind === "tryout" && requestedTryoutSlug
         ? await loadTryoutPackage(requestedTryoutSlug)
@@ -133,7 +140,8 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
     let a = await store.activeAttempt(user.id, b.kind, topic);
     if (a) a = await expire(a);
     if (!a || a.status === "completed") {
-      const excludedIds = tryoutPack || practicePack ? [] : await store.seenQuestionIds(user.id);
+      const excludedIds =
+        tryoutPack || practicePack ? [] : await store.seenQuestionIds(user.id);
       const questions = tryoutPack
         ? tryoutPack.questions
         : practicePack
@@ -143,7 +151,16 @@ export async function assessmentAction(b: ActionBody, user: store.User) {
               excludedIds,
               section: typeof b.section === "string" ? b.section : undefined,
             });
-      a = await store.createAttempt(user.id, b.kind, topic, questions);
+      a = await store.createAttempt(
+        user.id,
+        b.kind,
+        topic,
+        questions.map((q) => ({
+          ...q,
+          previouslySeen: excludedIds.includes(q.id),
+        })),
+        tryoutPack?.card.durationSeconds,
+      );
     }
     return response({ attempt: safe(a) });
   }

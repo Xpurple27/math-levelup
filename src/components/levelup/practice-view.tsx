@@ -1,16 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import {
-  ArrowRight,
-  Clock3,
-  Layers3,
-  LockKeyhole,
-  Target,
-} from "lucide-react";
+import { ArrowRight, Clock3, Layers3, LockKeyhole, Target } from "lucide-react";
 import type { Mastery } from "@/lib/scoring";
 import type { Dispatch, SetStateAction } from "react";
-import { useTopics } from "../content-context";
 
 type Props = {
   section: string;
@@ -37,6 +30,7 @@ type PracticePackage = {
   estimatedMinutes: number;
   section: { id: string; code: string; name: string };
   domain: { id: string; name: string; description: string };
+  subtopicIds: string[];
   questionCount: number;
   difficulty: { basic: number; medium: number; hard: number };
 };
@@ -55,7 +49,6 @@ function mixLabel(item: PracticePackage) {
 }
 
 export function PracticeView({ busy, start, recommended }: Props) {
-  const topics = useTopics();
   const [packages, setPackages] = useState<PracticePackage[]>([]);
   const [activeSection, setActiveSection] = useState("PK");
   const [activeDomain, setActiveDomain] = useState("");
@@ -73,14 +66,10 @@ export function PracticeView({ busy, start, recommended }: Props) {
         const items = (json.data || []) as PracticePackage[];
         setPackages(items);
 
-        const target = topics.find((item) => item.id === recommended);
-        const preferred = target
-          ? items.find(
-              (pkg) =>
-                pkg.section.code === target.section &&
-                pkg.domain.name === target.domain,
-            )
-          : undefined;
+        const preferred = items.find(
+          (pkg) =>
+            pkg.access === "FREE" && pkg.subtopicIds.includes(recommended),
+        );
         const firstSection =
           preferred?.section.code ||
           sections.find((item) =>
@@ -97,7 +86,7 @@ export function PracticeView({ busy, start, recommended }: Props) {
     return () => {
       alive = false;
     };
-  }, [recommended, topics]);
+  }, [recommended]);
 
   const sectionPackages = useMemo(
     () => packages.filter((item) => item.section.code === activeSection),
@@ -294,7 +283,9 @@ export function PracticeView({ busy, start, recommended }: Props) {
                     <button
                       className="mt-auto flex w-full items-center justify-between rounded-xl bg-[#0b1020] px-4 py-3 text-sm font-extrabold text-white transition hover:bg-[#18233e] disabled:cursor-not-allowed disabled:opacity-50"
                       disabled={
-                        busy || item.access !== "FREE" || item.questionCount === 0
+                        busy ||
+                        item.access !== "FREE" ||
+                        item.questionCount === 0
                       }
                       onClick={() => void start("practice", item.slug)}
                     >

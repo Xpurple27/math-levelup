@@ -24,7 +24,7 @@ async function hostedLearning(): Promise<LearningPayload> {
   const { data: modules, error: moduleError } = await client
     .from("learning_modules")
     .select(
-      "id,subtopic_id,code,slug,title,description,level,status,sort_order,estimated_minutes,subtopics(id,name,topic_id,topics(id,name,domain_id,domains(id,name)))",
+      "id,subtopic_id,code,slug,title,description,level,status,sort_order,estimated_minutes,subtopics(id,name,status,topic_id,topics(id,name,status,domain_id,domains(id,name,status)))",
     )
     .eq("status", "PUBLISHED")
     .order("sort_order")
@@ -88,9 +88,7 @@ async function hostedLearning(): Promise<LearningPayload> {
   if (mediaIds.length) {
     const { data: media, error: mediaError } = await client
       .from("media_assets")
-      .select(
-        "id,storage_provider,storage_path,alt_text,original_filename",
-      )
+      .select("id,storage_provider,storage_path,alt_text,original_filename")
       .in("id", mediaIds);
     if (mediaError) throw mediaError;
     const resolved = await Promise.all(
@@ -111,17 +109,19 @@ async function hostedLearning(): Promise<LearningPayload> {
     const content = {
       ...((block.content_json || {}) as Record<string, unknown>),
     };
-    const mediaId = typeof content.media_id === "string" ? content.media_id : "";
+    const mediaId =
+      typeof content.media_id === "string" ? content.media_id : "";
     if (mediaId && mediaMap.has(mediaId)) {
       content.url = mediaMap.get(mediaId)?.url || "";
-      content.alt =
-        content.alt || mediaMap.get(mediaId)?.alt || "Media lesson";
+      content.alt = content.alt || mediaMap.get(mediaId)?.alt || "Media lesson";
     }
     return { ...block, content_json: content };
   });
 
   const safeAssignments = (assignmentResult.data || []).filter((item) => {
-    const version = item.question_versions as unknown as { status?: string } | null;
+    const version = item.question_versions as unknown as {
+      status?: string;
+    } | null;
     return version?.status === "PUBLISHED";
   });
 
@@ -161,7 +161,7 @@ async function localLearning(): Promise<LearningPayload> {
      JOIN public.subtopics st ON st.id=m.subtopic_id
      JOIN public.topics t ON t.id=st.topic_id
      JOIN public.domains d ON d.id=t.domain_id
-     WHERE m.status='PUBLISHED'
+     WHERE m.status='PUBLISHED' AND st.status='ACTIVE' AND t.status='ACTIVE' AND d.status='ACTIVE'
      ORDER BY m.sort_order,m.title`,
   );
 
@@ -258,6 +258,47 @@ async function localLearning(): Promise<LearningPayload> {
   return { modules, lessons, blocks, assignments };
 }
 
+export function readableLearning(data: LearningPayload): LearningPayload {
+  const lessons = data.lessons.filter((lesson) =>
+    data.blocks.some((block) => {
+      if (block.lesson_id !== lesson.id) return false;
+      const content = block.content_json as Record<string, unknown> | undefined;
+      const value =
+        block.block_type === "IMAGE"
+          ? content?.url
+          : content?.text || content?.latex;
+      return typeof value === "string" && value.trim().length > 0;
+    }),
+  );
+  const modules = data.modules.filter((module) => {
+    const st = module.subtopics as
+      | {
+          status?: string;
+          topics?: { status?: string; domains?: { status?: string } };
+        }
+      | undefined;
+    if (st?.status && st.status !== "ACTIVE") return false;
+    if (st?.topics?.status && st.topics.status !== "ACTIVE") return false;
+    if (st?.topics?.domains?.status && st.topics.domains.status !== "ACTIVE")
+      return false;
+    const all = data.lessons.filter((lesson) => lesson.module_id === module.id);
+    return all.length > 0 && all.every((lesson) => lessons.includes(lesson));
+  });
+  const moduleIds = new Set(modules.map((item) => item.id));
+  const visibleLessons = lessons.filter((item) =>
+    moduleIds.has(item.module_id),
+  );
+  const ids = new Set(visibleLessons.map((item) => item.id));
+  return {
+    modules,
+    lessons: visibleLessons,
+    blocks: data.blocks.filter((item) => ids.has(item.lesson_id)),
+    assignments: data.assignments.filter((item) => ids.has(item.lesson_id)),
+  };
+}
+
 export async function loadPublishedLearning(): Promise<LearningPayload> {
-  return onlineBackend() ? hostedLearning() : localLearning();
+  return readableLearning(
+    await (onlineBackend() ? hostedLearning() : localLearning()),
+  );
 }
